@@ -1,0 +1,8 @@
+build/
+devel/
+install/
+logs/
+.vscode/
+.catkin_tools/
+src/PX4-Autopilot/
+src/mavlink_sitl_gazebo/
