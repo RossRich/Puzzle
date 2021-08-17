@@ -20,19 +20,23 @@ void poseCb(const geometry_msgs::PoseStampedConstPtr &msg) {
     currentPos = *msg;
 }
 
-
 int main(int argc, char *argv[])
 {       
     std::string vehicleName = "";
+    
 
     ros::init(argc, argv, "offboard");
     ros::NodeHandle nh;
+    
+    std::string nodeName = ros::this_node::getName();
 
-    if(!nh.getParam("vehicle_name", vehicleName)) {
-        // ROS_INFO("%s", vehicleName.)
+    if(!nh.hasParam(nodeName + "/vehicle_name")) {
         ROS_ERROR("No uav name");
         return -1;
     }
+
+    nh.getParam(nodeName + "/vehicle_name", vehicleName);
+    ROS_INFO("New vehicle %s", vehicleName.c_str());
 
     ros::Subscriber stateSub = nh.subscribe<State>(vehicleName + "mavros/state", 10, stateCb);
     ros::Publisher localPosPub = nh.advertise<geometry_msgs::PoseStamped>(vehicleName + "mavros/setpoint_position/local", 10);

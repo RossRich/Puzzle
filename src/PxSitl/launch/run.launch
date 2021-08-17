@@ -3,15 +3,15 @@
     <include file="$(find px4)/launch/multi_uav_mavros_sitl.launch"/>
 
     <node name="offboard_node_uav0" pkg="PxSitl" type="PxSitl_node" output="screen">
-        <param name="vehicle_name" value="uav0/"/>
+        <param name="vehicle_name" value="uav0/" type="string"/>
     </node>
 
     <node name="offboard_node_uav1" pkg="PxSitl" type="PxSitl_node" output="screen">
-        <param name="vehicle_name" value="uav1/"/>
+        <param name="vehicle_name" value="uav1/" type="string"/>
     </node>
 
     <node name="offboard_node_uav2" pkg="PxSitl" type="PxSitl_node" output="screen">
-        <param name="vehicle_name" value="uav2/"/>
+        <param name="vehicle_name" value="uav2/" type="string"/>
     </node>
 
 </launch>
