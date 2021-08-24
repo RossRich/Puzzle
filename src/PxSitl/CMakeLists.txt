@@ -192,6 +192,7 @@ install(FILES
 #   # myfile1
 #   # myfile2
   launch/run.launch
+  launch/single_vehicle_spawn.launch
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 

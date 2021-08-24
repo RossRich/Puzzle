@@ -43,3 +43,18 @@ catkin build
 source devel/setup.bash
 roslaunch px4 multi_uav_mavros_sitl.launch
 ```
+## Ошибки
+
+```
+[Err] [RenderEngine.cc:749] Can't open display: :0
+[Wrn] [RenderEngine.cc:89] Unable to create X window. Rendering will be disabled
+[Wrn] [RenderEngine.cc:292] Cannot initialize render engine since render path type is NONE. Ignore this warning ifrendering has been turned off on purpose.
+No protocol specified
+[Wrn] [GuiIface.cc:120] could not connect to display :0
+```
+> xhost +local:root
+
+```
+gzclient: /usr/include/boost/smart_ptr/shared_ptr.hpp:734: typename boost::detail::sp_member_access<T>::type boost::shared_ptr<T>::operator->() const [with T = gazebo::rendering::Camera; typename boost::detail::sp_member_access<T>::type = gazebo::rendering::Camera*]: Assertion `px != 0' failed.
+```
+>source /usr/share/gazebo/setup.sh

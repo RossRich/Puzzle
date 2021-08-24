@@ -29,6 +29,7 @@ int main(int argc, char *argv[])
     ros::NodeHandle nh;
     
     std::string nodeName = ros::this_node::getName();
+    ROS_INFO("%s", nodeName.c_str());
 
     if(!nh.hasParam(nodeName + "/vehicle_name")) {
         ROS_ERROR("No uav name");
@@ -100,15 +101,13 @@ int main(int argc, char *argv[])
         if(currentState.mode == "OFFBOARD" && currentState.armed == 1) {
 
             if(ros::Time::now() - lastRequest > ros::Duration(5.0)) {
-                std::string info = vehicleName;
-                info += "x: ";
-                info += currentPos.pose.position.x;
-                info += "y: ";
-                info += currentPos.pose.position.y;
-                info += "z: ";
-                info += currentPos.pose.position.z;
-
-                ROS_INFO("%s\n", info.c_str());
+                std::ostringstream info;
+                info << vehicleName;
+                info << " x: " << currentPos.pose.position.x;
+                info << " y: " << currentPos.pose.position.y;
+                info << " z: " << currentPos.pose.position.z;
+ 
+                ROS_INFO("%s", info.str().c_str());
 
                 lastRequest = ros::Time::now();
             }

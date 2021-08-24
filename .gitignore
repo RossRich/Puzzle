@@ -6,3 +6,4 @@ logs/
 .catkin_tools/
 src/PX4-Autopilot/
 src/mavlink_sitl_gazebo/
+src/PxSitl/tmp/
