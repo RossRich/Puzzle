@@ -52,9 +52,12 @@ roslaunch px4 multi_uav_mavros_sitl.launch
 No protocol specified
 [Wrn] [GuiIface.cc:120] could not connect to display :0
 ```
+Вводим в терминале (на хосте, т.е. не в контейнере)
 > xhost +local:root
-
+----
 ```
 gzclient: /usr/include/boost/smart_ptr/shared_ptr.hpp:734: typename boost::detail::sp_member_access<T>::type boost::shared_ptr<T>::operator->() const [with T = gazebo::rendering::Camera; typename boost::detail::sp_member_access<T>::type = gazebo::rendering::Camera*]: Assertion `px != 0' failed.
 ```
+Вводим в когда загрузится контейнер
 >source /usr/share/gazebo/setup.sh
+---
