@@ -41,6 +41,8 @@
         "/dev/dri:/dev/dri",
 		"-v",
 		"/home/asus/.vscode/extensions/:/root/.vscode-server/extensions/",
+		"-v",
+		"/home/asus/Opencv/:/workspaces/Opencv/:rw",
 		"--network",
 		"host"
 	],
@@ -51,7 +53,7 @@
 	},
 
 	// Uncomment to use the Docker CLI from inside the container. See https://aka.ms/vscode-remote/samples/docker-from-docker.
-	// "mounts": [ "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind" ],
+	// "mounts": ["source=/home/asus/Opencv,target=${cwd}/Opencv"]
 
 	// Uncomment to connect as a non-root user if you've added one. See https://aka.ms/vscode-remote/containers/non-root.
 	// "remoteUser": "vscode"

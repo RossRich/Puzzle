@@ -192,7 +192,8 @@ install(FILES
 #   # myfile1
 #   # myfile2
   launch/run.launch
-  launch/single_vehicle_spawn.launch
+  launch/single_uav_spawn.launch
+  launch/multiple_uav_spawn.launch
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
