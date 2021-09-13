@@ -14,6 +14,8 @@ geometry_msgs::PoseStamped currentPos;
 
 void stateCb(const State::ConstPtr &msg) {
     currentState = *msg;
+    ROS_INFO("Current state: %s", currentState.mode.c_str());
+    ROS_INFO("Is arm: %i", currentState.armed);
 }
 
 void poseCb(const geometry_msgs::PoseStampedConstPtr &msg) {
@@ -29,7 +31,7 @@ int main(int argc, char *argv[])
     ros::NodeHandle nh;
     
     std::string nodeName = ros::this_node::getName();
-    ROS_INFO("%s", nodeName.c_str());
+    ROS_INFO("Node name: %s", nodeName.c_str());
 
     if(!nh.hasParam(nodeName + "/vehicle_name")) {
         ROS_ERROR("No uav name");
@@ -39,11 +41,11 @@ int main(int argc, char *argv[])
     nh.getParam(nodeName + "/vehicle_name", vehicleName);
     ROS_INFO("New vehicle %s", vehicleName.c_str());
 
-    ros::Subscriber stateSub = nh.subscribe<State>(vehicleName + "mavros/state", 10, stateCb);
-    ros::Publisher localPosPub = nh.advertise<geometry_msgs::PoseStamped>(vehicleName + "mavros/setpoint_position/local", 10);
-    ros::ServiceClient armingCli = nh.serviceClient<CommandBool>(vehicleName + "mavros/cmd/arming");
-    ros::ServiceClient setModeCli = nh.serviceClient<SetMode>(vehicleName + "mavros/set_mode");
-    ros::Subscriber pos = nh.subscribe<geometry_msgs::PoseStamped>(vehicleName+"mavros/local_position/pose", 10, poseCb);
+    ros::Subscriber stateSub = nh.subscribe<State>(vehicleName + "/mavros/state", 10, stateCb);
+    ros::Publisher localPosPub = nh.advertise<geometry_msgs::PoseStamped>(vehicleName + "/mavros/setpoint_position/local", 10);
+    ros::ServiceClient armingCli = nh.serviceClient<CommandBool>(vehicleName + "/mavros/cmd/arming");
+    ros::ServiceClient setModeCli = nh.serviceClient<SetMode>(vehicleName + "/mavros/set_mode");
+    ros::Subscriber pos = nh.subscribe<geometry_msgs::PoseStamped>(vehicleName+"/mavros/local_position/pose", 10, poseCb);
 
     ros::Rate rate(20.0);
 
@@ -56,7 +58,7 @@ int main(int argc, char *argv[])
     geometry_msgs::PoseStamped pose;
     pose.pose.position.x = 0;
     pose.pose.position.y = 0;
-    pose.pose.position.z = 2;
+    pose.pose.position.z = 2.1;
 
     for(int i = 100; ros::ok() && i > 0; --i){
         localPosPub.publish(pose);
@@ -70,6 +72,7 @@ int main(int argc, char *argv[])
 
     SetMode offboardModeCmd;
     offboardModeCmd.request.custom_mode = "OFFBOARD";
+    offboardModeCmd.request.base_mode = 216;
 
     ros::Time lastRequest = ros::Time::now();
 

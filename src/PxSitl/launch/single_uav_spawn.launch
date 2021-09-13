@@ -3,7 +3,7 @@
 <!-- A launch file for spawn a single model in gazebo -->
 <launch>
     <!-- gazebo_ros setup-->
-    <arg name="vehicle" default="iris_obs_avoid"/>
+    <arg name="vehicle" default="iris"/>
     <arg name="model" default="$(arg vehicle)"/>
     <arg name="x" default="0"/>
     <arg name="y" default="0"/>
@@ -31,12 +31,13 @@
     <arg name="interactive" default="true"/>
     <arg unless="$(arg interactive)" name="px4_command_arg1" value=""/>
     <arg if="$(arg interactive)" name="px4_command_arg1" value="-d"/>
+
     <node name="sitl_$(arg ID)" pkg="px4" type="px4" output="screen" 
         args="$(find px4)/build/px4_sitl_default/etc 
-            -s etc/init.d-posix/rcS 
-            -i $(arg ID) 
+            -s etc/init.d-posix/rcS -i $(arg ID) 
             -w $(arg vehicle)_$(arg ID) 
-            $(arg px4_command_arg1)"/>
+            $(arg px4_command_arg1)"
+    />
 
     <!-- GAZEBO_ROS -->
     <arg name="cmd" default="$(find PxSitl)/scripts/jinja_gen.py 
@@ -48,13 +49,14 @@
         --video_uri=$(arg video_uri) 
         --mavlink_cam_udp_port=$(arg mavlink_cam_udp_port) 
         --sdf_tag=$(arg sdf_tag) 
-        $(find PxSitl)/gazebo_sitl/models/$(arg model)/$(arg model).sdf.jinja 
-        $(find PxSitl)"/>
-    <param command="$(arg cmd)" name="$(arg vehicle)_$(arg ID)_sdf"/>
+        --stdout $(find PxSitl)/gazebo_sitl/models/$(arg model)/$(arg model).sdf.jinja 
+        $(find PxSitl)"
+    />
     
-    <node name="$(anon vehicle_spawn)" pkg="gazebo_ros" type="spawn_model" output="screen" 
-        args="-sdf 
-            -file $(find PxSitl)/gazebo_sitl/models/$(arg model)/$(arg model).sdf
+    <param command="$(arg cmd)" name="$(arg vehicle)_$(arg ID)_sdf"/>
+
+    <node name="$(anon vehicle_spawn)" pkg="gazebo_ros" type="spawn_model" output="screen" args="-sdf 
+            -param $(arg vehicle)_$(arg ID)_sdf
             -robot_namespace $(arg vehicle)$(arg ID)
             -model $(arg model)$(arg ID) 
             -x $(arg x) 
