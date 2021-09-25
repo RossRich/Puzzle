@@ -40,7 +40,9 @@
 		"--device",
         "/dev/dri:/dev/dri",
 		"-v",
-		"/home/asus/.vscode/extensions/:/root/.vscode-server/extensions/",
+		"/home/asus/opencv/:/home/user/opencv/:rw",
+		// "-v",
+		// "/home/asus/.vscode/extensions/:/home/root/.vscode-server/extensions/",
 		"--network",
 		"host"
 	],

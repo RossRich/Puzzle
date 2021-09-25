@@ -64,12 +64,12 @@
     <arg name="id_uav1" value="1"/>
     <group ns="$(arg vehicle)$(arg id_uav1)">
         <include file="$(find PxSitl)/launch/$(arg spawner)">
-            <arg name="x" default="1"/>
+            <arg name="x" default="2"/>
             <arg name="y" default="0"/>
             <arg name="z" default="0"/>
             <arg name="R" default="0"/>
             <arg name="P" default="0"/>
-            <arg name="Y" default="0"/>
+            <arg name="Y" default="-3"/>
 
             <arg name="est" value="$(arg est)"/>
             <arg name="vehicle" value="$(arg vehicle)"/>

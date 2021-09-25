@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<launch>
+
+     <!-- Launch Gazebo -->
+    <!-- gazebo congig -->
+    <arg name="gui" default="true"/>
+    <arg name="debug" default="false"/>
+    <arg name="verbose" default="false"/>
+    <arg name="paused" default="false"/>
+    <arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/empty.world"/>
+
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="gui" default="$(arg gui)"/>
+        <arg name="world_name" default="$(arg world)"/>
+        <arg name="debug" default="$(arg debug)"/>
+        <arg name="verbose" default="$(arg verbose)"/>
+        <arg name="paused" default="$(arg paused)"/>
+    </include>
+
+    <!-- common px4 setup  -->
+    <arg name="est" default="ekf2"/>
+    <arg name="vehicle" default="iris"/>
+    <arg name="model" default="iris_puzzle"/>
+
+    <include file="$(find PxSitl)/launch/single_uav_spawn.launch">
+        <arg name="x" default="0"/>
+        <arg name="y" default="0"/>
+        <arg name="z" default="0"/>
+        <arg name="R" default="0"/>
+        <arg name="P" default="0"/>
+        <arg name="Y" default="0"/>
+
+        <arg name="est" value="$(arg est)"/>
+        <arg name="vehicle" value="$(arg vehicle)"/>
+        <arg name="model" value="$(arg model)"/>
+        <arg name="ID" value="0"/>
+
+        <arg name="mavlink_udp_port" value="14560"/>
+        <arg name="mavlink_tcp_port" value="4560"/>
+        <arg name="gst_udp_port" value="5600"/>
+        <arg name="video_uri" value="5600"/>
+        <arg name="mavlink_cam_udp_port" value="14530"/>
+    </include>
+
+    <!-- mavros -->
+    <arg name="fcu_url" default="udp://:14540@localhost:14580"/>
+    <include file="$(find mavros)/launch/px4.launch">
+        <arg name="fcu_url" value="$(arg fcu_url)"/>
+        <arg name="gcs_url" value=""/>
+        <arg name="tgt_system" value="1"/>
+        <arg name="tgt_component" value="1"/>
+    </include>
+
+
+    <!-- camera transform -->
+    <node pkg="tf" type="static_transform_publisher" name="tf_depth_camera" args="0 0 0 -1.57 0 -1.57 base_link camera_link 10"/>
+</launch>
