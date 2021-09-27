@@ -19,7 +19,7 @@ cv::Vec<cv::Scalar_<uint8_t>, 2> findThreshold(cv::VideoCapture &cap,
   uint16_t imWidht = cap.get(cv::CAP_PROP_FRAME_WIDTH);
   uint16_t imHeight = cap.get(cv::CAP_PROP_FRAME_HEIGHT);
 
-  cv::Size2i rectSize(70, 70);
+  cv::Size2i rectSize(30, 30);
   cv::Point2i rectPos(cvRound(imWidht / 2.0) - cvRound(rectSize.width / 2.0),
                       cvRound(imHeight / 2.0) - cvRound(rectSize.height / 2.0));
 
@@ -81,7 +81,7 @@ cv::Vec<cv::Scalar_<uint8_t>, 2> findThreshold(cv::VideoCapture &cap,
       }
     }
 
-    cv::rectangle(frame, cv::Rect2i(rectPos, rectSize), max, 3, cv::LINE_8);
+    cv::rectangle(frame, cv::Rect2i(rectPos, rectSize), max, 2);
     cv::imshow(winName, frame);
     c = cv::waitKey(5);
   }
@@ -178,18 +178,38 @@ int main(int argc, char *argv[]) {
     cv::findContours(mask.clone(), cnt, cv::RETR_EXTERNAL,
                      cv::CHAIN_APPROX_SIMPLE);
 
-    cv::drawContours(frame, cnt, -1, cv::Scalar::all(255));
+    // cv::drawContours(frame, cnt, -1, cv::Scalar::all(255));
+    // cout << "Contours count " << cnt.size() << endl;
+    float radius = 0.0;
+    cv::Point2f center;
+    if(cnt.size() > 0) {
+      std::vector<cv::Point> cnt0 = cnt[0];
+      
+      // Mat cc = cv::max(cnt0, cv::contourArea(cnt0));
+      cv::minEnclosingCircle(cnt0, center, radius);
+      // cv::Moments m = cv::moments(cnt0, true);
 
-    cout << "Contours count " << cnt.size() << endl;
+      // center.x = m.m10 / m.m00;
+      // center.y = m.m01 / m.m00;
+
+      cout << "Coordinate of center: " << Mat(center) << endl;
+
+      cv::circle(frame, center, radius + 7.0, cv::Scalar(threshold[1]), 1, cv::LINE_4);
+      cv::circle(frame, center, 3, cv::Scalar(0, 255, 0), cv::FILLED, cv::LINE_8);
+
+      std::stringstream info;
+      info << "Cx: " << center.x << " Cy: " << center.y; 
+      cv::Point2f textPos = {center.x + radius + 15.0, center.y + radius + 15.0};
+      cv::putText(frame, info.str(), textPos, cv::FONT_HERSHEY_SIMPLEX, .6, cv::Scalar::all(0), 2);
+    }
 
     cv::cvtColor(mask, mask, cv::COLOR_GRAY2BGR);
     mask.copyTo(view2);
     frame.copyTo(view1);
-    
+
     cv::imshow(mainWin, view);
 
-    char c = cv::waitKey(1);
-
+    char c = cv::waitKey(10);
     if (c == 'q')
       break;
   }
