@@ -140,7 +140,7 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(${PROJECT_NAME}_node src/OffboardNode.cpp)
 add_executable(BallTracking src/vision/BallTracking.cpp)
-
+add_executable(HelloRs src/vision/HelloRealsense.cpp)
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -159,6 +159,13 @@ target_link_libraries(${PROJECT_NAME}_node
 target_link_libraries(BallTracking
   ${OpenCV_LIBS}
   ${catkin_LIBRARIES}
+  realsense2
+)
+
+target_link_libraries(HelloRs
+  ${catkin_LIBRARIES}
+  ${OpenCV_LIBS}
+  realsense2
 )
 
 #############

@@ -26,8 +26,8 @@
 	// Uncomment when using a ptrace-based debugger like C++, Go, and Rust
 	"runArgs": [ 
 		"--privileged",
+		"-rm",
 		"-it",
-		"--rm",
 		"--gpus",
 		"all",
 		"--runtime=nvidia",
