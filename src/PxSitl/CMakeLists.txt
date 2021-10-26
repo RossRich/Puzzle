@@ -134,7 +134,7 @@ include_directories(
 add_library(${PROJECT_NAME}
   src/vision/BallTracking.cpp
   src/vision/BallTrackingRos.cpp
-  include/PxSitl/GyverFilters/src/filters/RingAverage.h
+##include/PxSitl/GyverFilters/src/filters/RingAverage.h
 )
 
 ## Add cmake target dependencies of the library

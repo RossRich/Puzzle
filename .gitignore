@@ -8,3 +8,4 @@ src/PX4-Autopilot/
 src/mavlink_sitl_gazebo/
 src/PxSitl/tmp/
 tmp/
+opencv/

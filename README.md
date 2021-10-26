@@ -2,16 +2,16 @@
 
 * Ubuntu 20.04
 * Графическая карта Nvidia
-* Установленый docker
+* Установленный docker
 * Установленный пакет nvidia-docker2
-* VSCode с установленым рсширением Docker (ms-azuretools.vscode-docker) и Remote-Container (ms-vscode-remote.remote-containers)
+* VSCode с установленным расширением Docker (ms-azuretools.vscode-docker) и Remote-Container (ms-vscode-remote.remote-containers)
 
 
 ## Docker
 
 Следуем [инструкции по установки](https://docs.docker.com/engine/install/ubuntu/) и [действия после успешной установки](https://docs.docker.com/engine/install/linux-postinstall/)
 
-Далее ставим [nvidia-docker2](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker). Это необходимо для работы видеокатры в контейнере, в противном случае gazebo может работать не стабильно или вообще не запуститься.
+Далее ставим [nvidia-docker2](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker). Это необходимо для работы видеокарты в контейнере, в противном случае gazebo может работать не стабильно или вообще не запуститься.
 
 
 ## VSCode 
@@ -21,7 +21,7 @@
 
 ## Развертывание Puzzle
 
-Открывем VSCode и клонируем репозиторий:
+Открываем VSCode и клонируем репозиторий:
 ```
 git clone --recurse-submodules https://github.com/RossRich/Puzzle.git
 ```

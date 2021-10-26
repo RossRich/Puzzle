@@ -26,7 +26,7 @@
 	// Uncomment when using a ptrace-based debugger like C++, Go, and Rust
 	"runArgs": [ 
 		"--privileged",
-		"-rm",
+		"--rm",
 		"-it",
 		"--gpus",
 		"all",
@@ -39,8 +39,8 @@
 		"/dev:/dev",
 		"--device",
         "/dev/dri:/dev/dri",
-		"-v",
-		"/home/asus/opencv/:/home/user/opencv/:rw",
+		// "-v",
+		// "/home/asus/opencv/:/home/user/opencv/:rw",
 		// "-v",
 		// "/home/asus/.vscode/extensions/:/home/root/.vscode-server/extensions/",
 		"--network",
