@@ -151,6 +151,7 @@ add_library(${PROJECT_NAME}
 add_executable(${PROJECT_NAME}_node src/OffboardNode.cpp)
 add_executable(BallTrackingNode src/vision/BallTrackingNode.cpp)
 add_executable(HelloRs src/vision/HelloRealsense.cpp)
+add_executable(TrackingParam src/vision/TrackingParam.cpp)
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -185,6 +186,11 @@ target_link_libraries(HelloRs
   ${catkin_LIBRARIES}
   ${OpenCV_LIBS}
   realsense2
+)
+
+target_link_libraries(TrackingParam
+  ${catkin_LIBRARIES}
+  ${OpenCV_LIBS}
 )
 
 #############
