@@ -1,10 +1,10 @@
 #include "../../include/PxSitl/vision/BallTracking.hpp"
 
-const char *BallTracking::_confFile = "/workspaces/Puzzle/src/PxSitl/data/config.yaml";
+
 
 BallTracking::BallTracking(uint16_t width, uint16_t height, cv::Vec<cv::Scalar_<uint8_t>, 2> threshold) {
   _imSize = Size2i(width, height);
-  _threshold = getThreshold();
+  _threshold = {0};
 }
 
 BallTracking::~BallTracking() {}
@@ -52,35 +52,4 @@ Point2i BallTracking::process(Mat &color) {
   }
 
   return {static_cast<uint16_t>(center.x), static_cast<uint16_t>(center.y)};
-}
-
-cv::Vec<cv::Scalar_<uint8_t>, 2> BallTracking::getThreshold() {
-  cv::FileStorage conf;
-  cv::Vec<cv::Scalar_<uint8_t>, 2> threshold = {0};
-  bool isDataAvalable = false;
-
-  try {
-    if (conf.open(_confFile, cv::FileStorage::READ)) {
-      cv::FileNode thresholdNode = conf["threshold"];
-      if (!thresholdNode.empty()) {
-        int i = 0;
-        for (auto t : thresholdNode)
-          thresholdNode[t.name()] >> threshold[i++];
-
-        isDataAvalable = true;
-      }
-    }
-
-    conf.release();
-  } catch (cv::Exception e) {
-    std::cerr << e.what() << '\n';
-  }
-
-  if (!isDataAvalable) {
-    std::cerr << "No available threshold data in file" << std::endl;
-  } else {
-    std::cout << "Threshold is available" << std::endl;
-  }
-
-  return threshold;
 }

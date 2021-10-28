@@ -34,7 +34,6 @@ public:
   void operator=(const BallTracking &bt);
 
   Point2i process(Mat &color);
-  static cv::Vec<cv::Scalar_<uint8_t>, 2> getThreshold();
 };
 
 #endif // _BALL_TRACKING_H_
