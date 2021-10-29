@@ -28,8 +28,7 @@ public:
   threshold_t getThreshold();
 };
 
-const char *TrackingParam::_confFile =
-    "/workspaces/Puzzle/src/PxSitl/data/config.yaml";
+const char *TrackingParam::_confFile = "/workspaces/Puzzle/src/PxSitl/data/config.yaml";
 
 TrackingParam::TrackingParam() {}
 
@@ -77,7 +76,7 @@ threshold_t TrackingParam::scanNewThreshold() {
   Mat frame;
   Mat tmpFrame;
 
-  if (!_vc.open(4)) {
+  if (!_vc.open(6)) {
     cerr << "Can't open video stream" << endl;
     return {};
   }
@@ -109,16 +108,15 @@ threshold_t TrackingParam::scanNewThreshold() {
         } else {
           if (_roiPointsNum == 4) {
             end = _roiPoints.at(0);
-            int cnt = 4;
-            const cv::Point *points[cnt];
-            for (uint8_t i = 0; i < 4; i++)
-              points[i] = &_roiPoints.at(i);
-            
-            Mat mask(frame.size(), CV_8UC1);
-            mask = 0;
-            // cv::fillPoly(frame, points, &cnt, 1, cv::Scalar::all(255));
-            cv::drawContours(mask, _roiPoints, 0, cv::Scalar::all(255), -1);
-            
+            Mat mask = Mat::zeros(frame.size(), CV_8UC1);
+            try {
+              cv::fillConvexPoly(mask, _roiPoints, cv::Scalar::all(255));
+              // cv::bitwise_not(mask, frame);
+              tmpFrame.copyTo(frame, mask);
+            } catch (cv::Exception &e) {
+              cerr << e.what() << endl;
+            }
+
           } else
             end = _cursor;
         }
@@ -152,6 +150,7 @@ void TrackingParam::onMouseCallnack(int ev, int x, int y, int flag) {
 
   if (ev == cv::MouseEventTypes::EVENT_RBUTTONUP) {
     _roiPointsNum = 0;
+    _roiPoints.clear();
   }
 
   _cursor = {x, y};
