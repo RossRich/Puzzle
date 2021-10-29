@@ -16,7 +16,8 @@ private:
   const char *_winName = "Main";
   static const char *_confFile;
   uint8_t _roiPointsNum = 0;
-  cv::Vec<cv::Point2i, 5> _roiPoints;
+  std::vector<cv::Point2i> _roiPoints;
+  cv::Point2i _cursor;
 
 public:
   TrackingParam();
@@ -76,7 +77,6 @@ threshold_t TrackingParam::scanNewThreshold() {
   Mat frame;
   Mat tmpFrame;
 
-
   if (!_vc.open(4)) {
     cerr << "Can't open video stream" << endl;
     return {};
@@ -91,6 +91,8 @@ threshold_t TrackingParam::scanNewThreshold() {
 
     if (isScaning)
       _vc >> frame;
+    else
+      frame = tmpFrame.clone();
 
     if (frame.empty())
       break;
@@ -99,13 +101,28 @@ threshold_t TrackingParam::scanNewThreshold() {
 
     if (_roiPointsNum != 0) {
       for (uint8_t i = 0; i < _roiPointsNum; i++) {
-        cv::Point2i start = _roiPoints[i];
+        cv::Point2i start = _roiPoints.at(i);
         cv::Point2i end;
+
         if (i + 1 < _roiPointsNum) {
-          end = _roiPoints[i + 1];
+          end = _roiPoints.at(i + 1);
         } else {
-          end = _roiPoints[4];
+          if (_roiPointsNum == 4) {
+            end = _roiPoints.at(0);
+            int cnt = 4;
+            const cv::Point *points[cnt];
+            for (uint8_t i = 0; i < 4; i++)
+              points[i] = &_roiPoints.at(i);
+            
+            Mat mask(frame.size(), CV_8UC1);
+            mask = 0;
+            // cv::fillPoly(frame, points, &cnt, 1, cv::Scalar::all(255));
+            cv::drawContours(mask, _roiPoints, 0, cv::Scalar::all(255), -1);
+            
+          } else
+            end = _cursor;
         }
+
         cv::line(frame, start, end, cv::Scalar::all(0));
       }
     }
@@ -114,8 +131,10 @@ threshold_t TrackingParam::scanNewThreshold() {
 
     c = (char)cv::waitKey(1);
 
-    if (c == 's')
+    if (c == 's') {
       isScaning = !isScaning;
+      tmpFrame = frame.clone();
+    }
   }
 
   _vc.release();
@@ -125,17 +144,17 @@ threshold_t TrackingParam::scanNewThreshold() {
 
 void TrackingParam::onMouseCallnack(int ev, int x, int y, int flag) {
   if (ev == cv::MouseEventTypes::EVENT_LBUTTONUP) {
-    if (_roiPointsNum > 3)
-      _roiPointsNum = 0;
-    _roiPoints[_roiPointsNum] = {x, y};
-    _roiPointsNum++;
+    if (_roiPointsNum < 4) {
+      _roiPoints.push_back({x, y});
+      _roiPointsNum++;
+    }
   }
 
-  if(ev == cv::MouseEventTypes::EVENT_RBUTTONUP) {
+  if (ev == cv::MouseEventTypes::EVENT_RBUTTONUP) {
     _roiPointsNum = 0;
   }
 
-  _roiPoints[4] = {x, y};
+  _cursor = {x, y};
 }
 
 int main(int argc, char const *argv[]) {
