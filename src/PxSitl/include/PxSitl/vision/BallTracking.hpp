@@ -1,7 +1,6 @@
 #if !defined(_BALL_TRACKING_H_)
 #define _BALL_TRACKING_H_
 
-#include "Utils.hpp"
 #include <deque>
 #include <iostream>
 #include <librealsense2/rs.hpp>
@@ -32,8 +31,7 @@ public:
   ~BallTracking();
 
   void operator=(const BallTracking &bt);
-
-  Point2i process(Mat &color);
+  void process(Mat &color, Mat &mask, Point2i *center = nullptr, uint16_t *radius = nullptr);
 };
 
 #endif // _BALL_TRACKING_H_

@@ -1,47 +1,18 @@
-#include <iostream>
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-
-using cv::Mat;
-using std::cerr;
-using std::cout;
-using std::endl;
-
-typedef cv::Vec<cv::Scalar_<uint8_t>, 2> threshold_t;
-
-class TrackingParam {
-private:
-  cv::VideoCapture _vc;
-  const char *_winName = "Main";
-  static const char *_confFile;
-  uint8_t _roiPointsNum = 0;
-  std::vector<cv::Point2i> _roiPoints;
-  cv::Point2i _cursor;
-
-public:
-  TrackingParam();
-  ~TrackingParam();
-
-  void onMouseCallnack(int ev, int x, int y, int flag);
-  threshold_t scanNewThreshold();
-  threshold_t getThreshold();
-};
+#include "../../include/PxSitl/vision/TrackingParam.hpp"
 
 const char *TrackingParam::_confFile = "/workspaces/Puzzle/src/PxSitl/data/config.yaml";
 
-TrackingParam::TrackingParam() {}
+void onMouseCallbackCv(int ev, int x, int y, int flag, void *uData) {
+  TrackingParam *tp = static_cast<TrackingParam *>(uData);
+  tp->onMouseCallback(ev, x, y, flag);
+}
+
+TrackingParam::TrackingParam(VideoHandler &vh) : _vh(vh) {}
 
 TrackingParam::~TrackingParam() { cv::destroyAllWindows(); }
 
-void onMouseCallback(int ev, int x, int y, int flag, void *uData) {
-  TrackingParam *tp = static_cast<TrackingParam *>(uData);
-  tp->onMouseCallnack(ev, x, y, flag);
-}
-
-threshold_t TrackingParam::getThreshold() {
+bool TrackingParam::getThreshold(threshold_t &td) {
   cv::FileStorage conf;
-  threshold_t threshold = {0};
   bool isDataAvalable = false;
 
   try {
@@ -50,7 +21,7 @@ threshold_t TrackingParam::getThreshold() {
       if (!thresholdNode.empty()) {
         int i = 0;
         for (auto t : thresholdNode)
-          thresholdNode[t.name()] >> threshold[i++];
+          thresholdNode[t.name()] >> td[i++];
 
         isDataAvalable = true;
       }
@@ -58,47 +29,46 @@ threshold_t TrackingParam::getThreshold() {
 
     conf.release();
   } catch (cv::Exception e) {
-    std::cerr << e.what() << '\n';
+    std::cerr << e.what() << std::endl;
   }
 
   if (!isDataAvalable) {
-    std::cout << "No available threshold data in file" << std::endl;
-    std::cout << "Start scan..." << endl;
-
+    std::cerr << "No available threshold data in file" << std::endl;
   } else {
     std::cout << "Threshold is available" << std::endl;
   }
 
-  return threshold;
+  return isDataAvalable;
 }
 
-threshold_t TrackingParam::scanNewThreshold() {
-  Mat frame;
-  Mat tmpFrame;
+void TrackingParam::maskFormGUI(cv::Mat &mask) {
 
-  if (!_vc.open(6)) {
-    cerr << "Can't open video stream" << endl;
-    return {};
-  }
+  std::cout << "Use a keyboard for navigation\n";
+  std::cout << "s - stop/start a video\nleft mouse button - set keypoint\nright mouse button - reset keypoints";
+  std::cout << "q - exit\n";
+  std::cout << "Stop a video and select region of interest\n";
 
   cv::namedWindow(_winName, cv::WINDOW_AUTOSIZE);
-  cv::setMouseCallback(_winName, onMouseCallback, this);
+  cv::setMouseCallback(_winName, onMouseCallbackCv, this);
 
   char c = ' ';
   bool isScaning = true;
+  Mat tmpFrame;
+  mask = Mat::zeros(_vh.getVideoSize(), CV_8UC1);
+
   while (c != 'q') {
 
     if (isScaning)
-      _vc >> frame;
+      _vh >> _frame;
     else
-      frame = tmpFrame.clone();
+      _frame = tmpFrame.clone();
 
-    if (frame.empty())
+    if (_frame.empty())
       break;
 
-    cv::resize(frame, frame, cv::Size2i(1280, 760));
+    // cv::resize(_frame, mask, cv::Size2i(640, 480));
 
-    if (_roiPointsNum != 0) {
+    if (_roiPointsNum != 0 && !isScaning) {
       for (uint8_t i = 0; i < _roiPointsNum; i++) {
         cv::Point2i start = _roiPoints.at(i);
         cv::Point2i end;
@@ -108,39 +78,95 @@ threshold_t TrackingParam::scanNewThreshold() {
         } else {
           if (_roiPointsNum == 4) {
             end = _roiPoints.at(0);
-            Mat mask = Mat::zeros(frame.size(), CV_8UC1);
+
             try {
+              cv::GaussianBlur(_frame, _frame, cv::Size2i(9, 9), 1);
               cv::fillConvexPoly(mask, _roiPoints, cv::Scalar::all(255));
-              // cv::bitwise_not(mask, frame);
-              tmpFrame.copyTo(frame, mask);
             } catch (cv::Exception &e) {
               cerr << e.what() << endl;
+              _roiPoints.clear();
+              mask = 0;
             }
-
           } else
             end = _cursor;
         }
-
-        cv::line(frame, start, end, cv::Scalar::all(0));
+        cv::line(_frame, start, end, cv::Scalar::all(0));
       }
     }
 
-    cv::imshow(_winName, frame);
+    cv::imshow(_winName, _frame);
 
     c = (char)cv::waitKey(1);
 
     if (c == 's') {
       isScaning = !isScaning;
-      tmpFrame = frame.clone();
+      tmpFrame = _frame.clone();
     }
   }
 
-  _vc.release();
-
-  return {0};
+  _frame = tmpFrame.clone();
+  cv::destroyWindow(_winName);
 }
 
-void TrackingParam::onMouseCallnack(int ev, int x, int y, int flag) {
+bool TrackingParam::newThreshold(Mat &mask) {
+  if (mask.empty() || _frame.empty())
+    return false;
+
+  Mat roi;
+  _frame.copyTo(roi, mask);
+
+  // cv::cvtColor(roi, roi, cv::COLOR_RGB2HSV);
+
+  Mat channels[3];
+
+  cv::split(roi, channels);
+
+  double min, max;
+  int idxMin, idxMax;
+
+  cv::Scalar_<uint8_t> maxThresh = cv::Scalar::all(0);
+  cv::Scalar_<uint8_t> minThresh = maxThresh;
+
+  for (uint8_t i = 0; i < 3; i++) {
+    cv::minMaxIdx(channels[i], &min, &max, &idxMin, &idxMax, mask);
+    cout << "In layer " << int(i) << " min val: " << min << " max val: " << max << endl;
+    maxThresh[i] = static_cast<uint8_t>(max);
+    minThresh[i] = static_cast<uint8_t>(min);
+  }
+
+  _threshold[0] = minThresh;
+  _threshold[1] = maxThresh;
+
+  cout << "New threshold\n";
+  cout << "Min: " << _threshold[0] << endl;
+  cout << "Max: " << _threshold[1] << endl;
+
+  cv::FileStorage conf;
+  try {
+    conf.open(_confFile, cv::FileStorage::WRITE);
+  } catch (const cv::Exception &e) {
+    std::cerr << e.what() << '\n';
+    return false;
+  }
+
+  /*   if (!conf.isOpened()) {
+      std::cerr << "Faild open file in " << _confFile << endl;
+      conf.release();
+      return false;
+    } */
+
+  conf << "threshold"
+       << "{";
+  conf << "min" << minThresh;
+  conf << "max" << maxThresh;
+  conf << "}";
+
+  conf.release();
+
+  return true;
+}
+
+void TrackingParam::onMouseCallback(int ev, int x, int y, int flag) {
   if (ev == cv::MouseEventTypes::EVENT_LBUTTONUP) {
     if (_roiPointsNum < 4) {
       _roiPoints.push_back({x, y});
@@ -154,10 +180,4 @@ void TrackingParam::onMouseCallnack(int ev, int x, int y, int flag) {
   }
 
   _cursor = {x, y};
-}
-
-int main(int argc, char const *argv[]) {
-  TrackingParam tp;
-  tp.scanNewThreshold();
-  return 0;
 }

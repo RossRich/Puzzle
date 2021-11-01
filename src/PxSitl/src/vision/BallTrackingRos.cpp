@@ -52,6 +52,9 @@ void BallTrackingRos::run() {
       // dists = dists.mul(d);
       // std::cout << dists(1,1) << std::endl;
       std::cout <<_depth->image.at<uint16_t>(pos) * 0.001f << std::endl;
+      // float point3d [3];
+      // rs2_intrinsics 
+      // std::cout << rs2_deproject_pixel_to_point(point3d, )
     }
 
     if (!frame.empty())
