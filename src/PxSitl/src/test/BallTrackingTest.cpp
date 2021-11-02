@@ -33,7 +33,6 @@ int main(int argc, char const *argv[]) {
   }
 
   RealsenseVH rsVideoHandler(cameraWidth, cameraHeight, rsPipe);
-  cv::Mat frame(rsVideoHandler.getVideoSize(), CV_8UC3);
 
   TrackingParam tr(rsVideoHandler);
 
@@ -62,9 +61,10 @@ int main(int argc, char const *argv[]) {
   uint16_t radius = 0;
   Point2i center = {0};
 
-  Mat m;
+  cv::Mat frame;
+  cv::Mat m;
   while (c != 'q') {
-    rsVideoHandler >> frame;
+    rsVideoHandler.read(frame);
 
     if (frame.empty())
       break;
@@ -84,7 +84,7 @@ int main(int argc, char const *argv[]) {
     c = cv::waitKey(1);
   }
 
-  cv::destroyWindow("TMP");
+  cv::destroyAllWindows();
   rsPipe.stop();
 
   return 0;

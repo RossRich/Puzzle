@@ -33,7 +33,7 @@ public:
   void onMouseCallback(int ev, int x, int y, int flag);
   bool newThreshold(Mat &mask);
   bool getThreshold(threshold_t &td);
-  void maskFormGUI(cv::Mat &mask);
+  void maskFormGUI(Mat &mask);
   void getMask();
 
 };

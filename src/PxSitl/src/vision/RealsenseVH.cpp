@@ -10,5 +10,5 @@ RealsenseVH::~RealsenseVH() {}
 void RealsenseVH::read(cv::Mat &frame) {
   _frameset = _rsPipe.wait_for_frames();
   rs2::video_frame color = _frameset.get_color_frame();
-  frame = cv::Mat(VideoHandler::getVideoSize(), CV_8UC3, (void *)color.get_data());
+  frame = cv::Mat(VideoHandler::getVideoSize(), CV_8UC3, (void *)color.get_data(), cv::Mat::AUTO_STEP);
 }

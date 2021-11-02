@@ -41,7 +41,7 @@ bool TrackingParam::getThreshold(threshold_t &td) {
   return isDataAvalable;
 }
 
-void TrackingParam::maskFormGUI(cv::Mat &mask) {
+void TrackingParam::maskFormGUI(Mat &mask) {
 
   std::cout << "Use a keyboard for navigation\n";
   std::cout << "s - stop/start a video\nleft mouse button - set keypoint\nright mouse button - reset keypoints";
