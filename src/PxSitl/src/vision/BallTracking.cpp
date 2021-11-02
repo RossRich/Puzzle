@@ -18,7 +18,7 @@ void BallTracking::process(Mat &color, Mat &maskt, Point2i *center, uint16_t *ra
   Mat mask(_imSize, CV_8UC1, cv::Scalar::all(0));
 
   GaussianBlur(frame, frame, cv::Size2i(9, 9), 0);
-  cv::cvtColor(frame, frame, cv::COLOR_RGB2HSV);
+  cv::cvtColor(frame, frame, cv::COLOR_BGR2HSV);
 
   cv::inRange(frame, cv::Scalar(_threshold[0]), cv::Scalar(_threshold[1]), mask);
 

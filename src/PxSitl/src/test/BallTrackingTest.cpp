@@ -21,12 +21,12 @@ int main(int argc, char const *argv[]) {
   rs2::config cfg;
 
   uint16_t cameraWidth = 1280;
-  uint16_t cameraHeight = 640;
+  uint16_t cameraHeight = 720;
 
-  cfg.enable_stream(rs2_stream::RS2_STREAM_COLOR, cameraWidth, cameraHeight);
+  cfg.enable_stream(rs2_stream::RS2_STREAM_COLOR, cameraWidth, cameraHeight, rs2_format::RS2_FORMAT_BGR8, 30);
 
   try {
-    rsPipe.start();
+    rsPipe.start(cfg);
   } catch (const std::exception &e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
@@ -56,7 +56,7 @@ int main(int argc, char const *argv[]) {
   std::cout << threshold[1] << endl;
 
   BallTracking bt(cameraWidth, cameraHeight, threshold);
-  
+
   char c = ' ';
 
   uint16_t radius = 0;
@@ -76,9 +76,10 @@ int main(int argc, char const *argv[]) {
     // cv::Point2f textPos = {center.x + radius + 15.0f, center.y + radius + 15.0f};
     // cv::putText(frame, _info.str(), textPos, cv::FONT_HERSHEY_SIMPLEX, .6, cv::Scalar::all(0), 2);
 
-    cv::cvtColor(frame, frame, cv::COLOR_RGB2BGR);
+    // cv::cvtColor(frame, frame, cv::COLOR_RGB2BGR);
 
-    cv::imshow("TMP", m);
+    cv::imshow("MASK", m);
+    cv::imshow("TRACKING", frame);
 
     c = cv::waitKey(1);
   }

@@ -115,7 +115,7 @@ bool TrackingParam::newThreshold(Mat &mask) {
   Mat roi;
   _frame.copyTo(roi, mask);
 
-  // cv::cvtColor(roi, roi, cv::COLOR_RGB2HSV);
+  cv::cvtColor(roi, roi, cv::COLOR_BGR2HSV);
 
   Mat channels[3];
 
