@@ -18,12 +18,10 @@ public:
     return cv::Size2i(_width, _height);
   }
 
+  inline uint16_t getWidth() const { return _width; }
+  inline uint16_t getHeight() const  { return _height; }
+
   friend VideoHandler& operator>> (VideoHandler &, cv::Mat&);
 };
-
-VideoHandler& operator>>(VideoHandler &vh, cv::Mat &img) {
-  vh.read(img);
-  return vh;
-}
 
 #endif // _VIDEO_HANDLER_H_

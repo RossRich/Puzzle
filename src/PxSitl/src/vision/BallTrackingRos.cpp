@@ -1,64 +1,74 @@
-#include "../../include/PxSitl/vision/BallTrackingRos.hpp"
+#include "../../include/PxSitl/Vision/BallTrackingRos.hpp"
+#include "../../include/PxSitl/Vision/TrackingParam.hpp"
 
-BallTrackingRos::BallTrackingRos(const ros::NodeHandle &nh, const image_transport::ImageTransport &it)
-    : _nh(nh), _it(it) {
-  _itRgb.subscribe(_it, "/camera/color/image_raw", 1);
-  _itDepth.subscribe(_it, "/camera/aligned_depth_to_color/image_raw", 1);
-  _sync = new message_filters::Synchronizer<MySyncPolicy>(MySyncPolicy(3), _itRgb, _itDepth);
-  _sync->registerCallback(boost::bind(&BallTrackingRos::imageSubCb, this, _1, _2));
+BallTrackingRos::BallTrackingRos(ros::NodeHandle &nh, VideoHandler &vh)
+    : _nh(nh), _vh(vh) {
 
-  int imgWidth;
-  int imgHeight;
-  _nh.param<int>("/camera/realsense2_camera/color_width", imgWidth, 640);
-  _nh.param<int>("/camera/realsense2_camera/color_height", imgHeight, 480);
+  if (!loadParam()) {
+    ROS_ERROR("Load parameters error.\nNode init failed.");
+    return;
+  }
 
-  ROS_INFO("Ing width: %d * height: %d", imgWidth, imgHeight);
-
-  _bt = BallTracking(imgWidth, imgHeight, cv::Vec<cv::Scalar_<uint8_t>, 2>());
-  cv::namedWindow(_winName, cv::WINDOW_AUTOSIZE);
+  _bt = BallTracking(_vh.getWidth(), _vh.getHeight(), threshold_t(0));
+  updateDetector();
 }
 
 BallTrackingRos::~BallTrackingRos() {
   cv::destroyAllWindows();
-  delete _sync;
 }
 
-void BallTrackingRos::imageSubCb(const ImageConstPtr &rgb, const ImageConstPtr &d) {
+bool BallTrackingRos::loadParam() { return true; }
 
-  try {
-    _color = cv_bridge::toCvCopy(rgb, enc::RGB8);
-  } catch (cv_bridge::Exception &e) {
-    ROS_ERROR("Could not convert  from '%s' to 'bgr8'.", _color->encoding.c_str());
-  }
+void BallTrackingRos::updateDetector() {
+  TrackingParam tp(_vh);
+  threshold_t newTreshold;
 
-  try {
-    _depth = cv_bridge::toCvCopy(d, enc::TYPE_16UC1);
-  } catch (cv_bridge::Exception &e) {
-    ROS_ERROR("Could not convert  from '%s' to 'TYPE_16UC1'", _depth->encoding.c_str());
-  }
-  run();
-}
+  if (!tp.getThreshold(newTreshold)) {
+    ROS_INFO("No threshold for detect color. Start setup");
 
-void BallTrackingRos::run() {
-  if (!_color->image.empty() && !_depth->image.empty()) {
-    Mat frame;
+    Mat mask;
+    tp.maskFormGUI(mask);
+    if (tp.newThreshold(mask)) {
+      ROS_INFO("New threshold saved in file");
+      if (!tp.getThreshold(newTreshold)) {
+        ROS_ERROR("Fatal error. New threshold not readable from file");
+        return;
+      }
 
-    cv::Point2i pos = _bt.process(_color->image);
-    if (pos.x != 0 && pos.y != 0) {
-
-      // std::cout << pos << std::endl;
-      // cv::Matx33f dists = _depth->image(cv::Rect2i(int(pos.x) - 1, int(pos.y) - 1, 3, 3)).clone();
-      // cv::Matx33f d = cv::Matx33f::all(0.001f);
-      // dists = dists.mul(d);
-      // std::cout << dists(1,1) << std::endl;
-      std::cout <<_depth->image.at<uint16_t>(pos) * 0.001f << std::endl;
-      // float point3d [3];
-      // rs2_intrinsics 
-      // std::cout << rs2_deproject_pixel_to_point(point3d, )
+      _bt.setThreshold(newTreshold);
+      ROS_INFO("Threshold updated");
+    } else {
+      ROS_ERROR("Fatal error. New threshold not readable from file");
+      return;
     }
-
-    if (!frame.empty())
-      cv::imshow(_winName, frame);
   }
-  cv::waitKey(1);
+
+  ROS_INFO("Threshold updated");
+}
+
+void BallTrackingRos::tracking() {
+  uint16_t radius = 0;
+  Point2i center = {0};
+  cv::Mat frame;
+  cv::Mat m;
+
+  _vh >> frame;
+
+  if (frame.empty()) {
+    ROS_WARN("Empty frame");
+    return;
+  }
+
+  _bt.process(frame, m, &center, &radius);
+
+  cv::circle(frame, center, radius + 7.0, cv::Scalar(0, 255, 0), 1, cv::LINE_4);
+  cv::circle(frame, center, 3, cv::Scalar(0, 255, 0), cv::FILLED, cv::LINE_8);
+  // cv::Point2f textPos = {center.x + radius + 15.0f, center.y + radius
+  // + 15.0f}; cv::putText(frame, _info.str(), textPos,
+  // cv::FONT_HERSHEY_SIMPLEX, .6, cv::Scalar::all(0), 2);
+
+  // cv::cvtColor(frame, frame, cv::COLOR_RGB2BGR);
+
+  cv::imshow("MASK", m);
+  cv::imshow("TRACKING", frame);
 }

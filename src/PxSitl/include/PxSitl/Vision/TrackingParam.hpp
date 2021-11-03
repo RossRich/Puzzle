@@ -2,6 +2,7 @@
 #define _TRACKING_PARAM_H_
 
 #include "VideoHandler.hpp"
+#include "../Utils/thresholdtype.hpp"
 
 #include <iostream>
 #include <opencv2/core/core.hpp>
@@ -12,8 +13,6 @@ using cv::Mat;
 using std::cerr;
 using std::cout;
 using std::endl;
-
-typedef cv::Vec<cv::Scalar_<uint8_t>, 2> threshold_t;
 
 class TrackingParam {
 private:
@@ -35,7 +34,6 @@ public:
   bool getThreshold(threshold_t &td);
   void maskFormGUI(Mat &mask);
   void getMask();
-
 };
 
 #endif // _TRACKING_PARAM_H_

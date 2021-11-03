@@ -112,7 +112,7 @@ find_package(OpenCV 4.5.3 REQUIRED)
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
- INCLUDE_DIRS include include/PxSitl/vision
+ INCLUDE_DIRS include include/PxSitl/Vision
  LIBRARIES ${PROJECT_NAME} video_handler
  CATKIN_DEPENDS roscpp std_msgs sensor_msgs cv_bridge image_transport
 #  DEPENDS system_lib
@@ -126,7 +126,7 @@ catkin_package(
 ## Your package locations should be listed before other locations
 include_directories(
   include
-  include/PxSitl/vision
+  include/PxSitl/Vision
   ${catkin_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
 )
@@ -135,14 +135,15 @@ include_directories(
 add_library(${PROJECT_NAME}
   src/vision/BallTracking.cpp
   src/vision/TrackingParam.cpp
-  # src/vision/BallTrackingRos.cpp
+  src/vision/BallTrackingRos.cpp
 ##include/PxSitl/GyverFilters/src/filters/RingAverage.h
 )
 
-add_library(video_handler
-  include/PxSitl/vision/VideoHandler.hpp
-  include/PxSitl/vision/RealsenseVH.hpp
-  src/vision/RealsenseVH.cpp
+add_library(VideoHandlerLib
+  # include/PxSitl/Vision/VideoHandler.hpp
+  # include/PxSitl/Vision/RosVH.hpp
+  src/vision/VideoHandler.cpp
+  src/vision/RosVH.cpp
 )
 
 ## Add cmake target dependencies of the library
@@ -157,8 +158,8 @@ add_library(video_handler
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(${PROJECT_NAME}_node src/OffboardNode.cpp)
-# add_executable(BallTrackingNode src/vision/BallTrackingNode.cpp)
-add_executable(BallTrackingTest src/test/BallTrackingTest.cpp)
+add_executable(BallTrackingNode src/vision/BallTrackingNode.cpp)
+# add_executable(BallTrackingTest src/test/BallTrackingTest.cpp)
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -182,20 +183,21 @@ target_link_libraries(${PROJECT_NAME}_node
   ${catkin_LIBRARIES}
 )
 
-# target_link_libraries(BallTrackingNode
-#   ${catkin_LIBRARIES}
-#   ${PROJECT_NAME}
-#   ${OpenCV_LIBS}
-#   realsense2
-# )
-
-target_link_libraries(BallTrackingTest
-  # ${catkin_LIBRARIES}
-  ${OpenCV_LIBS}
+target_link_libraries(BallTrackingNode
+  ${catkin_LIBRARIES}
   ${PROJECT_NAME}
+  ${OpenCV_LIBS}
   realsense2
-  video_handler
+  VideoHandlerLib
 )
+
+# target_link_libraries(BallTrackingTest
+#   # ${catkin_LIBRARIES}
+#   ${OpenCV_LIBS}
+#   ${PROJECT_NAME}
+#   realsense2
+#   video_handler
+# )
 
 #############
 ## Install ##
@@ -240,6 +242,7 @@ install(FILES
   launch/single_uav_spawn.launch
   launch/multiple_uav_spawn.launch
   launch/takeoff.launch
+  launch/ball_tracking.launch
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 

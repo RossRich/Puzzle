@@ -1,10 +1,10 @@
 #if !defined(_BALL_TRACKING_H_)
 #define _BALL_TRACKING_H_
 
+#include "../Utils/thresholdtype.hpp"
 #include <deque>
 #include <iostream>
-#include <librealsense2/rs.hpp>
-// #include <opencv2/highgui.hpp>
+#include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <time.h>
 
@@ -16,7 +16,7 @@ class BallTracking {
 
 private:
   Size2i _imSize;
-  cv::Vec<cv::Scalar_<uint8_t>, 2> _threshold;
+  threshold_t _threshold;
   std::vector<std::vector<cv::Point2i>> _cnts;
   // std::stringstream _info;
 
@@ -32,6 +32,8 @@ public:
 
   void operator=(const BallTracking &bt);
   void process(Mat &color, Mat &mask, Point2i *center = nullptr, uint16_t *radius = nullptr);
+
+  inline void setThreshold(const threshold_t th) { _threshold = th; }
 };
 
 #endif // _BALL_TRACKING_H_

@@ -1,4 +1,4 @@
-#include "../../include/PxSitl/vision/TrackingParam.hpp"
+#include "../../include/PxSitl/Vision/TrackingParam.hpp"
 
 const char *TrackingParam::_confFile = "/workspaces/Puzzle/src/PxSitl/data/config.yaml";
 

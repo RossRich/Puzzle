@@ -1,6 +1,6 @@
-#include "../../include/PxSitl/vision/BallTracking.hpp"
-#include "../../include/PxSitl/vision/RealsenseVH.hpp"
-#include "../../include/PxSitl/vision/TrackingParam.hpp"
+#include "../../include/PxSitl/Vision/BallTracking.hpp"
+#include "../../include/PxSitl/Vision/RealsenseVH.hpp"
+#include "../../include/PxSitl/Vision/TrackingParam.hpp"
 #include <iostream>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>

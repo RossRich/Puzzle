@@ -1,4 +1,4 @@
-#include "../../include/PxSitl/vision/RosVH.hpp"
+#include "../../include/PxSitl/Vision/RosVH.hpp"
 
 RosVH::RosVH(ros::NodeHandle &nh, image_transport::ImageTransport &it, uint16_t width, uint16_t height)
     : VideoHandler(width, height), _nh(nh), _it(it) {
@@ -14,7 +14,9 @@ RosVH::RosVH(ros::NodeHandle &nh, image_transport::ImageTransport &it, uint16_t 
   _sync->registerCallback(boost::bind(&RosVH::imageSubCb, this, _1, _2));
 }
 
-RosVH::~RosVH() {}
+RosVH::~RosVH() {
+    delete _sync;
+}
 
 bool RosVH::loadParam() {
 
