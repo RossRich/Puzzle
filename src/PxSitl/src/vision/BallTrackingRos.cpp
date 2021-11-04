@@ -1,5 +1,4 @@
 #include "../../include/PxSitl/Vision/BallTrackingRos.hpp"
-#include "../../include/PxSitl/Vision/TrackingParam.hpp"
 
 BallTrackingRos::BallTrackingRos(ros::NodeHandle &nh, VideoHandler &vh)
     : _nh(nh), _vh(vh) {
@@ -9,8 +8,11 @@ BallTrackingRos::BallTrackingRos(ros::NodeHandle &nh, VideoHandler &vh)
     return;
   }
 
-  _bt = BallTracking(_vh.getWidth(), _vh.getHeight(), threshold_t(0));
+  _bt = BallTracking(_vh.getWidth(), _vh.getHeight(), threshold_t());
   updateDetector();
+
+  cv::namedWindow("MASK", cv::WINDOW_AUTOSIZE);
+  cv::namedWindow("TRACKING", cv::WINDOW_AUTOSIZE);
 }
 
 BallTrackingRos::~BallTrackingRos() {
@@ -71,4 +73,5 @@ void BallTrackingRos::tracking() {
 
   cv::imshow("MASK", m);
   cv::imshow("TRACKING", frame);
+  cv::waitKey(1);
 }

@@ -14,29 +14,37 @@ RosVH::RosVH(ros::NodeHandle &nh, image_transport::ImageTransport &it, uint16_t 
   _sync->registerCallback(boost::bind(&RosVH::imageSubCb, this, _1, _2));
 }
 
-RosVH::~RosVH() {
-    delete _sync;
-}
+RosVH::~RosVH() { delete _sync; }
 
 bool RosVH::loadParam() {
 
   if (!_nh.getParam("color_topic", _colorTopic)) {
     ROS_ERROR("No color_topic param");
+    return false;
+  } else {
+    ROS_INFO("RGB image stream from %s", _colorTopic.c_str());
   }
 
   if (!_nh.getParam("depth_topic", _depthTopic)) {
     ROS_ERROR("No depth_topic param");
+    return false;
+  } else {
+    ROS_INFO("Depth stream from %s", _depthTopic.c_str());
   }
 
   return true;
 }
 
-void RosVH::read(cv::Mat &frame) { frame = _color->image; }
+void RosVH::read(cv::Mat &frame) {
+  if (_color) {
+    frame = _color->image;
+  }
+}
 
 void RosVH::imageSubCb(const ImageConstPtr &rgb, const ImageConstPtr &d) {
 
   try {
-    _color = cv_bridge::toCvCopy(rgb, enc::RGB8);
+    _color = cv_bridge::toCvCopy(rgb, enc::BGR8);
   } catch (cv_bridge::Exception &e) {
     ROS_ERROR("Could not convert  from '%s' to 'bgr8'.", _color->encoding.c_str());
   }

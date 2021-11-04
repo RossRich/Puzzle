@@ -30,7 +30,7 @@ public:
   BallTracking(uint16_t width, uint16_t height, cv::Vec<cv::Scalar_<uint8_t>, 2> threshold);
   ~BallTracking();
 
-  void operator=(const BallTracking &bt);
+  // void operator=(const BallTracking &bt);
   void process(Mat &color, Mat &mask, Point2i *center = nullptr, uint16_t *radius = nullptr);
 
   inline void setThreshold(const threshold_t th) { _threshold = th; }

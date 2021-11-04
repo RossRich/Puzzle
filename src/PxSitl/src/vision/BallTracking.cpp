@@ -7,10 +7,10 @@ BallTracking::BallTracking(uint16_t width, uint16_t height, cv::Vec<cv::Scalar_<
 
 BallTracking::~BallTracking() {}
 
-void BallTracking::operator=(const BallTracking &bt) {
+/* void BallTracking::operator=(const BallTracking &bt) {
   _imSize = bt._imSize;
   _threshold = bt._threshold;
-}
+} */
 
 void BallTracking::process(Mat &color, Mat &maskt, Point2i *center, uint16_t *radius) {
 

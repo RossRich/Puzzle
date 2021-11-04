@@ -19,6 +19,7 @@ private:
   const char *_winName = "Main";
   static const char *_confFile;
   uint8_t _roiPointsNum = 0;
+  uint16_t _counter = 100;
   std::vector<cv::Point2i> _roiPoints;
   cv::Point2i _cursor;
   threshold_t _threshold;

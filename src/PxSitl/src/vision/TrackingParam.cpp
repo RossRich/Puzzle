@@ -55,20 +55,29 @@ void TrackingParam::maskFormGUI(Mat &mask) {
   bool isScaning = true;
   Mat tmpFrame;
   mask = Mat::zeros(_vh.getVideoSize(), CV_8UC1);
+  uint16_t skippedFrames = 0;
+  cv::Mat _frame1;
 
   while (c != 'q') {
 
     if (isScaning)
-      _vh >> _frame;
+      _vh >> _frame1;
     else
-      _frame = tmpFrame.clone();
+      _frame1 = tmpFrame.clone();
 
-    if (_frame.empty())
-      break;
+    if (_frame1.empty()){
+      std::cout << "Frame is empty. No video stream" << std::endl;
+      skippedFrames++;
+
+      if(skippedFrames >= _counter)
+        break;
+      else
+        continue;
+    }
 
     // cv::resize(_frame, mask, cv::Size2i(640, 480));
 
-    if (_roiPointsNum != 0 && !isScaning) {
+    /*if (_roiPointsNum != 0 && !isScaning) { 
       for (uint8_t i = 0; i < _roiPointsNum; i++) {
         cv::Point2i start = _roiPoints.at(i);
         cv::Point2i end;
@@ -92,9 +101,9 @@ void TrackingParam::maskFormGUI(Mat &mask) {
         }
         cv::line(_frame, start, end, cv::Scalar::all(0));
       }
-    }
+    } */
 
-    cv::imshow(_winName, _frame);
+    cv::imshow(_winName, _frame1);
 
     c = (char)cv::waitKey(1);
 
