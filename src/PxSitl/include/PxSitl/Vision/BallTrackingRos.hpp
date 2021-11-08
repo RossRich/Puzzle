@@ -4,28 +4,39 @@
 #include "VideoHandler.hpp"
 #include "BallTracking.hpp"
 #include "TrackingParam.hpp"
-#include <cv_bridge/cv_bridge.h>
-#include <image_transport/image_transport.h>
-#include <image_transport/subscriber_filter.h>
-#include <message_filters/sync_policies/approximate_time.h>
+#include "State/State.hpp"
 #include <opencv2/highgui/highgui.hpp>
 #include <ros/ros.h>
+#include <std_srvs/Empty.h>
 
 class BallTrackingRos {
   
 private:
+  Strategy *_strategy = nullptr;
+  State *_state = nullptr;
   ros::NodeHandle &_nh;
   VideoHandler &_vh;
   BallTracking _bt;
-
-  void updateDetector();
+  ros::ServiceServer _strategySrv;
 
 public:
   BallTrackingRos(ros::NodeHandle &nh, VideoHandler &vh);
   ~BallTrackingRos();
 
+  void transitionTo(State *state);
+
+  void setStrategy(Strategy *strategy);
+
+  bool runSetupSrv(std_srvs::EmptyRequest &request, std_srvs::EmptyResponse &response);
+  void toTrackingStrategy();
+  void toSetupStrategy();
   bool loadParam();
   void tracking();
+  void setup();
+  void run();
 };
+
+#include "State/SetupState.hpp"
+#include "State/TrackingState.hpp"
 
 #endif // _BALL_TRACKING_ROS_H_

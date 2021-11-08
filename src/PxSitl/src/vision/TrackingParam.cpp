@@ -77,7 +77,7 @@ void TrackingParam::maskFormGUI(Mat &mask) {
 
     // cv::resize(_frame, mask, cv::Size2i(640, 480));
 
-    /*if (_roiPointsNum != 0 && !isScaning) { 
+    if (_roiPointsNum != 0 && !isScaning) { 
       for (uint8_t i = 0; i < _roiPointsNum; i++) {
         cv::Point2i start = _roiPoints.at(i);
         cv::Point2i end;
@@ -101,7 +101,7 @@ void TrackingParam::maskFormGUI(Mat &mask) {
         }
         cv::line(_frame, start, end, cv::Scalar::all(0));
       }
-    } */
+    }
 
     cv::imshow(_winName, _frame1);
 

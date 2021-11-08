@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
   
   ros::Rate loop_rate(30);
   while (ros::ok()) {
-    ballTracking.tracking();
+    ballTracking.run();
     ros::spinOnce();
     loop_rate.sleep();
   }

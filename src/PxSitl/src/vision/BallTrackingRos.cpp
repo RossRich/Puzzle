@@ -1,7 +1,6 @@
 #include "../../include/PxSitl/Vision/BallTrackingRos.hpp"
 
-BallTrackingRos::BallTrackingRos(ros::NodeHandle &nh, VideoHandler &vh)
-    : _nh(nh), _vh(vh) {
+BallTrackingRos::BallTrackingRos(ros::NodeHandle &nh, VideoHandler &vh) : _nh(nh), _vh(vh) {
 
   if (!loadParam()) {
     ROS_ERROR("Load parameters error.\nNode init failed.");
@@ -9,26 +8,60 @@ BallTrackingRos::BallTrackingRos(ros::NodeHandle &nh, VideoHandler &vh)
   }
 
   _bt = BallTracking(_vh.getWidth(), _vh.getHeight(), threshold_t());
-  updateDetector();
+  setup();
+
+  _strategySrv = _nh.advertiseService("strategy_srv", runSetupSrv, this);
+  ROS_INFO("Change strategy server ready");
 
   cv::namedWindow("MASK", cv::WINDOW_AUTOSIZE);
   cv::namedWindow("TRACKING", cv::WINDOW_AUTOSIZE);
 }
 
 BallTrackingRos::~BallTrackingRos() {
-  cv::destroyAllWindows();
+  cv::destroyWindow("MASK");
+  cv::destroyWindow("TRACKING");
+  delete _strategy;
+  _strategy = nullptr;
+  delete _state;
+  _state = nullptr;
 }
+
+void BallTrackingRos::transitionTo(State *state) {
+  if (state != nullptr) {
+    delete _state;
+    _state = state;
+    _state->setContext(this);
+    std::cout << "Transition to next state\n";
+  }
+}
+
+void BallTrackingRos::setStrategy(Strategy *strategy) {
+  if (strategy != nullptr) {
+    delete _strategy;
+    _strategy = strategy;
+  }
+}
+
+void BallTrackingRos::toSetupStrategy() { transitionTo(new SetupState()); }
+
+void BallTrackingRos::toTrackingStrategy() { transitionTo(new TrackingState()); }
 
 bool BallTrackingRos::loadParam() { return true; }
 
-void BallTrackingRos::updateDetector() {
+bool BallTrackingRos::runSetupSrv(std_srvs::EmptyRequest &request, std_srvs::EmptyResponse &response) {
+  toSetupStrategy();
+  return true;
+}
+
+void BallTrackingRos::setup() {
   TrackingParam tp(_vh);
   threshold_t newTreshold;
 
   if (!tp.getThreshold(newTreshold)) {
     ROS_INFO("No threshold for detect color. Start setup");
+    toSetupStrategy();
 
-    Mat mask;
+    /* cv::Mat mask;
     tp.maskFormGUI(mask);
     if (tp.newThreshold(mask)) {
       ROS_INFO("New threshold saved in file");
@@ -42,7 +75,10 @@ void BallTrackingRos::updateDetector() {
     } else {
       ROS_ERROR("Fatal error. New threshold not readable from file");
       return;
-    }
+    } */
+  } else {
+    ROS_INFO("Go to tracking strategy");
+    toTrackingStrategy();
   }
 
   ROS_INFO("Threshold updated");
@@ -50,7 +86,7 @@ void BallTrackingRos::updateDetector() {
 
 void BallTrackingRos::tracking() {
   uint16_t radius = 0;
-  Point2i center = {0};
+  cv::Point2i center = {0};
   cv::Mat frame;
   cv::Mat m;
 
@@ -74,4 +110,9 @@ void BallTrackingRos::tracking() {
   cv::imshow("MASK", m);
   cv::imshow("TRACKING", frame);
   cv::waitKey(1);
+}
+
+void BallTrackingRos::run() {
+  if (_strategy != nullptr)
+    _strategy->execute();
 }
