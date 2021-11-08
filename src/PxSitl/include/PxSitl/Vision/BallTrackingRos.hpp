@@ -5,6 +5,7 @@
 #include "BallTracking.hpp"
 #include "TrackingParam.hpp"
 #include "State/State.hpp"
+#include "Strategy/Strategy.hpp"
 #include <opencv2/highgui/highgui.hpp>
 #include <ros/ros.h>
 #include <std_srvs/Empty.h>
@@ -28,12 +29,17 @@ public:
   void setStrategy(Strategy *strategy);
 
   bool runSetupSrv(std_srvs::EmptyRequest &request, std_srvs::EmptyResponse &response);
-  void toTrackingStrategy();
-  void toSetupStrategy();
+  // void toTrackingStrategy();
+  // void toSetupStrategy();
   bool loadParam();
   void tracking();
   void setup();
   void run();
+
+  void test1();
+  void test2();
+
+  inline VideoHandler& getVideoHandler() { return _vh; }
 };
 
 #include "State/SetupState.hpp"

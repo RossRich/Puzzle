@@ -41,7 +41,7 @@ bool TrackingParam::getThreshold(threshold_t &td) {
   return isDataAvalable;
 }
 
-void TrackingParam::maskFormGUI(Mat &mask) {
+void TrackingParam::maskFormGUI(cv::Mat &mask) {
 
   std::cout << "Use a keyboard for navigation\n";
   std::cout << "s - stop/start a video\nleft mouse button - set keypoint\nright mouse button - reset keypoints";
@@ -53,8 +53,8 @@ void TrackingParam::maskFormGUI(Mat &mask) {
 
   char c = ' ';
   bool isScaning = true;
-  Mat tmpFrame;
-  mask = Mat::zeros(_vh.getVideoSize(), CV_8UC1);
+  cv::Mat tmpFrame;
+  mask = cv::Mat::zeros(_vh.getVideoSize(), CV_8UC1);
   uint16_t skippedFrames = 0;
   cv::Mat _frame1;
 
@@ -92,7 +92,7 @@ void TrackingParam::maskFormGUI(Mat &mask) {
               cv::GaussianBlur(_frame, _frame, cv::Size2i(9, 9), 1);
               cv::fillConvexPoly(mask, _roiPoints, cv::Scalar::all(255));
             } catch (cv::Exception &e) {
-              cerr << e.what() << endl;
+              std::cerr << e.what() << std::endl;
               _roiPoints.clear();
               mask = 0;
             }
@@ -117,16 +117,16 @@ void TrackingParam::maskFormGUI(Mat &mask) {
   cv::destroyWindow(_winName);
 }
 
-bool TrackingParam::newThreshold(Mat &mask) {
+bool TrackingParam::newThreshold(cv::Mat &mask) {
   if (mask.empty() || _frame.empty())
     return false;
 
-  Mat roi;
+  cv::Mat roi;
   _frame.copyTo(roi, mask);
 
   cv::cvtColor(roi, roi, cv::COLOR_BGR2HSV);
 
-  Mat channels[3];
+  cv::Mat channels[3];
 
   cv::split(roi, channels);
 
@@ -138,7 +138,7 @@ bool TrackingParam::newThreshold(Mat &mask) {
 
   for (uint8_t i = 0; i < 3; i++) {
     cv::minMaxIdx(channels[i], &min, &max, &idxMin, &idxMax, mask);
-    cout << "In layer " << int(i) << " min val: " << min << " max val: " << max << endl;
+    std::cout << "In layer " << int(i) << " min val: " << min << " max val: " << max << std::endl;
     maxThresh[i] = static_cast<uint8_t>(max);
     minThresh[i] = static_cast<uint8_t>(min);
   }
@@ -146,9 +146,9 @@ bool TrackingParam::newThreshold(Mat &mask) {
   _threshold[0] = minThresh;
   _threshold[1] = maxThresh;
 
-  cout << "New threshold\n";
-  cout << "Min: " << _threshold[0] << endl;
-  cout << "Max: " << _threshold[1] << endl;
+  std::cout << "New threshold\n";
+  std::cout << "Min: " << _threshold[0] << std::endl;
+  std::cout << "Max: " << _threshold[1] << std::endl;
 
   cv::FileStorage conf;
   try {

@@ -3,7 +3,6 @@
 
 #include "../TrackingParam.hpp"
 #include "Strategy.hpp"
-#include "../Strategy/SetupStrategy.hpp"
 
 class SetupStrategy : public Strategy {
 private:

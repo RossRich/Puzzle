@@ -3,6 +3,7 @@
 
 #include "../BallTrackingRos.hpp"
 #include "../Strategy/TrakcingStrategy.hpp"
+#include "SetupState.hpp"
 
 class TrackingState: public State
 {

@@ -1,6 +1,7 @@
 #include "../../include/PxSitl/Vision/BallTrackingRos.hpp"
 
-BallTrackingRos::BallTrackingRos(ros::NodeHandle &nh, VideoHandler &vh) : _nh(nh), _vh(vh) {
+BallTrackingRos::BallTrackingRos(ros::NodeHandle &nh, VideoHandler &vh)
+    : _nh(nh), _vh(vh) {
 
   if (!loadParam()) {
     ROS_ERROR("Load parameters error.\nNode init failed.");
@@ -42,14 +43,22 @@ void BallTrackingRos::setStrategy(Strategy *strategy) {
   }
 }
 
-void BallTrackingRos::toSetupStrategy() { transitionTo(new SetupState()); }
+// void BallTrackingRos::toSetupStrategy() { transitionTo(new SetupState()); }
 
-void BallTrackingRos::toTrackingStrategy() { transitionTo(new TrackingState()); }
+// void BallTrackingRos::toTrackingStrategy() {
+// transitionTo(new TrackingState());
+// }
+
+void BallTrackingRos::test1() { _state->setup(); }
+
+void BallTrackingRos::test2() { _state->tracking(); }
 
 bool BallTrackingRos::loadParam() { return true; }
 
-bool BallTrackingRos::runSetupSrv(std_srvs::EmptyRequest &request, std_srvs::EmptyResponse &response) {
-  toSetupStrategy();
+bool BallTrackingRos::runSetupSrv(std_srvs::EmptyRequest &request,
+                                  std_srvs::EmptyResponse &response) {
+  // toSetupStrategy();
+  test1();
   return true;
 }
 
@@ -59,7 +68,8 @@ void BallTrackingRos::setup() {
 
   if (!tp.getThreshold(newTreshold)) {
     ROS_INFO("No threshold for detect color. Start setup");
-    toSetupStrategy();
+    // toSetupStrategy();
+    test1();
 
     /* cv::Mat mask;
     tp.maskFormGUI(mask);
@@ -78,7 +88,8 @@ void BallTrackingRos::setup() {
     } */
   } else {
     ROS_INFO("Go to tracking strategy");
-    toTrackingStrategy();
+    // toTrackingStrategy();
+    test2();
   }
 
   ROS_INFO("Threshold updated");
@@ -115,4 +126,6 @@ void BallTrackingRos::tracking() {
 void BallTrackingRos::run() {
   if (_strategy != nullptr)
     _strategy->execute();
+  else
+    ROS_INFO("No strategy");
 }

@@ -1,7 +1,7 @@
 #if !defined(_TRACKING_STRATEGY_H_)
 #define _TRACKING_STRATEGY_H_
 
-#include "../TrackingParam.hpp"
+#include "../BallTracking.hpp"
 #include "Strategy.hpp"
 
 class TrakcingStrategy : public Strategy {
