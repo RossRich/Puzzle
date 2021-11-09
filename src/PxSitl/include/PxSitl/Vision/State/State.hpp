@@ -11,7 +11,9 @@ protected:
 
 public:
   State() {}
-  virtual ~State() {}
+  virtual ~State() {
+    std::cout << "Delete base state\n";
+  }
 
   void setContext(BallTrackingRos *context) {
     if (context != nullptr && _context != context)

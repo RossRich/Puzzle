@@ -43,6 +43,7 @@ int main(int argc, char *argv[]) {
   RosVH videoHandler(nh, it, cameraWidth, cameraHeight);
   BallTrackingRos ballTracking(nh, videoHandler);
   
+
   ros::Rate loop_rate(30);
   while (ros::ok()) {
     ballTracking.run();

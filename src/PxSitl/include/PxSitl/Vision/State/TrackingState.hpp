@@ -11,10 +11,11 @@ private:
   
 public:
   TrackingState() {}
-  ~TrackingState() {}
+  ~TrackingState() {
+    std::cout << "Delete state tracking\n";
+  }
 
   void setup() override;
-
   void tracking() override;
 };
 

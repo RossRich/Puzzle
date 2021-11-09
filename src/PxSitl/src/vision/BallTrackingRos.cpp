@@ -36,19 +36,20 @@ BallTrackingRos::~BallTrackingRos() {
 
 void BallTrackingRos::transitionTo(State *state) {
   if (state != nullptr) {
+    state->setContext(this);
     delete _state;
-    _state = nullptr;
     _state = state;
-    _state->setContext(this);
-    std::cout << "Transition to next state\n";
+    
+    ROS_INFO("Transition to new state");
   }
 }
 
 void BallTrackingRos::setStrategy(Strategy *strategy) {
   if (strategy != nullptr) {
     delete _strategy;
-    _strategy = nullptr;
     _strategy = strategy;
+
+    ROS_INFO("New strategy ready");
   }
 }
 
@@ -140,14 +141,14 @@ void BallTrackingRos::run() {
 void SetupState::setup() { std::cout << "In setup mode\n"; }
 
 void SetupState::tracking() {
-  _context->transitionTo(new TrackingState());
   _context->setStrategy(new TrakcingStrategy(_context->getVideoHandler()));
+  _context->transitionTo(new TrackingState());
   std::cout << "Transition to tracking mode\n";
 }
 
 void TrackingState::setup() {
-  _context->transitionTo(new SetupState());
   _context->setStrategy(new SetupStrategy(_context->getVideoHandler()));
+  _context->transitionTo(new SetupState());
   std::cout << "Transition to setup mode\n";
 }
 

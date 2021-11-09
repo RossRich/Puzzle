@@ -9,16 +9,19 @@ private:
   const char *_winName = "Setup";
 
   cv::Mat _frame;
-  // TrackingParam _tp;
+  TrackingParam _tp;
   VideoHandler &_vh;
 
 public:
-  SetupStrategy(VideoHandler &vh) : _vh(vh) {
+  SetupStrategy(VideoHandler &vh) : _vh(vh), _tp(vh) {
     cv::namedWindow(_winName, cv::WINDOW_AUTOSIZE);
     std::cout << "Setup mode ready\n";
   }
 
-  ~SetupStrategy() { cv::destroyWindow(_winName); }
+  ~SetupStrategy() {
+    std::cout << "Delete Setup strategy\n";
+    cv::destroyWindow(_winName);
+  }
 
   void execute() override {
     _vh >> _frame;
@@ -31,8 +34,8 @@ public:
     cv::imshow(_winName, _frame);
     char c = (uint8_t)cv::waitKey(1);
 
-    if(c == 'q') {
-      
+    if (c == 'q') {
+      std::cout << "q" << std::endl;
     }
   }
 };

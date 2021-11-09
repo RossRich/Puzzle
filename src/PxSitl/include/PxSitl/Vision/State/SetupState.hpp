@@ -9,7 +9,9 @@ class SetupState : public State {
 private:
 public:
   SetupState() {}
-  ~SetupState() {}
+  ~SetupState() {
+    std::cout << "Delete state setup\n";
+  }
 
   void setup() override; 
   void tracking() override;

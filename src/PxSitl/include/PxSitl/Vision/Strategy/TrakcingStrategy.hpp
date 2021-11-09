@@ -17,12 +17,15 @@ public:
 
     std::cout << "Tracking mode ready\n";
   }
-  ~TrakcingStrategy() { cv::destroyWindow(_winName); }
+  ~TrakcingStrategy() {
+    std::cout << "Delete Tracking strategy\n";
+    cv::destroyWindow(_winName);
+  }
 
   void execute() override {
     _vh >> _frame;
 
-    if(_frame.empty()){
+    if (_frame.empty()) {
       std::cerr << "Frame is empty\n";
       return;
     }
