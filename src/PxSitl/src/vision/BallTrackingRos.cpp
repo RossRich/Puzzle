@@ -1,17 +1,18 @@
 #include "../../include/PxSitl/Vision/BallTrackingRos.hpp"
 
-BallTrackingRos::BallTrackingRos(ros::NodeHandle &nh, VideoHandler &vh)
-    : _nh(nh), _vh(vh) {
+BallTrackingRos::BallTrackingRos(ros::NodeHandle &nh, VideoHandler &vh) : _nh(nh), _vh(vh) {
 
   if (!loadParam()) {
     ROS_ERROR("Load parameters error.\nNode init failed.");
     return;
   }
 
-  _bt = BallTracking(_vh.getWidth(), _vh.getHeight(), threshold_t());
+  transitionTo(new TrackingState());
+
+  // _bt = BallTracking(_vh.getWidth(), _vh.getHeight(), threshold_t());
   setup();
 
-  _strategySrv = _nh.advertiseService("strategy_srv", runSetupSrv, this);
+  _strategySrv = _nh.advertiseService("strategy_srv", &BallTrackingRos::runSetupSrv, this);
   ROS_INFO("Change strategy server ready");
 
   cv::namedWindow("MASK", cv::WINDOW_AUTOSIZE);
@@ -55,8 +56,7 @@ void BallTrackingRos::test2() { _state->tracking(); }
 
 bool BallTrackingRos::loadParam() { return true; }
 
-bool BallTrackingRos::runSetupSrv(std_srvs::EmptyRequest &request,
-                                  std_srvs::EmptyResponse &response) {
+bool BallTrackingRos::runSetupSrv(std_srvs::EmptyRequest &request, std_srvs::EmptyResponse &response) {
   // toSetupStrategy();
   test1();
   return true;
@@ -91,12 +91,10 @@ void BallTrackingRos::setup() {
     // toTrackingStrategy();
     test2();
   }
-
-  ROS_INFO("Threshold updated");
 }
 
 void BallTrackingRos::tracking() {
-  uint16_t radius = 0;
+  /* uint16_t radius = 0;
   cv::Point2i center = {0};
   cv::Mat frame;
   cv::Mat m;
@@ -112,15 +110,16 @@ void BallTrackingRos::tracking() {
 
   cv::circle(frame, center, radius + 7.0, cv::Scalar(0, 255, 0), 1, cv::LINE_4);
   cv::circle(frame, center, 3, cv::Scalar(0, 255, 0), cv::FILLED, cv::LINE_8);
+   */
   // cv::Point2f textPos = {center.x + radius + 15.0f, center.y + radius
   // + 15.0f}; cv::putText(frame, _info.str(), textPos,
   // cv::FONT_HERSHEY_SIMPLEX, .6, cv::Scalar::all(0), 2);
 
   // cv::cvtColor(frame, frame, cv::COLOR_RGB2BGR);
-
+/* 
   cv::imshow("MASK", m);
   cv::imshow("TRACKING", frame);
-  cv::waitKey(1);
+  cv::waitKey(1); */
 }
 
 void BallTrackingRos::run() {
@@ -129,3 +128,18 @@ void BallTrackingRos::run() {
   else
     ROS_INFO("No strategy");
 }
+
+void SetupState::setup() { std::cout << "In setup mode\n"; }
+
+void SetupState::tracking() {
+  _context->transitionTo(new TrackingState());
+  // _context->setStrategy(new SetupStrategy(_context->getVideoHandler()));
+  std::cout << "Transition to tracking mode\n";
+}
+
+void TrackingState::setup() {
+  _context->transitionTo(new SetupState());
+  std::cout << "Transition to setup mode\n";
+}
+
+void TrackingState::tracking() { std::cout << "In tracking mode\n"; }

@@ -11,15 +11,8 @@ public:
   SetupState() {}
   ~SetupState() {}
 
-  void setup() override {
-    std::cout << "In setup mode\n";
-  }
-
-  void tracking() override {
-    _context->transitionTo(new TrackingState());
-    // _context->setStrategy(new SetupStrategy(_context->getVideoHandler()));
-    std::cout << "Transition to tracking mode\n";
-  }
+  void setup() override; 
+  void tracking() override;
 };
 
 #endif // _SETUP_STATE_H_

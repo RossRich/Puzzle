@@ -13,14 +13,9 @@ public:
   TrackingState() {}
   ~TrackingState() {}
 
-  void setup() override {
-    _context->transitionTo(new SetupState());
-    std::cout << "Transition to setup mode\n";
-  }
+  void setup() override;
 
-  void tracking() override {
-    std::cout << "In tracking mode\n";
-  }
+  void tracking() override;
 };
 
 #endif // _TRACKING_STATE_H_

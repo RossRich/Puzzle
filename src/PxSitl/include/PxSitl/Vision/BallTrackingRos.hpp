@@ -17,7 +17,7 @@ private:
   State *_state = nullptr;
   ros::NodeHandle &_nh;
   VideoHandler &_vh;
-  BallTracking _bt;
+  // BallTracking _bt;
   ros::ServiceServer _strategySrv;
 
 public:
