@@ -9,11 +9,11 @@ private:
   const char *_winName = "Setup";
 
   cv::Mat _frame;
-  TrackingParam _tp;
+  // TrackingParam _tp;
   VideoHandler &_vh;
 
 public:
-  SetupStrategy(VideoHandler &vh) : _vh(vh), _tp(TrackingParam(vh)) {
+  SetupStrategy(VideoHandler &vh) : _vh(vh) {
     cv::namedWindow(_winName, cv::WINDOW_AUTOSIZE);
     std::cout << "Setup mode ready\n";
   }
