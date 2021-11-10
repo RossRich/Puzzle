@@ -1,7 +1,7 @@
 #if !defined(_BALL_TRACKING_H_)
 #define _BALL_TRACKING_H_
 
-#include "../Utils/thresholdtype.hpp"
+#include "Utils/thresholdtype.hpp"
 #include <deque>
 #include <iostream>
 #include <opencv2/core/core.hpp>
@@ -23,7 +23,7 @@ private:
   cv::Size2i _filterSize = cv::Size2i(3, 3);
   cv::Matx33f _dist2Meters = cv::Matx33d::all(0.001f);
 
-  static const char *_confFile;
+  // static const char *_confFile;
 
 public:
   BallTracking() {}

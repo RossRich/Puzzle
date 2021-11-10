@@ -1,6 +1,7 @@
 #include "../../include/PxSitl/Vision/TrackingParam.hpp"
 
-const char *TrackingParam::_confFile = "/workspaces/Puzzle/src/PxSitl/data/config.yaml";
+const char *TrackingParam::_confFile =
+    "/workspaces/Puzzle/src/PxSitl/data/config.yaml";
 
 void onMouseCallbackCv(int ev, int x, int y, int flag, void *uData) {
   TrackingParam *tp = static_cast<TrackingParam *>(uData);
@@ -44,7 +45,8 @@ bool TrackingParam::getThreshold(threshold_t &td) {
 void TrackingParam::maskFormGUI(Mat &mask) {
 
   std::cout << "Use a keyboard for navigation\n";
-  std::cout << "s - stop/start a video\nleft mouse button - set keypoint\nright mouse button - reset keypoints";
+  std::cout << "s - stop/start a video\nleft mouse button - set "
+               "keypoint\nright mouse button - reset keypoints";
   std::cout << "q - exit\n";
   std::cout << "Stop a video and select region of interest\n";
 
@@ -129,7 +131,8 @@ bool TrackingParam::newThreshold(Mat &mask) {
 
   for (uint8_t i = 0; i < 3; i++) {
     cv::minMaxIdx(channels[i], &min, &max, &idxMin, &idxMax, mask);
-    cout << "In layer " << int(i) << " min val: " << min << " max val: " << max << endl;
+    cout << "In layer " << int(i) << " min val: " << min << " max val: " << max
+         << endl;
     maxThresh[i] = static_cast<uint8_t>(max);
     minThresh[i] = static_cast<uint8_t>(min);
   }

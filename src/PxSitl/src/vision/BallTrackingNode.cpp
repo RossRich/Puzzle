@@ -33,10 +33,13 @@ int main(int argc, char *argv[]) {
 
   RosVH videoHandler(nh, it, cameraWidth, cameraHeight);
   BallTrackingRos ballTracking(nh, videoHandler);
+  ballTracking.setState(new StateWait(&ballTracking));
+  ballTracking.wait();
 
   ros::Rate loop_rate(30);
+  
   while (ros::ok()) {
-    ballTracking.tracking();
+    ballTracking.loop();
     ros::spinOnce();
     loop_rate.sleep();
   }

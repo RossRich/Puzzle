@@ -2,7 +2,7 @@
 #define _TRACKING_PARAM_H_
 
 #include "VideoHandler.hpp"
-#include "../Utils/thresholdtype.hpp"
+#include "Utils/thresholdtype.hpp"
 
 #include <iostream>
 #include <opencv2/core/core.hpp>
