@@ -6,20 +6,24 @@ using sensor_msgs::CameraInfoConstPtr;
 
 int main(int argc, char *argv[]) {
   ros::init(argc, argv, "ball_tracking");
+  ros::NodeHandle nh("ball_tracking");
 
   int cameraWidth, cameraHeight = 0;
-  ros::param::param<int>("/camera/realsense2_camera/color_width",
-                             cameraWidth, 0);
-  ros::param::param<int>("/camera/realsense2_camera/color_height",
-                             cameraHeight, 0);
+  ros::param::param<int>("/camera/realsense2_camera/color_width", cameraWidth, 0);
+  ros::param::param<int>("/camera/realsense2_camera/color_height", cameraHeight, 0);
 
   if (cameraHeight <= 0 || cameraWidth <= 0) {
+    ROS_INFO("No camera resolution in params. Trying to request resolution from CameraInfo...");
     CameraInfoConstPtr cameraInfo;
     try {
-      cameraInfo = ros::topic::waitForMessage<CameraInfo>(
-          "/camera/color/camera_info", ros::Duration(10));
+      cameraInfo = ros::topic::waitForMessage<CameraInfo>("/camera/color/camera_info", nh, ros::Duration(5));
     } catch (const ros::Exception &e) {
-      ROS_ERROR(e.what());
+      ROS_ERROR("%s", e.what());
+      ROS_ERROR("No camera rosolution. Exit.");
+      return EXIT_FAILURE;
+    }
+
+    if(!cameraInfo) {
       ROS_ERROR("No camera rosolution. Exit.");
       return EXIT_FAILURE;
     }
@@ -28,18 +32,31 @@ int main(int argc, char *argv[]) {
     cameraHeight = cameraInfo->height;
   }
 
-  ros::NodeHandle nh("ball_tracking");
-  image_transport::ImageTransport it(nh);
+  if (cameraHeight <= 0 || cameraWidth <= 0) {
+    ROS_ERROR("No camera rosolution. Exit.");
+    return EXIT_FAILURE;
+  }
 
+  ROS_INFO("Camera resolution received. Width = %i, height = %i", cameraWidth, cameraHeight);
+
+  image_transport::ImageTransport it(nh);
   RosVH videoHandler(nh, it, cameraWidth, cameraHeight);
   BallTrackingRos ballTracking(nh, videoHandler);
+<<<<<<< HEAD
   ballTracking.setState(new StateWait(&ballTracking));
   ballTracking.wait();
+=======
+  
+>>>>>>> 8ad21a8c05e4c999f491118b7574d61db3ade669
 
   ros::Rate loop_rate(30);
   
   while (ros::ok()) {
+<<<<<<< HEAD
     ballTracking.loop();
+=======
+    ballTracking.run();
+>>>>>>> 8ad21a8c05e4c999f491118b7574d61db3ade669
     ros::spinOnce();
     loop_rate.sleep();
   }
