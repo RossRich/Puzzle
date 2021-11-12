@@ -3,6 +3,7 @@
 
 #include "State.hpp"
 
+
 class StateWait: public State
 {
 private:

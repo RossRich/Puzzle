@@ -1,10 +1,11 @@
 #if !defined(_STRATEGY_WAIT_H_)
 #define _STRATEGY_WAIT_H_
 
-#include "BallTrackingRos.hpp"
 #include "Strategy.hpp"
 #include "Utils/Utils.hpp"
 #include "ros/ros.h"
+
+class BallTrackingRos;
 
 class StrategyWait: public Strategy
 {
@@ -22,21 +23,7 @@ public:
     std::cout << "Delete strategy\n";
   }
 
-  void execute() override {
-
-    if(ros::Duration(ros::Time::now() - _timer) >= _timeOut) {
-      
-      threshold_t thresh;
-      if(Utils::readThresholds(_context->getConfFile(), thresh)) {
-        ROS_INFO("Data available");
-        _context->tracking();
-      } else
-        ROS_WARN("No data");
-      
-      _timer = ros::Time::now();
-    }
-
-  }
+  void execute() override;
 };
 
 #endif // _STRATEGY_WAIT_H_

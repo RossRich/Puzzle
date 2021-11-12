@@ -42,21 +42,14 @@ int main(int argc, char *argv[]) {
   image_transport::ImageTransport it(nh);
   RosVH videoHandler(nh, it, cameraWidth, cameraHeight);
   BallTrackingRos ballTracking(nh, videoHandler);
-<<<<<<< HEAD
   ballTracking.setState(new StateWait(&ballTracking));
+  ballTracking.setStrategy(new StrategyWait(&ballTracking));
   ballTracking.wait();
-=======
-  
->>>>>>> 8ad21a8c05e4c999f491118b7574d61db3ade669
 
   ros::Rate loop_rate(30);
   
   while (ros::ok()) {
-<<<<<<< HEAD
     ballTracking.loop();
-=======
-    ballTracking.run();
->>>>>>> 8ad21a8c05e4c999f491118b7574d61db3ade669
     ros::spinOnce();
     loop_rate.sleep();
   }

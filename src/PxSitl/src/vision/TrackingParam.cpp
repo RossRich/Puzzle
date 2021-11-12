@@ -140,12 +140,7 @@ bool TrackingParam::newThreshold(cv::Mat &mask) {
 
   for (uint8_t i = 0; i < 3; i++) {
     cv::minMaxIdx(channels[i], &min, &max, &idxMin, &idxMax, mask);
-<<<<<<< HEAD
-    cout << "In layer " << int(i) << " min val: " << min << " max val: " << max
-         << endl;
-=======
     std::cout << "In layer " << int(i) << " min val: " << min << " max val: " << max << std::endl;
->>>>>>> 8ad21a8c05e4c999f491118b7574d61db3ade669
     maxThresh[i] = static_cast<uint8_t>(max);
     minThresh[i] = static_cast<uint8_t>(min);
   }

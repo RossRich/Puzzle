@@ -3,7 +3,6 @@
 
 #include <iostream>
 
-// #include "BallTrackingRos.hpp"
 class BallTrackingRos;
 
 class State {
