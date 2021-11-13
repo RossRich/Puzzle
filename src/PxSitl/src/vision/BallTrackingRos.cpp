@@ -1,28 +1,22 @@
 #include "../../include/PxSitl/Vision/BallTrackingRos.hpp"
 
-BallTrackingRos::BallTrackingRos(ros::NodeHandle &nh, VideoHandler &vh)
-    : _nh(nh), _vh(vh) {
+BallTrackingRos::BallTrackingRos(ros::NodeHandle &nh, VideoHandler &vh) : _nh(nh), _vh(vh) {
 
   if (!loadParam()) {
     ROS_ERROR("Load parameters error.\nNode init failed.");
     return;
   }
 
-  _strategySrv =
-      _nh.advertiseService("strategy_srv", &BallTrackingRos::runSetupSrv, this);
+  _strategySrv = _nh.advertiseService("strategy_srv", &BallTrackingRos::runSetupSrv, this);
   ROS_INFO("Change strategy server ready");
 }
 
 BallTrackingRos::~BallTrackingRos() {
-  // cv::destroyAllWindows();
   delete _strategy;
   delete _state;
 }
 
-bool BallTrackingRos::runSetupSrv(std_srvs::EmptyRequest &request,
-                                  std_srvs::EmptyResponse &response) {
-  return true;
-}
+bool BallTrackingRos::runSetupSrv(std_srvs::EmptyRequest &request, std_srvs::EmptyResponse &response) { return true; }
 
 bool BallTrackingRos::loadParam() {
 
@@ -58,11 +52,10 @@ void BallTrackingRos::loop() {
 }
 
 void StateWait::tracking() {
-  StrategyTracking *ts =
-      new StrategyTracking(_context->getVideoHandler(), _context);
+  StrategyTracking *ts = new StrategyTracking(_context->getVideoHandler(), _context);
 
   if (!ts->init()) {
-    ROS_WARN("translation to tracking strategy is rejected");
+    ROS_WARN("Translation to tracking strategy is rejected");
     return;
   }
 
@@ -113,8 +106,28 @@ void StrategyTracking::execute() {
     ROS_WARN("Frame is empty");
   }
 
-  cv::imshow(_winName, _frame);
-  cv::waitKey(1);
+  cv::Mat mask;
+  cv::Point2i center;
+  uint16_t radius;
 
-  // _bt.process();
+  _bt.process(_frame, mask, &center, &radius);
+
+
+  if(radius != 0) {
+    cv::circle(_frame, center, radius + 7.0, cv::Scalar::all(128), 1, cv::LINE_4);
+    cv::circle(_frame, center, 3, cv::Scalar(0, 255, 0), cv::FILLED, cv::LINE_8);
+
+    std::stringstream info;
+    info << "CENTER: " << center << " RADIUS: " << radius << std::endl;
+
+    cv::Point2f textPos = {center.x + radius + 15.0f, center.y + radius + 15.0f};
+    cv::putText(_frame, info.str(), textPos, cv::FONT_HERSHEY_SIMPLEX, .6, cv::Scalar::all(0), 2);
+  }
+
+  try {
+    cv::imshow(_winName, _frame);
+    cv::waitKey(1);
+  } catch (const cv::Exception &e) {
+    ROS_ERROR("The video in current environment not available.\n%s", e.what());
+  }
 }
