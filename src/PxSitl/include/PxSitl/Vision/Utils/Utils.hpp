@@ -3,6 +3,7 @@
 
 #include "thresholdtype.hpp"
 #include <opencv2/core/core.hpp>
+#include <iostream>
 
 class Utils {
 private:
@@ -39,6 +40,35 @@ public:
     }
 
     return isDataAvalable;
+  }
+
+  static bool writeThreshold(const char *fileName, threshold_t &threshold) {
+    cv::FileStorage conf;
+    
+    try {
+      conf.open(fileName, cv::FileStorage::WRITE);
+    } catch (const cv::Exception &e) {
+      std::cerr << e.what() << '\n';
+      std::cerr << "Failed to write a new threshold to file\n";
+      return false;
+    }
+
+    if (!conf.isOpened()) {
+      std::cerr << "Faild to open the file " << fileName << std::endl;
+      return false;
+    }
+
+    conf << "threshold"
+         << "{";
+    conf << "min" << threshold[0];
+    conf << "max" << threshold[1];
+    conf << "}";
+
+    conf.release();
+
+    std::cout << "New threshold saved\n";
+
+    return true;
   }
 };
 

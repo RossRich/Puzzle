@@ -126,7 +126,6 @@ catkin_package(
 ## Your package locations should be listed before other locations
 include_directories(
   include
-  include/PxSitl/Vision
   ${catkin_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
 )
@@ -134,8 +133,9 @@ include_directories(
 ## Declare a C++ library
 add_library(${PROJECT_NAME}
   src/vision/BallTracking.cpp
-  src/vision/TrackingParam.cpp
+  src/vision/setup/TrackingParam.cpp
   src/vision/BallTrackingRos.cpp
+  src/vision/setup/BallTrackingSetupRos.cpp
 ##include/PxSitl/GyverFilters/src/filters/RingAverage.h
 )
 
@@ -159,7 +159,7 @@ add_library(VideoHandlerLib
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(${PROJECT_NAME}_node src/OffboardNode.cpp)
 add_executable(BallTrackingNode src/vision/BallTrackingNode.cpp)
-# add_executable(BallTrackingTest src/test/BallTrackingTest.cpp)
+add_executable(BallTrackingSetupNode src/vision/setup/BallTrackingSetupNode.cpp)
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -184,6 +184,14 @@ target_link_libraries(${PROJECT_NAME}_node
 )
 
 target_link_libraries(BallTrackingNode
+  ${catkin_LIBRARIES}
+  ${PROJECT_NAME}
+  ${OpenCV_LIBS}
+  realsense2
+  VideoHandlerLib
+)
+
+target_link_libraries(BallTrackingSetupNode
   ${catkin_LIBRARIES}
   ${PROJECT_NAME}
   ${OpenCV_LIBS}
