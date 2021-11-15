@@ -41,6 +41,14 @@ void RosVH::read(cv::Mat &frame) {
   }
 }
 
+void RosVH::readColor(cv::Mat &colorFrame) {
+  read(colorFrame);
+}
+
+void RosVH::readDepth(cv::Mat &depthFrame) {}
+
+void RosVH::readSet(cv::Mat &colorFrame, cv::Mat &depthFrame) {}
+
 void RosVH::imageSubCb(const ImageConstPtr &rgb, const ImageConstPtr &d) {
 
   try {
