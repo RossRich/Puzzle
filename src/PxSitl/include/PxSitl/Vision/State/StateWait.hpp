@@ -3,16 +3,11 @@
 
 #include "State.hpp"
 
-
-class StateWait: public State
-{
+class StateWait : public State {
 private:
-  
 public:
-  StateWait(BallTrackingRos *context): State(context) {}
-  ~StateWait() {
-    std::cout << "Delete state\n";
-  }
+  StateWait(BallTrackingRos *context) : State(context) {}
+  ~StateWait() { std::cout << "Delete state\n"; }
 
   void tracking() override;
   void wait() override;

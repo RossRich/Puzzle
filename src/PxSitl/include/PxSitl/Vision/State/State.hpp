@@ -1,5 +1,5 @@
-#if !defined(_STATE_H_)
-#define _STATE_H_
+#if !defined(_STATE_TRACKING_H_)
+#define _STATE_TRACKING_H_
 
 #include <iostream>
 
@@ -7,21 +7,15 @@ class BallTrackingRos;
 
 class State {
 protected:
-  BallTrackingRos *_context = nullptr;
-
+    BallTrackingRos *_context = nullptr;
 public:
-  State() {}
+  State(BallTrackingRos *context): _context(context) {}
   virtual ~State() {
-    std::cout << "Delete base state\n";
+      std::cout << "Delete state base\n";
   }
 
-  void setContext(BallTrackingRos *context) {
-    if (context != nullptr && _context != context)
-      _context = context;
-  }
-
-  virtual void setup() = 0;
   virtual void tracking() = 0;
+  virtual void wait() = 0;
 };
 
-#endif // _STATE_H_
+#endif // _STATE_TRACKING_H_

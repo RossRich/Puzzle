@@ -2,26 +2,21 @@
 #define _STRATEGY_WAIT_H_
 
 #include "Strategy.hpp"
-#include "Utils/Utils.hpp"
+#include "../Utils/Utils.hpp"
 #include "ros/ros.h"
 
 class BallTrackingRos;
 
-class StrategyWait: public Strategy
-{
+class StrategyWait : public Strategy {
 private:
   ros::Time _timer;
   ros::Duration _timeOut = ros::Duration(10);
   BallTrackingRos *_context = nullptr;
 
 public:
-  StrategyWait(BallTrackingRos *context):_context(context) {
-    _timer = ros::Time::now();
-  }
+  StrategyWait(BallTrackingRos *context) : _context(context) { _timer = ros::Time::now(); }
 
-  ~StrategyWait() {
-    std::cout << "Delete strategy\n";
-  }
+  ~StrategyWait() { std::cout << "Delete strategy\n"; }
 
   void execute() override;
 };

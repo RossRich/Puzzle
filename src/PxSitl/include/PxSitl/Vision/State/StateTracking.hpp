@@ -6,10 +6,8 @@
 class StateTracking : public State {
 private:
 public:
-  StateTracking(BallTrackingRos *context): State(context) {}
-  ~StateTracking() {
-    std::cout << "Delete state\n";
-  }
+  StateTracking(BallTrackingRos *context) : State(context) {}
+  ~StateTracking() { std::cout << "Delete state\n"; }
 
   void tracking() override;
   void wait() override;

@@ -1,12 +1,12 @@
 #if !defined(_BALL_TRACKING_ROS_H_)
 #define _BALL_TRACKING_ROS_H_
 
-#include "State.hpp"
-#include "StateTracking.hpp"
-#include "StateWait.hpp"
-#include "Strategy.hpp"
-#include "StrategyTracking.hpp"
-#include "StrategyWait.hpp"
+#include "State/State.hpp"
+#include "State/StateTracking.hpp"
+#include "State/StateWait.hpp"
+#include "Strategy/Strategy.hpp"
+#include "Strategy/StrategyTracking.hpp"
+#include "Strategy/StrategyWait.hpp"
 #include "VideoHandler.hpp"
 #include <opencv2/highgui/highgui.hpp>
 #include <ros/ros.h>
@@ -40,8 +40,5 @@ public:
   void wait();
   void loop();
 };
-
-#include "StateTracking.hpp"
-#include "StateWait.hpp"
 
 #endif // _BALL_TRACKING_ROS_H_

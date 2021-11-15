@@ -1,5 +1,5 @@
-#if !defined(_STRATEGY_H_)
-#define _STRATEGY_H_
+#if !defined(_VISION_STRATEGY_H_)
+#define _VISION_STRATEGY_H_
 
 #include <iostream>
 
@@ -7,13 +7,9 @@ class Strategy {
 private:
 public:
   Strategy() {}
-  virtual ~Strategy() {
-    std::cout << "Delete base strategy\n";
-  }
-  
-  void test() {}
+  virtual ~Strategy() { std::cout << "Delete strategy base\n"; }
 
   virtual void execute() = 0;
 };
 
-#endif // _STRATEGY_H_
+#endif // _VISION_STRATEGY_H_
