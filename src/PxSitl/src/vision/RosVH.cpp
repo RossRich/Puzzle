@@ -17,7 +17,6 @@ RosVH::RosVH(ros::NodeHandle &nh, image_transport::ImageTransport &it, uint16_t 
 RosVH::~RosVH() { delete _sync; }
 
 bool RosVH::loadParam() {
-
   if (!_nh.getParam("color_topic", _colorTopic)) {
     ROS_ERROR("No color_topic param");
     return false;
@@ -35,19 +34,20 @@ bool RosVH::loadParam() {
   return true;
 }
 
-void RosVH::read(cv::Mat &frame) {
-  if (_color) {
-    frame = _color->image;
-  }
-}
-
 void RosVH::readColor(cv::Mat &colorFrame) {
-  read(colorFrame);
+  if (_color)
+    colorFrame = _color->image;
 }
 
-void RosVH::readDepth(cv::Mat &depthFrame) {}
+void RosVH::readDepth(cv::Mat &depthFrame) {
+  if (_depth)
+    depthFrame = _depth->image;
+}
 
-void RosVH::readSet(cv::Mat &colorFrame, cv::Mat &depthFrame) {}
+void RosVH::readFrameset(cv::Mat &colorFrame, cv::Mat &depthFrame) {
+  readColor(colorFrame);
+  readDepth(depthFrame);
+}
 
 void RosVH::imageSubCb(const ImageConstPtr &rgb, const ImageConstPtr &d) {
 

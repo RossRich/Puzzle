@@ -12,7 +12,9 @@ private:
 public:
   VideoHandler(uint16_t width, uint16_t height) : _width(width), _height(height) {}
   virtual ~VideoHandler() {}
-  virtual void read(cv::Mat &frame) = 0;
+  virtual void readColor(cv::Mat &colorFrame) = 0;
+  virtual void readDepth(cv::Mat &depthFrame) = 0;
+  virtual void readFrameset(cv::Mat &colorFrame, cv::Mat &depthFrame) = 0;
 
   inline cv::Size2i getVideoSize() const {
     return cv::Size2i(_width, _height);

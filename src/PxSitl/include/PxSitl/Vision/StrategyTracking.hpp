@@ -17,6 +17,7 @@ private:
   BallTracking _bt;
   VideoHandler &_vh;
   cv::Mat _frame;
+  cv::Mat _depth;
   BallTrackingRos *_context;
   
 

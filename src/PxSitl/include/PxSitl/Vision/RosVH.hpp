@@ -32,15 +32,14 @@ private:
   cv_bridge::CvImagePtr _depth;
   void imageSubCb(const ImageConstPtr &rgb, const ImageConstPtr &depth);
   bool loadParam();
-  void read(cv::Mat &frame) override;
 
 public:
   RosVH(ros::NodeHandle &nh, ImageTransport &it, uint16_t width, uint16_t height);
   ~RosVH();
 
-  void readColor(cv::Mat &colorFrame);
-  void readDepth(cv::Mat &depthFrame);
-  void readSet(cv::Mat &colorFrame, cv::Mat &depthFrame); 
+  void readColor(cv::Mat &colorFrame) override;
+  void readDepth(cv::Mat &depthFrame) override;
+  void readFrameset(cv::Mat &colorFrame, cv::Mat &depthFrame) override; 
 };
 
 #endif // _ROS_VIDEO_HANDLER_H_

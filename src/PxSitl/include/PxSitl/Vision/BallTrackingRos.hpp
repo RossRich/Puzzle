@@ -39,6 +39,7 @@ public:
   void tracking();
   void wait();
   void loop();
+  void shutdown();
 };
 
 #include "StateTracking.hpp"

@@ -51,6 +51,11 @@ void BallTrackingRos::loop() {
     _strategy->execute();
 }
 
+void BallTrackingRos::shutdown() {
+  _nh.shutdown();
+  ros::shutdown();
+}
+
 void StateWait::tracking() {
   StrategyTracking *ts = new StrategyTracking(_context->getVideoHandler(), _context);
 
@@ -101,9 +106,11 @@ bool StrategyTracking::init() {
 
 void StrategyTracking::execute() {
   _vh >> _frame;
+  _vh.readDepth(_depth);
 
-  if (_frame.empty()) {
+  if (_frame.empty() || _depth.empty()) {
     ROS_WARN("Frame is empty");
+    return;
   }
 
   cv::Mat mask;
@@ -112,8 +119,7 @@ void StrategyTracking::execute() {
 
   _bt.process(_frame, mask, &center, &radius);
 
-
-  if(radius != 0) {
+  if (radius != 0) {
     cv::circle(_frame, center, radius + 7.0, cv::Scalar::all(128), 1, cv::LINE_4);
     cv::circle(_frame, center, 3, cv::Scalar(0, 255, 0), cv::FILLED, cv::LINE_8);
 
@@ -122,6 +128,33 @@ void StrategyTracking::execute() {
 
     cv::Point2f textPos = {center.x + radius + 15.0f, center.y + radius + 15.0f};
     cv::putText(_frame, info.str(), textPos, cv::FONT_HERSHEY_SIMPLEX, .6, cv::Scalar::all(0), 2);
+
+    // cv::Mat ballDepth (_depth, mask);
+
+    try {
+      uint16_t posRadius = radius * 2;
+      cv::Mat ballDist(cv::Size2i(posRadius, posRadius), CV_16UC1, cv::Scalar::all(0));
+      _depth.copyTo(ballDist, mask);
+
+      /*  int sizes[] = { 255, 255, 255 };
+      typedef cv::Point3_<uint8_t> Pixel;
+      Mat_<Pixel> image = Mat::zeros(3, sizes, CV_8UC3);
+      image.forEach<Pixel>([&](Pixel& pixel, const int position[]) -> void {
+     pixel.x = position[0];
+     pixel.y = position[1];
+     pixel.z = position[2];
+ }); */
+
+      std::cout << "Start\n";
+      ballDist.forEach<uint16_t>([&](uint16_t &pixel, const int pos[]) -> void {
+        if(pixel != 0) std::cout << pixel << std::endl;
+      });
+      std::cout << "End\n";
+      std::cout << _depth.at<uint16_t>(center) * 0.001f << std::endl;
+    } catch (const cv::Exception &e) {
+      std::cerr << e.what() << '\n';
+      _context->shutdown();
+    }
   }
 
   try {
