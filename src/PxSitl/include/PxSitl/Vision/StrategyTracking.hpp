@@ -19,16 +19,21 @@ private:
   cv::Mat _frame;
   cv::Mat _depth;
   BallTrackingRos *_context;
+  ros::Time _timer;
+  ros::Duration _timeOut = ros::Duration(1);
   
 
 public:
   StrategyTracking(VideoHandler &vh, BallTrackingRos *context) : _vh(vh), _context(context) {
     cv::namedWindow(_winName, cv::WINDOW_AUTOSIZE);
+    cv::namedWindow("test", cv::WINDOW_AUTOSIZE);
+    _timer = ros::Time::now();
   }
 
   ~StrategyTracking() {
     std::cout << "Delete strategy\n";
     cv::destroyWindow(_winName);
+    cv::destroyWindow("test");
   }
 
   bool init();

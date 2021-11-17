@@ -130,30 +130,45 @@ void StrategyTracking::execute() {
     cv::putText(_frame, info.str(), textPos, cv::FONT_HERSHEY_SIMPLEX, .6, cv::Scalar::all(0), 2);
 
     // cv::Mat ballDepth (_depth, mask);
+    if (ros::Duration(ros::Time::now() - _timer) >= _timeOut) {
+      try {
+        uint16_t posRadius = radius * 2;
+        cv::Mat ballDist(cv::Size2i(posRadius, posRadius), CV_16UC1, cv::Scalar::all(0));
+        _depth.copyTo(ballDist, mask);
 
-    try {
-      uint16_t posRadius = radius * 2;
-      cv::Mat ballDist(cv::Size2i(posRadius, posRadius), CV_16UC1, cv::Scalar::all(0));
-      _depth.copyTo(ballDist, mask);
+        std::map<uint16_t, uint16_t> mapOfDist;
+        for (auto &&d : cv::Mat_<uint16_t>(ballDist)) {
+          if (mapOfDist.count(d) > 0)
+            mapOfDist.at(d) += 1;
+          else
+            mapOfDist.insert(std::pair<uint16_t, uint16_t>(d, 0));
+        }
 
-      /*  int sizes[] = { 255, 255, 255 };
-      typedef cv::Point3_<uint8_t> Pixel;
-      Mat_<Pixel> image = Mat::zeros(3, sizes, CV_8UC3);
-      image.forEach<Pixel>([&](Pixel& pixel, const int position[]) -> void {
-     pixel.x = position[0];
-     pixel.y = position[1];
-     pixel.z = position[2];
- }); */
+        std::multimap<uint16_t, uint16_t> inv;
+        for (auto &&i : mapOfDist)
+          inv.insert(std::pair<uint16_t, uint16_t>(i.second, i.first));
+      
 
-      std::cout << "Start\n";
-      ballDist.forEach<uint16_t>([&](uint16_t &pixel, const int pos[]) -> void {
-        if(pixel != 0) std::cout << pixel << std::endl;
-      });
-      std::cout << "End\n";
-      std::cout << _depth.at<uint16_t>(center) * 0.001f << std::endl;
-    } catch (const cv::Exception &e) {
-      std::cerr << e.what() << '\n';
-      _context->shutdown();
+        for (auto &&ii : inv)
+          std::cout << ii.first << ": " << ii.second << std::endl;
+
+        uint16_t distToBall;
+        for (std::multimap<uint16_t, uint16_t>::const_iterator i = inv.cend(); i != inv.cbegin(); i--)
+        {
+          if(i->second <= 100)
+            continue;
+
+          distToBall = i->second;
+          break;
+        }
+
+        std::cout << "Hight accur: " << distToBall * 0.001f << std::endl;
+        std::cout << "Raw" << _depth.at<uint16_t>(center) * 0.001f << std::endl;
+      } catch (const cv::Exception &e) {
+        std::cerr << e.what() << '\n';
+        _context->shutdown();
+      }
+      _timer = ros::Time::now();
     }
   }
 
