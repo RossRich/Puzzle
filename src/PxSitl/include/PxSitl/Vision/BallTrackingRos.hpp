@@ -11,6 +11,10 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <ros/ros.h>
 #include <std_srvs/Empty.h>
+#include <sensor_msgs/CameraInfo.h>
+
+using sensor_msgs::CameraInfoConstPtr;
+using image_geometry::PinholeCameraModel;
 
 class BallTrackingRos {
 
@@ -18,6 +22,7 @@ private:
   Strategy *_strategy = nullptr;
   State *_state = nullptr;
   ros::NodeHandle &_nh;
+  CameraInfoConstPtr _cameraInfo;
   VideoHandler &_vh;
   ros::ServiceServer _strategySrv;
   std::string _confFile = "/workspaces/Puzzle/src/PxSitl/data/config.yaml";
@@ -35,6 +40,7 @@ public:
 
   VideoHandler &getVideoHandler() const { return _vh; }
   const char *getConfFile() const { return _confFile.c_str(); }
+  CameraInfoConstPtr& getCameraInfo() { return _cameraInfo; }
 
   void tracking();
   void wait();

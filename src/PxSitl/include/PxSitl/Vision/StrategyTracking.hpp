@@ -8,6 +8,11 @@
 #include "Utils/thresholdtype.hpp"
 #include "Utils/Utils.hpp"
 #include "ros/ros.h"
+#include <tf2_ros/transform_listener.h>
+#include <geometry_msgs/TransformStamped.h>
+#include <image_geometry/pinhole_camera_model.h>
+
+using geometry_msgs::TransformStamped;
 
 class BaBallTrackingRos;
 
@@ -21,10 +26,13 @@ private:
   BallTrackingRos *_context;
   ros::Time _timer;
   ros::Duration _timeOut = ros::Duration(1);
+  PinholeCameraModel _cameraModel;
+  tf2_ros::Buffer _tfBuffer;
+  tf2_ros::TransformListener _tfListener;
   
 
 public:
-  StrategyTracking(VideoHandler &vh, BallTrackingRos *context) : _vh(vh), _context(context) {
+  StrategyTracking(VideoHandler &vh, BallTrackingRos *context) : _vh(vh), _context(context), _tfListener(_tfBuffer) {
     cv::namedWindow(_winName, cv::WINDOW_AUTOSIZE);
     cv::namedWindow("test", cv::WINDOW_AUTOSIZE);
     _timer = ros::Time::now();

@@ -25,6 +25,21 @@ bool BallTrackingRos::loadParam() {
     ROS_WARN("Use a default configuration file path '%s'", _confFile.c_str());
   }
 
+  ROS_INFO("Reads camera info...");
+  try {
+    _cameraInfo = ros::topic::waitForMessage<CameraInfoConstPtr>("/camera/color/camera_info", _nh, ros::Duration(5));
+  } catch (const ros::Exception &e) {
+    ROS_ERROR("%s", e.what());
+    ROS_ERROR("Failed to get camera info. Exit.");
+    return false;
+  }
+
+  if (!_cameraInfo) {
+    ROS_ERROR("Failed to get camera info. Exit.");
+    return false;
+  }
+  ROS_INFO("Camera info ready");
+
   return true;
 }
 
@@ -60,6 +75,7 @@ void StateWait::tracking() {
   StrategyTracking *ts = new StrategyTracking(_context->getVideoHandler(), _context);
 
   if (!ts->init()) {
+    delete ts;
     ROS_WARN("Translation to tracking strategy is rejected");
     return;
   }
@@ -101,6 +117,11 @@ bool StrategyTracking::init() {
   else
     return false;
 
+  if (!_cameraModel.fromCameraInfo(_context->getCameraInfo())) {
+    ROS_ERROR("Failed to build model of camera. Exit.");
+    return false;
+  }
+
   return true;
 }
 
@@ -124,12 +145,10 @@ void StrategyTracking::execute() {
     cv::circle(_frame, center, 3, cv::Scalar(0, 255, 0), cv::FILLED, cv::LINE_8);
 
     std::stringstream info;
-    info << "CENTER: " << center << " RADIUS: " << radius << std::endl;
+    info << "CENTER: " << center << " RADIUS: " << radius;
 
     cv::Point2f textPos = {center.x + radius + 15.0f, center.y + radius + 15.0f};
-    cv::putText(_frame, info.str(), textPos, cv::FONT_HERSHEY_SIMPLEX, .6, cv::Scalar::all(0), 2);
 
-    // cv::Mat ballDepth (_depth, mask);
     if (ros::Duration(ros::Time::now() - _timer) >= _timeOut) {
       try {
         uint16_t posRadius = radius * 2;
@@ -147,15 +166,13 @@ void StrategyTracking::execute() {
         std::multimap<uint16_t, uint16_t> inv;
         for (auto &&i : mapOfDist)
           inv.insert(std::pair<uint16_t, uint16_t>(i.second, i.first));
-      
 
-        for (auto &&ii : inv)
-          std::cout << ii.first << ": " << ii.second << std::endl;
+        /* for (auto &&ii : inv)
+          std::cout << ii.first << ": " << ii.second << std::endl; */
 
         uint16_t distToBall;
-        for (std::multimap<uint16_t, uint16_t>::const_iterator i = inv.cend(); i != inv.cbegin(); i--)
-        {
-          if(i->second <= 100)
+        for (std::multimap<uint16_t, uint16_t>::const_iterator i = inv.cend(); i != inv.cbegin(); i--) {
+          if (i->second <= 100)
             continue;
 
           distToBall = i->second;
@@ -163,13 +180,34 @@ void StrategyTracking::execute() {
         }
 
         std::cout << "Hight accur: " << distToBall * 0.001f << std::endl;
-        std::cout << "Raw" << _depth.at<uint16_t>(center) * 0.001f << std::endl;
+        info << " DIST: " << distToBall;
+        // std::cout << "Raw" << _depth.at<uint16_t>(center) * 0.001f << std::endl;
       } catch (const cv::Exception &e) {
         std::cerr << e.what() << '\n';
         _context->shutdown();
       }
       _timer = ros::Time::now();
     }
+
+    cv::putText(_frame, info.str(), textPos, cv::FONT_HERSHEY_SIMPLEX, .6, cv::Scalar::all(0), 2);
+
+     TransformStamped transform;
+
+    
+    try {
+      ros::Time acquisition_time = info_msg->header.stamp;
+      ros::Duration timeout(1.0 / 30);
+      tf2_ros:: .waitForTransform(cam_model_.tfFrame(), frame_id, acquisition_time, timeout);
+      tf_listener_.lookupTransform(cam_model_.tfFrame(), frame_id, acquisition_time, transform);
+    } catch (tf::TransformException &ex) {
+      ROS_WARN("[draw_frames] TF exception:\n%s", ex.what());
+      return;
+    }
+
+    cv::Point pt = transform.getOrigin();
+    cv::Point3d pt_cv(pt.x(), pt.y(), pt.z());
+    cv::Point2d uv;
+    uv = _cameraModel.project3dToPixel(pt_cv);
   }
 
   try {
