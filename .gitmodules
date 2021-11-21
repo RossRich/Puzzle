@@ -4,6 +4,6 @@
 [submodule "src/mavlink_sitl_gazebo"]
 	path = src/mavlink_sitl_gazebo
 	url = https://github.com/PX4/PX4-SITL_gazebo.git
-[submodule "src/drone_stats"]
-	path = src/drone_stats
+[submodule "src/DroneStats"]
+	path = src/DroneStats
 	url = https://github.com/era-team/DroneStats.git
