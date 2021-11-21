@@ -62,4 +62,6 @@ void RosVH::imageSubCb(const ImageConstPtr &rgb, const ImageConstPtr &d) {
   } catch (cv_bridge::Exception &e) {
     ROS_ERROR("Could not convert  from '%s' to 'TYPE_16UC1'", _depth->encoding.c_str());
   }
+
+  setLastTime(_color->header.stamp.toSec());
 }

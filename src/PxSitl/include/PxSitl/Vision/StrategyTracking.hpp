@@ -8,13 +8,15 @@
 #include "Utils/thresholdtype.hpp"
 #include "Utils/Utils.hpp"
 #include "ros/ros.h"
+#include <sensor_msgs/CameraInfo.h>
 #include <tf2_ros/transform_listener.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <image_geometry/pinhole_camera_model.h>
 
 using geometry_msgs::TransformStamped;
+using image_geometry::PinholeCameraModel;
 
-class BaBallTrackingRos;
+class BallTrackingRos;
 
 class StrategyTracking : public Strategy {
 private:

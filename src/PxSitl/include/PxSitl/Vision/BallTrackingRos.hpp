@@ -14,7 +14,6 @@
 #include <sensor_msgs/CameraInfo.h>
 
 using sensor_msgs::CameraInfoConstPtr;
-using image_geometry::PinholeCameraModel;
 
 class BallTrackingRos {
 

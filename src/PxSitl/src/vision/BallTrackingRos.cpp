@@ -27,7 +27,7 @@ bool BallTrackingRos::loadParam() {
 
   ROS_INFO("Reads camera info...");
   try {
-    _cameraInfo = ros::topic::waitForMessage<CameraInfoConstPtr>("/camera/color/camera_info", _nh, ros::Duration(5));
+    _cameraInfo = ros::topic::waitForMessage<sensor_msgs::CameraInfo>("/camera/color/camera_info", _nh, ros::Duration(5));
   } catch (const ros::Exception &e) {
     ROS_ERROR("%s", e.what());
     ROS_ERROR("Failed to get camera info. Exit.");
@@ -182,6 +182,14 @@ void StrategyTracking::execute() {
         std::cout << "Hight accur: " << distToBall * 0.001f << std::endl;
         info << " DIST: " << distToBall;
         // std::cout << "Raw" << _depth.at<uint16_t>(center) * 0.001f << std::endl;
+
+        cv::Point3d pixel3d = _cameraModel.projectPixelTo3dRay(center);
+
+        pixel3d.dot(cv::Point3d(distToBall, distToBall, distToBall));
+
+        std::stringstream info2;
+        info2 << pixel3d;
+        ROS_INFO("Pixel in 3d: %s", info2.str().c_str());
       } catch (const cv::Exception &e) {
         std::cerr << e.what() << '\n';
         _context->shutdown();
@@ -191,23 +199,22 @@ void StrategyTracking::execute() {
 
     cv::putText(_frame, info.str(), textPos, cv::FONT_HERSHEY_SIMPLEX, .6, cv::Scalar::all(0), 2);
 
-     TransformStamped transform;
+    /* TransformStamped transform;
 
-    
     try {
-      ros::Time acquisition_time = info_msg->header.stamp;
+      ros::Time acquisition_time = ros::Time(_vh.getLastTime());
+      ROS_INFO("Img last time %f", acquisition_time.toSec());
       ros::Duration timeout(1.0 / 30);
-      tf2_ros:: .waitForTransform(cam_model_.tfFrame(), frame_id, acquisition_time, timeout);
-      tf_listener_.lookupTransform(cam_model_.tfFrame(), frame_id, acquisition_time, transform);
-    } catch (tf::TransformException &ex) {
+      // _tfListener.waitForTransform(_cameraModel.tfFrame(), frame_id, acquisition_time, timeout);
+      transform = _tfBuffer.lookupTransform(_cameraModel.tfFrame(), "camera_link", acquisition_time, timeout);
+    } catch (tf2::TransformException &ex) {
       ROS_WARN("[draw_frames] TF exception:\n%s", ex.what());
-      return;
-    }
+      // return;
+    } */
 
-    cv::Point pt = transform.getOrigin();
-    cv::Point3d pt_cv(pt.x(), pt.y(), pt.z());
-    cv::Point2d uv;
-    uv = _cameraModel.project3dToPixel(pt_cv);
+    /* geometry_msgs::Vector pt = transform.transform.translation;
+    cv::Point3d pt_cv(pt.x, pt.y, pt.z);
+    cv::Point2d uv = _cameraModel.project3dToPixel(pt_cv); */
   }
 
   try {
