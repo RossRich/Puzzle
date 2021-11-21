@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="mavros_state" default="/mavros/state"/>
+  <arg name="mavros_battary" default="/mavros/battery"/>
+  
+  <arg name="model" value="$(find drone_stats)/urdf/drone.urdf"/>
+  <arg name="rvizconfig" value="$(find drone_stats)/rviz/rviz.rviz" />
+  <param name="robot_description" command="$(find xacro)/xacro $(arg model)" />
+  
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rvizconfig)" required="true"/>
+  <node name="drone_stats" pkg="drone_stats" type="drone_stats"  output="screen" respawn="false">
+    <param name="mavros_state" value="$(arg mavros_state)"/>
+    <param name="mavros_battary" value="$(arg mavros_battary)"/>
+  </node>
+  
+</launch>
