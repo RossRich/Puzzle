@@ -18,6 +18,7 @@ find_package(catkin REQUIRED COMPONENTS
   realsense2_camera
   tf2_ros
   image_geometry
+  visualization_msgs
 )
 
 find_package(cv_bridge REQUIRED)
