@@ -27,7 +27,7 @@ private:
   cv::Mat _depth;
   BallTrackingRos *_context;
   ros::Time _timer;
-  ros::Duration _timeOut = ros::Duration(1);
+  ros::Duration _timeOut = ros::Duration(0.03);
   PinholeCameraModel _cameraModel;
   tf2_ros::Buffer _tfBuffer;
   tf2_ros::TransformListener _tfListener;

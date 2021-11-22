@@ -9,6 +9,8 @@ BallTrackingRos::BallTrackingRos(ros::NodeHandle &nh, VideoHandler &vh) : _nh(nh
 
   _strategySrv = _nh.advertiseService("strategy_srv", &BallTrackingRos::runSetupSrv, this);
   ROS_INFO("Change strategy server ready");
+
+  _ballPub = _nh.advertise<Marker>("ball", 5, false);
 }
 
 BallTrackingRos::~BallTrackingRos() {
@@ -41,6 +43,36 @@ bool BallTrackingRos::loadParam() {
   ROS_INFO("Camera info ready");
 
   return true;
+}
+
+void BallTrackingRos::ballPosPub(cv::Point3d ballPos) {
+  Marker m;
+
+  m.header.frame_id = "camera_link";
+  m.header.stamp = ros::Time::now();
+
+  geometry_msgs::Pose p;
+  p.position.x = ballPos.x;
+  p.position.y = ballPos.y;
+  p.position.z = ballPos.z;
+  m.pose = p;
+
+  geometry_msgs::Vector3 scale;
+  scale.x = .1;
+  scale.y = .1;
+  scale.z = .1;
+  m.scale = scale;
+
+  std_msgs::ColorRGBA c;
+  c.a = 1;
+  c.b = 0;
+  c.g = 1;
+  c.r = 0;
+  m.color = c;
+
+  m.type = Marker::SPHERE;
+
+  _ballPub.publish(m);
 }
 
 void BallTrackingRos::setState(State *state) {
@@ -126,6 +158,7 @@ bool StrategyTracking::init() {
 }
 
 void StrategyTracking::execute() {
+  ros::Time tt = ros::Time::now();
   _vh >> _frame;
   _vh.readDepth(_depth);
 
@@ -184,12 +217,14 @@ void StrategyTracking::execute() {
         // std::cout << "Raw" << _depth.at<uint16_t>(center) * 0.001f << std::endl;
 
         cv::Point3d pixel3d = _cameraModel.projectPixelTo3dRay(center);
+        pixel3d.z = distToBall * 0.001f;
 
-        pixel3d.dot(cv::Point3d(distToBall, distToBall, distToBall));
+        // pixel3d.dot(cv::Point3d(distToBall, distToBall, distToBall));
 
         std::stringstream info2;
         info2 << pixel3d;
         ROS_INFO("Pixel in 3d: %s", info2.str().c_str());
+        _context->ballPosPub(pixel3d);
       } catch (const cv::Exception &e) {
         std::cerr << e.what() << '\n';
         _context->shutdown();
@@ -215,6 +250,7 @@ void StrategyTracking::execute() {
     /* geometry_msgs::Vector pt = transform.transform.translation;
     cv::Point3d pt_cv(pt.x, pt.y, pt.z);
     cv::Point2d uv = _cameraModel.project3dToPixel(pt_cv); */
+    ROS_INFO("dt: %f", ros::Duration(ros::Time::now() - tt).toSec() / 1000.0f);
   }
 
   try {

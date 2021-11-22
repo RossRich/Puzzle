@@ -1,7 +1,14 @@
 <?xml version="1.0"?>
 <launch>
+
+  <arg name="rviz_cong" value="$(find PxSitl)/rviz/ballTest.rviz" />
+  
+
   <node name="ball_tracking" pkg="PxSitl" type="BallTrackingNode" output="screen">
     <param name="color_topic" value="/camera/color/image_raw"/>
     <param name="depth_topic" value="/camera/aligned_depth_to_color/image_raw"/>
   </node>
+
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rviz_cong)" output="screen"/>
+  
 </launch>
