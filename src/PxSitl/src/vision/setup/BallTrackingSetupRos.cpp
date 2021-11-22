@@ -17,12 +17,12 @@ BallTrackingSetupRos::~BallTrackingSetupRos() { cv::destroyWindow(_winName); }
 bool BallTrackingSetupRos::loadParam() { return true; }
 
 void BallTrackingSetupRos::onMouseCallback(int ev, int x, int y, int flag) {
-  if (ev == cv::MouseEventTypes::EVENT_LBUTTONUP && flag == cv::MouseEventFlags::EVENT_FLAG_LBUTTON) {
+  if (ev == cv::MouseEventTypes::EVENT_LBUTTONUP) {
     if (_roiPoints.size() < 4)
       _roiPoints.push_back({x, y});
   }
 
-  if (ev == cv::MouseEventTypes::EVENT_RBUTTONUP && flag == cv::MouseEventFlags::EVENT_FLAG_RBUTTON) {
+  if (ev == cv::MouseEventTypes::EVENT_RBUTTONUP) {
     _roiPoints.clear();
   }
 
