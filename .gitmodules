@@ -11,6 +11,7 @@
 [submodule "src/ddynamic_reconfigure"]
 	path = src/ddynamic_reconfigure
 	url = https://github.com/pal-robotics/ddynamic_reconfigure.git
-[submodule "src/DroneStats"]
-	path = src/DroneStats
+[submodule "src/drone_stats"]
+	path = src/drone_stats
 	url = https://github.com/era-team/DroneStats.git
+	branch = master
