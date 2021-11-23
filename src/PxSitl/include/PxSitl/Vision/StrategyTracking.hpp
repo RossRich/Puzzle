@@ -21,10 +21,12 @@ class BallTrackingRos;
 class StrategyTracking : public Strategy {
 private:
   const char* _winName = "Tracking";
+  float _filterGain = 0.65f;
   BallTracking _bt;
   VideoHandler &_vh;
   cv::Mat _frame;
   cv::Mat _depth;
+  cv::Point3d _ballPos;
   BallTrackingRos *_context;
   ros::Time _timer;
   ros::Duration _timeOut = ros::Duration(0.03);
@@ -32,7 +34,6 @@ private:
   tf2_ros::Buffer _tfBuffer;
   tf2_ros::TransformListener _tfListener;
   
-
 public:
   StrategyTracking(VideoHandler &vh, BallTrackingRos *context) : _vh(vh), _context(context), _tfListener(_tfBuffer) {
     cv::namedWindow(_winName, cv::WINDOW_AUTOSIZE);
@@ -48,6 +49,8 @@ public:
 
   bool init();
   void execute() override;
+
+  inline void setFilterGain(float gain) { (gain < 0 ? _filterGain = abs(gain) : _filterGain = gain); };
 };
 
 #endif // _STRATEGY_TRACKING_H_

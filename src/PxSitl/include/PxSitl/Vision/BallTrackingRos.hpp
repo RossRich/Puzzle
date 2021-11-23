@@ -22,6 +22,7 @@ class BallTrackingRos {
 
 private:
   std::string _confFile = "/workspaces/Puzzle/src/PxSitl/data/config.yaml";
+  float _filterGain;
 
   ros::NodeHandle &_nh;
   ros::ServiceServer _strategySrv;
@@ -46,6 +47,7 @@ public:
   VideoHandler &getVideoHandler() const { return _vh; }
   const char *getConfFile() const { return _confFile.c_str(); }
   CameraInfoConstPtr &getCameraInfo() { return _cameraInfo; }
+  float getFilterGain() { return _filterGain; }
 
   void tracking();
   void wait();
