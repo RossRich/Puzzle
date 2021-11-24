@@ -49,24 +49,48 @@ bool BallTrackingRos::loadParam() {
   ROS_INFO("Camera info ready");
 
   if (!_nh.getParam("filter_gain", _filterGain)) {
-    _filterGain = 0.65;
+    _filterGain = 0.45f;
     ROS_INFO("No filter_gain param. Use default value %f", _filterGain);
   }
 
   return true;
 }
 
-void BallTrackingRos::ballPosPub(cv::Point3d ballPos) {
+void BallTrackingRos::ballPosPub(Marker m) {
+  _ballPub.publish(m);
+}
+
+void BallTrackingRos::drawBallDir(geometry_msgs::Pose pose) {
   Marker m;
 
   m.header.frame_id = "camera_link";
   m.header.stamp = ros::Time::now();
+  m.pose = pose;
 
-  geometry_msgs::Pose p;
-  p.position.x = ballPos.x;
-  p.position.y = ballPos.y;
-  p.position.z = ballPos.z;
-  m.pose = p;
+  geometry_msgs::Vector3 scale;
+  scale.x = .5;
+  scale.y = .5;
+  scale.z = .5;
+  m.scale = scale;
+
+  std_msgs::ColorRGBA c;
+  c.a = 1;
+  c.b = 0;
+  c.g = 1;
+  c.r = 0;
+  m.color = c;
+
+  m.type = Marker::ARROW;
+
+  ballPosPub(m);
+}
+
+void BallTrackingRos::drawBallPos(geometry_msgs::Pose pose) {
+  Marker m;
+
+  m.header.frame_id = "camera_link";
+  m.header.stamp = ros::Time::now();
+  m.pose = pose;
 
   geometry_msgs::Vector3 scale;
   scale.x = .1;
@@ -83,7 +107,7 @@ void BallTrackingRos::ballPosPub(cv::Point3d ballPos) {
 
   m.type = Marker::SPHERE;
 
-  _ballPub.publish(m);
+  ballPosPub(m);
 }
 
 void BallTrackingRos::setState(State *state) {
@@ -239,13 +263,38 @@ void StrategyTracking::execute() {
 
         cv::Point3d newBallPos = _cameraModel.projectPixelTo3dRay(center);
         newBallPos.z = distToBall * 0.001f;
+        tf2::Vector3 newBallDir =
+            tf2::Vector3(newBallPos.x, newBallPos.y, newBallPos.z);
+        // tf2::Vector3 ballDir = tf2::Vector3(_ballPos.x, _ballPos.y, _ballPos.z);
+
+        tf2::Quaternion q;
+        tf2::Vector3 ballDir = tf2::tf2Cross(newBallDir, ballDir);
+        q.setEulerZYX(ballDir.z(), ballDir.y(), ballDir.x());
 
         Utils::fastFilterCvPoint3d(_ballPos, newBallPos, _filterGain);
 
         std::stringstream info2;
         info2 << _ballPos;
         ROS_INFO("Pixel in 3d: %s", info2.str().c_str());
-        _context->ballPosPub(_ballPos);
+        
+
+        geometry_msgs::Pose ballpPos;
+        ballpPos.position.x = _ballPos.x;
+        ballpPos.position.y = _ballPos.y;
+        ballpPos.position.z = _ballPos.z;
+        ballpPos.orientation.w = 1;
+
+        _context->drawBallPos(ballpPos);
+        
+        geometry_msgs::Pose arrowDir;
+        arrowDir.position = ballpPos.position;
+        arrowDir.orientation.x = q.getX();
+        arrowDir.orientation.y = q.getY();
+        arrowDir.orientation.z = q.getZ();
+        arrowDir.orientation.w = q.getW();
+
+        _context->drawBallDir(arrowDir);
+
       } catch (const cv::Exception &e) {
         std::cerr << e.what() << '\n';
         _context->shutdown();

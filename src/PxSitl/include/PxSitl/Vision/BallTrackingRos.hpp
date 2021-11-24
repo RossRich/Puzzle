@@ -13,6 +13,7 @@
 #include <sensor_msgs/CameraInfo.h>
 #include <std_srvs/Empty.h>
 #include <visualization_msgs/Marker.h>
+#include <opencv2/core.hpp>
 
 using sensor_msgs::CameraInfoConstPtr;
 using visualization_msgs::Marker;
@@ -39,7 +40,9 @@ public:
 
   bool runSetupSrv(std_srvs::EmptyRequest &request, std_srvs::EmptyResponse &response);
   bool loadParam();
-  void ballPosPub(cv::Point3d ballPos);
+  void ballPosPub(Marker m);
+  void drawBallDir(geometry_msgs::Pose pose);
+  void drawBallPos(geometry_msgs::Pose pose);
 
   void setState(State *state);
   void setStrategy(Strategy *strategy);
