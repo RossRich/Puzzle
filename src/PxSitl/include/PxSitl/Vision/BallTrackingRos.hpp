@@ -40,9 +40,9 @@ public:
 
   bool runSetupSrv(std_srvs::EmptyRequest &request, std_srvs::EmptyResponse &response);
   bool loadParam();
-  void ballPosPub(Marker m);
-  void drawBallDir(geometry_msgs::Pose pose);
-  void drawBallPos(geometry_msgs::Pose pose);
+  void drawBallPos(geometry_msgs::Pose p);
+  void drawBallDiract(geometry_msgs::Pose p);
+  void pubMarker(Marker m);
 
   void setState(State *state);
   void setStrategy(Strategy *strategy);
