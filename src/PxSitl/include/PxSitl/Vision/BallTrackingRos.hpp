@@ -39,7 +39,8 @@ public:
 
   bool runSetupSrv(std_srvs::EmptyRequest &request, std_srvs::EmptyResponse &response);
   bool loadParam();
-  void ballPosPub(cv::Point3d ballPos);
+  void drawBallPos(geometry_msgs::Pose p);
+  void drawBallDiract(geometry_msgs::Pose p);
 
   void setState(State *state);
   void setStrategy(Strategy *strategy);
@@ -53,6 +54,7 @@ public:
   void wait();
   void loop();
   void shutdown();
+  void pubMarker(Marker m);
 };
 
 #include "StateTracking.hpp"
