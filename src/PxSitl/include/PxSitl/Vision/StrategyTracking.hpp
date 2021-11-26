@@ -12,6 +12,7 @@
 #include <tf2_ros/transform_listener.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <image_geometry/pinhole_camera_model.h>
+#include <queue>
 
 using geometry_msgs::TransformStamped;
 using image_geometry::PinholeCameraModel;
@@ -33,6 +34,7 @@ private:
   PinholeCameraModel _cameraModel;
   tf2_ros::Buffer _tfBuffer;
   tf2_ros::TransformListener _tfListener;
+  std::queue<cv::Point3d> _ballTragectory;
   
 public:
   StrategyTracking(VideoHandler &vh, BallTrackingRos *context) : _vh(vh), _context(context), _tfListener(_tfBuffer) {

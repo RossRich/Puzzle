@@ -8,12 +8,12 @@
 #include "StrategyTracking.hpp"
 #include "StrategyWait.hpp"
 #include "VideoHandler.hpp"
+#include <opencv2/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <ros/ros.h>
 #include <sensor_msgs/CameraInfo.h>
 #include <std_srvs/Empty.h>
 #include <visualization_msgs/Marker.h>
-#include <opencv2/core.hpp>
 
 using sensor_msgs::CameraInfoConstPtr;
 using visualization_msgs::Marker;
@@ -43,6 +43,7 @@ public:
   void drawBallPos(geometry_msgs::Pose p);
   void drawBallDiract(geometry_msgs::Pose p);
   void pubMarker(Marker m);
+  void draBallTrajectory(std::queue<cv::Point3d> &bt);
 
   void setState(State *state);
   void setStrategy(Strategy *strategy);

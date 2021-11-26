@@ -107,6 +107,26 @@ void BallTrackingRos::drawBallDiract(geometry_msgs::Pose pose) {
   pubMarker(m);
 }
 
+void BallTrackingRos::draBallTrajectory(std::queue<cv::Point3d> &bt) {
+  Marker line;
+
+  line.header.frame_id = "camera_link";
+  line.header.stamp = ros::Time::now();
+
+  line.id = 0;
+  line.ns = "trajectory";
+  line.type = Marker::LINE_STRIP;
+
+  geometry_msgs::Point point;
+  for (uint8_t i = 0; i < bt.size(); i++)
+  {
+    line.points.push_back(point);
+  }
+  
+  //todo draw line 
+
+}
+
 void BallTrackingRos::pubMarker(Marker m) { _ballPub.publish(m); }
 
 void BallTrackingRos::setState(State *state) {
@@ -256,6 +276,11 @@ void StrategyTracking::execute() {
 
         cv::Point3d newBallPos = _cameraModel.projectPixelTo3dRay(center);
         newBallPos.z = distToBall * 0.001f;
+
+        if (_ballTragectory.size() > 5)
+          _ballTragectory.pop();
+        
+        _ballTragectory.push(newBallPos);
 
         tf2::Vector3 ballPoseV(_ballPos.x, _ballPos.y, _ballPos.z);
         tf2::Vector3 newBallPoseV(newBallPos.x, newBallPos.y, newBallPos.z);
