@@ -107,7 +107,7 @@ void BallTrackingRos::drawBallDiract(geometry_msgs::Pose pose) {
   pubMarker(m);
 }
 
-void BallTrackingRos::draBallTrajectory(std::queue<cv::Point3d> &bt) {
+void BallTrackingRos::draBallTrajectory(std::list<cv::Point3d> &bt) {
   Marker line;
 
   line.header.frame_id = "camera_link";
@@ -117,14 +117,31 @@ void BallTrackingRos::draBallTrajectory(std::queue<cv::Point3d> &bt) {
   line.ns = "trajectory";
   line.type = Marker::LINE_STRIP;
 
+  std_msgs::ColorRGBA c;
+  c.a = 1;
+  c.b = 0;
+  c.g = 1;
+  c.r = 0;
+
+  line.color = c;
+
+  geometry_msgs::Vector3 scale;
+  scale.x = .05f;
+  scale.y = .05f;
+
+  line.scale = scale;
+
   geometry_msgs::Point point;
-  for (uint8_t i = 0; i < bt.size(); i++)
-  {
+  for (auto &&i : bt) {
+    point.x = i.x;
+    point.y = i.y;
+    point.z = i.z;
     line.points.push_back(point);
   }
-  
-  //todo draw line 
 
+  line.pose.orientation.w = 1;
+
+  pubMarker(line);
 }
 
 void BallTrackingRos::pubMarker(Marker m) { _ballPub.publish(m); }
@@ -278,18 +295,18 @@ void StrategyTracking::execute() {
         newBallPos.z = distToBall * 0.001f;
 
         if (_ballTragectory.size() > 5)
-          _ballTragectory.pop();
-        
-        _ballTragectory.push(newBallPos);
+          _ballTragectory.pop_front();
+
+        _ballTragectory.push_back(newBallPos);
 
         tf2::Vector3 ballPoseV(_ballPos.x, _ballPos.y, _ballPos.z);
         tf2::Vector3 newBallPoseV(newBallPos.x, newBallPos.y, newBallPos.z);
 
         tf2::Vector3 ballDirV = newBallPoseV - ballPoseV;
 
-        // tf2::Quaternion q = tf2::shortestArcQuatNormalize2(ballPoseV, newBallPoseV);
-        tf2::Quaternion q;
-        q.setEulerZYX(ballDirV.z(), ballDirV.y(), ballDirV.x());
+        tf2::Quaternion q = tf2::shortestArcQuatNormalize2(ballPoseV, newBallPoseV);
+        // tf2::Quaternion q;
+        // q.setEulerZYX(ballDirV.z(), ballDirV.y(), ballDirV.x());
 
         Utils::fastFilterCvPoint3d(_ballPos, newBallPos, _filterGain);
 
@@ -307,6 +324,8 @@ void StrategyTracking::execute() {
         pose.orientation.z = q.z();
 
         _context->drawBallDiract(pose);
+
+        _context->draBallTrajectory(_ballTragectory);
 
         std::stringstream info2;
         info2 << _ballPos;

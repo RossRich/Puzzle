@@ -43,7 +43,7 @@ public:
   void drawBallPos(geometry_msgs::Pose p);
   void drawBallDiract(geometry_msgs::Pose p);
   void pubMarker(Marker m);
-  void draBallTrajectory(std::queue<cv::Point3d> &bt);
+  void draBallTrajectory(std::list<cv::Point3d> &bt);
 
   void setState(State *state);
   void setStrategy(Strategy *strategy);

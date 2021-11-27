@@ -34,7 +34,7 @@ private:
   PinholeCameraModel _cameraModel;
   tf2_ros::Buffer _tfBuffer;
   tf2_ros::TransformListener _tfListener;
-  std::queue<cv::Point3d> _ballTragectory;
+  std::list<cv::Point3d> _ballTragectory;
   
 public:
   StrategyTracking(VideoHandler &vh, BallTrackingRos *context) : _vh(vh), _context(context), _tfListener(_tfBuffer) {
