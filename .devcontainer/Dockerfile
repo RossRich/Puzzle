@@ -21,7 +21,7 @@ RUN apt update \
     && apt install ros-noetic-image-geometry -y \
     && apt-get install librealsense2-dkms -y \
     && apt-get install librealsense2-utils -y \
-    && apt-get install librealsense2-dev -y \
-    # && apt install libopencv-dev python3-opencv -y
+    && apt-get install librealsense2-dev -y
+    # && apt install libopencv-dev python3 \
 
 RUN git config --global user.email "RossRich@bk.ru" && git config --global user.name "Ross Rich"
