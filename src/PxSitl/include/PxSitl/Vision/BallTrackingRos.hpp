@@ -42,8 +42,9 @@ public:
   bool loadParam();
   void drawBallPos(geometry_msgs::Pose p);
   void drawBallDiract(geometry_msgs::Pose p);
-  void pubMarker(Marker m);
+  void drawPredicted(std::array<geometry_msgs::Point, 5> array);
   void draBallTrajectory(std::list<cv::Point3d> &bt);
+  void pubMarker(Marker m);
 
   void setState(State *state);
   void setStrategy(Strategy *strategy);

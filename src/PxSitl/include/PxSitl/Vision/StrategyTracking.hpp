@@ -30,6 +30,7 @@ private:
   cv::Point3d _ballPos;
   BallTrackingRos *_context;
   ros::Time _timer;
+  ros::Time _lastDetection;
   ros::Duration _timeOut = ros::Duration(0.03);
   PinholeCameraModel _cameraModel;
   tf2_ros::Buffer _tfBuffer;
@@ -41,6 +42,7 @@ public:
     cv::namedWindow(_winName, cv::WINDOW_AUTOSIZE);
     cv::namedWindow("test", cv::WINDOW_AUTOSIZE);
     _timer = ros::Time::now();
+    _lastDetection = ros::Time::now();
   }
 
   ~StrategyTracking() {

@@ -79,6 +79,38 @@ void BallTrackingRos::drawBallPos(geometry_msgs::Pose p) {
   pubMarker(m);
 }
 
+void BallTrackingRos::drawPredicted(std::array<geometry_msgs::Point, 5> array) {
+  Marker m;
+
+  m.header.frame_id = "camera_link";
+  m.header.stamp = ros::Time::now();
+  m.ns = "ball_pred";
+  m.id = 2;
+
+  for (auto &&p : array) {
+    m.points.push_back(p);
+  }
+
+  m.pose.orientation.w = 1;
+
+  geometry_msgs::Vector3 scale;
+  scale.x = .1;
+  scale.y = .1;
+  scale.z = .1;
+  m.scale = scale;
+
+  std_msgs::ColorRGBA c;
+  c.a = 1;
+  c.b = .321;
+  c.g = .34;
+  c.r = .0338;
+  m.color = c;
+
+  m.type = Marker::POINTS;
+
+  pubMarker(m);
+}
+
 void BallTrackingRos::drawBallDiract(geometry_msgs::Pose pose) {
   Marker m;
 
@@ -240,10 +272,12 @@ void StrategyTracking::execute() {
   }
 
   cv::Mat mask;
-  cv::Point2i center;
-  uint16_t radius;
+  cv::Point2i center = {0, 0};
+  uint16_t radius = 0;
 
   _bt.process(_frame, mask, &center, &radius);
+
+  ROS_DEBUG("RADIUS: %d", radius);
 
   if (radius != 0) {
     cv::circle(_frame, center, radius + 7.0, cv::Scalar::all(128), 1, cv::LINE_4);
@@ -286,15 +320,16 @@ void StrategyTracking::execute() {
           break;
         }
 
-        std::cout << "Hight accur: " << distToBall * 0.001f << std::endl;
+        // std::cout << "Hight accur: " << distToBall * 0.001f << std::endl;
         info << " DIST: " << distToBall;
+
         // std::cout << "Raw" << _depth.at<uint16_t>(center) * 0.001f <<
         // std::endl;
 
         cv::Point3d newBallPos = _cameraModel.projectPixelTo3dRay(center);
         newBallPos.z = distToBall * 0.001f;
 
-        if (_ballTragectory.size() > 5)
+        if (_ballTragectory.size() > 10)
           _ballTragectory.pop_front();
 
         _ballTragectory.push_back(newBallPos);
@@ -302,9 +337,37 @@ void StrategyTracking::execute() {
         tf2::Vector3 ballPoseV(_ballPos.x, _ballPos.y, _ballPos.z);
         tf2::Vector3 newBallPoseV(newBallPos.x, newBallPos.y, newBallPos.z);
 
-        tf2::Vector3 ballDirV = newBallPoseV - ballPoseV;
+        float dist = tf2::tf2Distance2(newBallPoseV, ballPoseV);
+
+        if (ros::Time::now() - _lastDetection >= ros::Duration(0.1)) {
+          double velocity = dist / ros::Duration(0.1).toSec();
+
+          tf2::Vector3 ballDirV = newBallPoseV - ballPoseV;
+          tf2::Vector3 normVBall(ballDirV.normalize());
+
+          tf2::Vector3 tt(newBallPoseV);
+          std::array<geometry_msgs::Point, 5> linePoints;
+          
+          for (size_t i = 0; i < 5; i++) {
+            normVBall *= (velocity * .025);
+            // normVBall.z = 
+            tt += normVBall;
+
+            geometry_msgs::Point p;
+            p.x = tt.x();
+            p.y = tt.y();
+            p.z = tt.z();
+            
+            linePoints.at(i) = p;
+          }
+          _context->drawPredicted(linePoints);
+
+          _lastDetection = ros::Time::now();
+        }
+        // ROS_INFO("Ball move %f", dist);
 
         tf2::Quaternion q = tf2::shortestArcQuatNormalize2(ballPoseV, newBallPoseV);
+
         // tf2::Quaternion q;
         // q.setEulerZYX(ballDirV.z(), ballDirV.y(), ballDirV.x());
 
@@ -327,9 +390,9 @@ void StrategyTracking::execute() {
 
         _context->draBallTrajectory(_ballTragectory);
 
-        std::stringstream info2;
-        info2 << _ballPos;
-        ROS_INFO("Pixel in 3d: %s", info2.str().c_str());
+        // std::stringstream info2;
+        // info2 << _ballPos;
+        // ROS_INFO("Pixel in 3d: %s", info2.str().c_str());
       } catch (const cv::Exception &e) {
         std::cerr << e.what() << '\n';
         _context->shutdown();
@@ -355,7 +418,7 @@ void StrategyTracking::execute() {
     /* geometry_msgs::Vector pt = transform.transform.translation;
     cv::Point3d pt_cv(pt.x, pt.y, pt.z);
     cv::Point2d uv = _cameraModel.project3dToPixel(pt_cv); */
-    ROS_INFO("dt: %f ms", ros::Duration(ros::Time::now() - tt).toSec() * 1000.0f);
+    // ROS_INFO("dt: %f ms", ros::Duration(ros::Time::now() - tt).toSec() * 1000.0f);
   }
 
   try {
