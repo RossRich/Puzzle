@@ -343,14 +343,20 @@ void StrategyTracking::execute() {
           double velocity = dist / ros::Duration(0.1).toSec();
 
           tf2::Vector3 ballDirV = newBallPoseV - ballPoseV;
+
+          double vX = ballDirV.x() / ros::Duration(0.1).toSec();
+          double vY = ballDirV.y() / ros::Duration(0.1).toSec();
+          double vZ = ballDirV.z() / ros::Duration(0.1).toSec();
+
+          // ROS_INFO("vX: %lf, xY: %lf vZ: %lf", vX, vY, vZ);
+
           tf2::Vector3 normVBall(ballDirV.normalize());
 
           tf2::Vector3 tt(newBallPoseV);
           std::array<geometry_msgs::Point, 5> linePoints;
           
           for (size_t i = 0; i < 5; i++) {
-            normVBall *= (velocity * .025);
-            // normVBall.z = 
+            normVBall.setZ(normVBall.z() +(vZ * ros::Duration(0.25).toSec()) + 5.0 * 0.0625);
             tt += normVBall;
 
             geometry_msgs::Point p;
