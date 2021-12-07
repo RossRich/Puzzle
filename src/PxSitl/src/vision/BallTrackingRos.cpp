@@ -79,7 +79,7 @@ void BallTrackingRos::drawBallPos(geometry_msgs::Pose p) {
   pubMarker(m);
 }
 
-void BallTrackingRos::drawPredicted(std::array<geometry_msgs::Point, 5> array) {
+void BallTrackingRos::drawPredicted(std::array<geometry_msgs::Point, 10> array) {
   Marker m;
 
   m.header.frame_id = "camera_link";
@@ -340,17 +340,25 @@ void StrategyTracking::execute() {
         float dist = tf2::tf2Distance2(newBallPoseV, ballPoseV);
 
         if (ros::Time::now() - _lastDetection >= ros::Duration(0.1)) {
-          double velocity = dist / ros::Duration(0.1).toSec();
+          // double velocity = dist / ros::Duration(0.1).toSec();
 
           tf2::Vector3 ballDirV = newBallPoseV - ballPoseV;
-          tf2::Vector3 normVBall(ballDirV.normalize());
 
-          tf2::Vector3 tt(newBallPoseV);
-          std::array<geometry_msgs::Point, 5> linePoints;
-          
-          for (size_t i = 0; i < 5; i++) {
-            normVBall *= (velocity * .025);
-            // normVBall.z = 
+          double vX = ballDirV.x() / ros::Duration(0.1).toSec();
+          double vY = ballDirV.y() / ros::Duration(0.1).toSec();
+          double vZ = ballDirV.z() / ros::Duration(0.1).toSec();
+
+          // ROS_INFO("vX: %lf, xY: %lf vZ: %lf", vX, vY, vZ);
+
+          double gt = (9.8 * ros::Duration(0.05).toSec() * ros::Duration(0.05).toSec()) / 2.0;
+          tf2::Vector3 tt(ballDirV);
+          std::array<geometry_msgs::Point, 10> linePoints;
+
+          for (size_t i = 0; i < 10; i++) {
+            tf2::Vector3 normVBall(tt.normalize());
+            normVBall.setX(normVBall.x() * (vX * ros::Duration(0.05).toSec()));
+            normVBall.setY(normVBall.y() * (vY * ros::Duration(0.05).toSec()));
+            normVBall.setZ(normVBall.z() * ((vZ * ros::Duration(0.05).toSec()) - gt));
             tt += normVBall;
 
             geometry_msgs::Point p;
