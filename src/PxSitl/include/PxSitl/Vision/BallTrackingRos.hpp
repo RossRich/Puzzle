@@ -14,6 +14,7 @@
 #include <sensor_msgs/CameraInfo.h>
 #include <std_srvs/Empty.h>
 #include <visualization_msgs/Marker.h>
+#include <geometry_msgs/Point.h>
 
 using sensor_msgs::CameraInfoConstPtr;
 using visualization_msgs::Marker;
@@ -42,7 +43,7 @@ public:
   bool loadParam();
   void drawBallPos(geometry_msgs::Pose p);
   void drawBallDiract(geometry_msgs::Pose p);
-  void drawPredicted(std::array<geometry_msgs::Point, 10> array);
+  void drawPredicted(std::list<geometry_msgs::Point> list);
   void draBallTrajectory(std::list<cv::Point3d> &bt);
   void pubMarker(Marker m);
 

@@ -79,7 +79,7 @@ void BallTrackingRos::drawBallPos(geometry_msgs::Pose p) {
   pubMarker(m);
 }
 
-void BallTrackingRos::drawPredicted(std::array<geometry_msgs::Point, 10> array) {
+void BallTrackingRos::drawPredicted(std::list<geometry_msgs::Point> list) {
   Marker m;
 
   m.header.frame_id = "camera_link";
@@ -87,16 +87,16 @@ void BallTrackingRos::drawPredicted(std::array<geometry_msgs::Point, 10> array) 
   m.ns = "ball_pred";
   m.id = 2;
 
-  for (auto &&p : array) {
+  for (auto &&p : list) {
     m.points.push_back(p);
   }
 
   m.pose.orientation.w = 1;
 
   geometry_msgs::Vector3 scale;
-  scale.x = .1;
-  scale.y = .1;
-  scale.z = .1;
+  scale.x = .03;
+  scale.y = .03;
+  scale.z = .03;
   m.scale = scale;
 
   std_msgs::ColorRGBA c;
@@ -106,7 +106,7 @@ void BallTrackingRos::drawPredicted(std::array<geometry_msgs::Point, 10> array) 
   c.r = .0338;
   m.color = c;
 
-  m.type = Marker::POINTS;
+  m.type = Marker::LINE_STRIP;
 
   pubMarker(m);
 }
@@ -262,7 +262,6 @@ bool StrategyTracking::init() {
 }
 
 void StrategyTracking::execute() {
-  ros::Time tt = ros::Time::now();
   _vh >> _frame;
   _vh.readDepth(_depth);
 
@@ -277,7 +276,7 @@ void StrategyTracking::execute() {
 
   _bt.process(_frame, mask, &center, &radius);
 
-  ROS_DEBUG("RADIUS: %d", radius);
+  // ROS_DEBUG("RADIUS: %d", radius);
 
   if (radius != 0) {
     cv::circle(_frame, center, radius + 7.0, cv::Scalar::all(128), 1, cv::LINE_4);
@@ -285,130 +284,143 @@ void StrategyTracking::execute() {
 
     std::stringstream info;
     info << "CENTER: " << center << " RADIUS: " << radius;
-
     cv::Point2f textPos = {center.x + radius + 15.0f, center.y - 15.0f};
 
-    if (ros::Duration(ros::Time::now() - _timer) >= _timeOut) {
-      try {
-        uint16_t deametr = radius + radius;
-        cv::Mat ballDist(cv::Size2i(deametr, deametr), CV_16UC1, cv::Scalar::all(0));
-        _depth.copyTo(ballDist, mask);
+    try {
+      uint16_t deametr = radius + radius;
+      cv::Mat ballDist(cv::Size2i(deametr, deametr), CV_16UC1, cv::Scalar::all(0));
+      _depth.copyTo(ballDist, mask);
 
-        std::map<uint16_t, uint16_t> mapOfDist;
-        for (auto &&d : cv::Mat_<uint16_t>(ballDist)) {
-          if (d == 0)
-            continue;
-          if (mapOfDist.count(d) > 0)
-            mapOfDist.at(d) += 1;
-          else
-            mapOfDist.insert(std::pair<uint16_t, uint16_t>(d, 0));
-        }
-
-        std::multimap<uint16_t, uint16_t> inv;
-        for (auto &&i : mapOfDist)
-          inv.insert(std::pair<uint16_t, uint16_t>(i.second, i.first));
-
-        /* for (auto &&ii : inv)
-          std::cout << ii.first << ": " << ii.second << std::endl; */
-
-        uint16_t distToBall;
-        for (std::multimap<uint16_t, uint16_t>::const_iterator i = inv.cend(); i != inv.cbegin(); i--) {
-          if (i->second <= 100)
-            continue;
-
-          distToBall = i->second;
-          break;
-        }
-
-        // std::cout << "Hight accur: " << distToBall * 0.001f << std::endl;
-        info << " DIST: " << distToBall;
-
-        // std::cout << "Raw" << _depth.at<uint16_t>(center) * 0.001f <<
-        // std::endl;
-
-        cv::Point3d newBallPos = _cameraModel.projectPixelTo3dRay(center);
-        newBallPos.z = distToBall * 0.001f;
-
-        if (_ballTragectory.size() > 10)
-          _ballTragectory.pop_front();
-
-        _ballTragectory.push_back(newBallPos);
-
-        tf2::Vector3 ballPoseV(_ballPos.x, _ballPos.y, _ballPos.z);
-        tf2::Vector3 newBallPoseV(newBallPos.x, newBallPos.y, newBallPos.z);
-
-        float dist = tf2::tf2Distance2(newBallPoseV, ballPoseV);
-
-        if (ros::Time::now() - _lastDetection >= ros::Duration(0.1)) {
-          // double velocity = dist / ros::Duration(0.1).toSec();
-
-          tf2::Vector3 ballDirV = newBallPoseV - ballPoseV;
-
-          double vX = ballDirV.x() / ros::Duration(0.1).toSec();
-          double vY = ballDirV.y() / ros::Duration(0.1).toSec();
-          double vZ = ballDirV.z() / ros::Duration(0.1).toSec();
-
-          // ROS_INFO("vX: %lf, xY: %lf vZ: %lf", vX, vY, vZ);
-
-          double gt = (9.8 * ros::Duration(0.05).toSec() * ros::Duration(0.05).toSec()) / 2.0;
-          tf2::Vector3 tt(ballDirV);
-          std::array<geometry_msgs::Point, 10> linePoints;
-
-          for (size_t i = 0; i < 10; i++) {
-            tf2::Vector3 normVBall(tt.normalize());
-            normVBall.setX(normVBall.x() * (vX * ros::Duration(0.05).toSec()));
-            normVBall.setY(normVBall.y() * (vY * ros::Duration(0.05).toSec()));
-            normVBall.setZ(normVBall.z() * ((vZ * ros::Duration(0.05).toSec()) - gt));
-            tt += normVBall;
-
-            geometry_msgs::Point p;
-            p.x = tt.x();
-            p.y = tt.y();
-            p.z = tt.z();
-            
-            linePoints.at(i) = p;
-          }
-          _context->drawPredicted(linePoints);
-
-          _lastDetection = ros::Time::now();
-        }
-        // ROS_INFO("Ball move %f", dist);
-
-        tf2::Quaternion q = tf2::shortestArcQuatNormalize2(ballPoseV, newBallPoseV);
-
-        // tf2::Quaternion q;
-        // q.setEulerZYX(ballDirV.z(), ballDirV.y(), ballDirV.x());
-
-        Utils::fastFilterCvPoint3d(_ballPos, newBallPos, _filterGain);
-
-        geometry_msgs::Pose pose;
-        pose.position.x = _ballPos.x;
-        pose.position.y = _ballPos.y;
-        pose.position.z = _ballPos.z;
-        pose.orientation.w = 1;
-
-        _context->drawBallPos(pose);
-
-        pose.orientation.w = q.w();
-        pose.orientation.x = q.x();
-        pose.orientation.y = q.y();
-        pose.orientation.z = q.z();
-
-        _context->drawBallDiract(pose);
-
-        _context->draBallTrajectory(_ballTragectory);
-
-        // std::stringstream info2;
-        // info2 << _ballPos;
-        // ROS_INFO("Pixel in 3d: %s", info2.str().c_str());
-      } catch (const cv::Exception &e) {
-        std::cerr << e.what() << '\n';
-        _context->shutdown();
+      std::map<uint16_t, uint16_t> mapOfDist;
+      for (auto &&d : cv::Mat_<uint16_t>(ballDist)) {
+        if (d == 0)
+          continue;
+        if (mapOfDist.count(d) > 0)
+          mapOfDist.at(d) += 1;
+        else
+          mapOfDist.insert(std::pair<uint16_t, uint16_t>(d, 0));
       }
-      _timer = ros::Time::now();
+
+      std::multimap<uint16_t, uint16_t> inv;
+      for (auto &&i : mapOfDist)
+        inv.insert(std::pair<uint16_t, uint16_t>(i.second, i.first));
+
+      /* for (auto &&ii : inv)
+        std::cout << ii.first << ": " << ii.second << std::endl; */
+
+      uint16_t distToBall;
+      for (std::multimap<uint16_t, uint16_t>::const_iterator i = inv.cend(); i != inv.cbegin(); i--) {
+        if (i->second <= 100)
+          continue;
+
+        distToBall = i->second;
+        break;
+      }
+
+      // std::cout << "Hight accur: " << distToBall * 0.001f << std::endl;
+      info << " DIST: " << distToBall;
+
+      // std::cout << "Raw" << _depth.at<uint16_t>(center) * 0.001f <<
+      // std::endl;
+
+      cv::Point3d newBallPos = _cameraModel.projectPixelTo3dRay(center);
+      newBallPos.z = distToBall * 0.001f;
+
+      if (_ballTragectory.size() > 10)
+        _ballTragectory.pop_front();
+
+      _ballTragectory.push_back(newBallPos);
+
+      tf2::Vector3 ballPoseV(_ballPos.x, _ballPos.y, _ballPos.z);
+      tf2::Vector3 newBallPoseV(newBallPos.x, newBallPos.y, newBallPos.z);
+
+      float dist = tf2::tf2Distance2(newBallPoseV, ballPoseV);
+
+      if (ros::Time::now() - _lastDetection >= ros::Duration(0.1)) {
+        // double velocity = dist / ros::Duration(0.1).toSec();
+
+        tf2::Vector3 ballDirV = newBallPoseV - ballPoseV;
+
+        double vX = ballDirV.x() / ros::Duration(0.1).toSec();
+        double vY = ballDirV.y() / ros::Duration(0.1).toSec();
+        double vZ = ballDirV.z() / ros::Duration(0.1).toSec();
+
+        // ROS_INFO("vX: %lf, xY: %lf vZ: %lf", vX, vY, vZ);
+
+        double gt = (9.8 * ros::Duration(0.1).toSec() * ros::Duration(0.1).toSec()) / 2.0;
+        tf2::Vector3 tt(newBallPoseV);
+        tf2::Vector3 ptt(ballPoseV);
+
+        for (size_t i = 0; i < 10; i++) {
+          ballDirV = tt - ptt;
+          tf2::Vector3 normVBall(ballDirV.normalize());
+          normVBall.setX(normVBall.x() * (vX * ros::Duration(0.1).toSec()));
+          normVBall.setY(normVBall.y() * ((vY * ros::Duration(0.1).toSec()) - gt));
+          normVBall.setZ(normVBall.z() * (vZ * ros::Duration(0.1).toSec()));
+          ptt = tt;
+          tt += normVBall;
+
+          geometry_msgs::Point p;
+          p.x = tt.x();
+          p.y = tt.y();
+          p.z = tt.z();
+
+          _ballPredictedTraj.push_back(p);
+          if (_ballPredictedTraj.size() > 20)
+            _ballPredictedTraj.pop_front();
+        }
+        _context->drawPredicted(_ballPredictedTraj);
+
+        _lastDetection = ros::Time::now();
+      }
+      // ROS_INFO("Ball move %f", dist);
+
+      tf2::Quaternion q = tf2::shortestArcQuatNormalize2(ballPoseV, newBallPoseV);
+
+      // tf2::Quaternion q;
+      // q.setEulerZYX(ballDirV.z(), ballDirV.y(), ballDirV.x());
+
+      Utils::fastFilterCvPoint3d(_ballPos, newBallPos, _filterGain);
+
+      geometry_msgs::Pose pose;
+      pose.position.x = _ballPos.x;
+      pose.position.y = _ballPos.y;
+      pose.position.z = _ballPos.z;
+      pose.orientation.w = 1;
+
+      _context->drawBallPos(pose);
+
+      pose.orientation.w = q.w();
+      pose.orientation.x = q.x();
+      pose.orientation.y = q.y();
+      pose.orientation.z = q.z();
+
+      _context->drawBallDiract(pose);
+
+      _context->draBallTrajectory(_ballTragectory);
+
+      // std::stringstream info2;
+      // info2 << _ballPos;
+      // ROS_INFO("Pixel in 3d: %s", info2.str().c_str());
+    } catch (const cv::Exception &e) {
+      std::cerr << e.what() << '\n';
+      _context->shutdown();
     }
 
-    cv::putText(_frame, info.str(), textPos, cv::FONT_HERSHEY_SIMPLEX, .6, cv::Scalar::all(0), 2);
+    /* if (ros::Duration(ros::Time::now() - _timer) <= ros::Duration(1.0)) {
+      framesCount++;
+    } else {
+      fps = framesCount;
+      _timer = ros::Time::now();
+      framesCount = 0;
+    } */
+
+    _fps = static_cast<int>(std::ceil(1.0 / ros::Duration(ros::Time::now() - _timer).toSec()));
+
+    cv::Size textSize = cv::getTextSize(std::to_string(_fps), cv::FONT_HERSHEY_SIMPLEX, 0.4, 2, nullptr);
+    cv::putText(_frame, std::to_string(_fps), cv::Point(5, textSize.height * 2), cv::FONT_HERSHEY_SIMPLEX, 0.4,
+                cv::Scalar::all(0));
+    cv::putText(_frame, info.str(), textPos, cv::FONT_HERSHEY_SIMPLEX, .4, cv::Scalar::all(0), 2);
     /* TransformStamped transform;
 
     try {
@@ -435,4 +447,7 @@ void StrategyTracking::execute() {
   } catch (const cv::Exception &e) {
     ROS_ERROR("The video in current environment not available.\n%s", e.what());
   }
+  // << end rate
+  // _rate.sleep();
+  _timer = ros::Time::now();
 }
