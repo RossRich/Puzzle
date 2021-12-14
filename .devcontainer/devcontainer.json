@@ -39,6 +39,8 @@
 		"/dev:/dev",
 		"--device",
         "/dev/dri:/dev/dri",
+		"-v",
+		"~/.gitconfig:/etc/gitconfig",
 		// "-v",
 		// "/home/asus/opencv/:/home/user/opencv/:rw",
 		// "-v",

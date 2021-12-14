@@ -22,6 +22,10 @@ RUN apt update \
     && apt-get install librealsense2-dkms -y \
     && apt-get install librealsense2-utils -y \
     && apt-get install librealsense2-dev -y
-    # && apt install libopencv-dev python3 \
 
-RUN git config --global user.email "RossRich@bk.ru" && git config --global user.name "Ross Rich"
+#setup gazebo simulation
+WORKDIR /workspaces/Puzzle/src/PX4-Autopilot
+RUN DONT_RUN=1 make px4_sitl gazebo
+RUN source Tools/setup_gazebo.bash $(pwd) $(pwd)/build/px4_sitl_default
+ENV GAZEBO_MODEL_PATH ${GAZEBO_MODEL_PATH:/workspaces/Puzzle/src/PxSitl/gazebo_sitl/models}
+
