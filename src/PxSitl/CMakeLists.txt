@@ -16,6 +16,9 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   sensor_msgs
   realsense2_camera
+  tf2_ros
+  image_geometry
+  visualization_msgs
 )
 
 find_package(cv_bridge REQUIRED)
@@ -114,7 +117,7 @@ find_package(OpenCV 4.5.3 REQUIRED)
 catkin_package(
  INCLUDE_DIRS include
  LIBRARIES ${PROJECT_NAME} video_handler
- CATKIN_DEPENDS roscpp std_msgs sensor_msgs cv_bridge image_transport
+ CATKIN_DEPENDS roscpp std_msgs sensor_msgs cv_bridge image_transport tf2_ros image_geometry
 #  DEPENDS system_lib
 )
 

@@ -1,6 +1,6 @@
 #include "../../include/PxSitl/Vision/VideoHandler.hpp"
 
 VideoHandler& operator>>(VideoHandler &vh, cv::Mat &img) {
-  vh.read(img);
+  vh.readColor(img);
   return vh;
 }

@@ -37,7 +37,9 @@ public:
   RosVH(ros::NodeHandle &nh, ImageTransport &it, uint16_t width, uint16_t height);
   ~RosVH();
 
-  void read(cv::Mat &frame) override;
+  void readColor(cv::Mat &colorFrame) override;
+  void readDepth(cv::Mat &depthFrame) override;
+  void readFrameset(cv::Mat &colorFrame, cv::Mat &depthFrame) override; 
 };
 
 #endif // _ROS_VIDEO_HANDLER_H_

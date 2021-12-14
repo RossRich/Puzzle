@@ -10,7 +10,7 @@ class BallTrackingRos;
 class StrategyWait : public Strategy {
 private:
   ros::Time _timer;
-  ros::Duration _timeOut = ros::Duration(10);
+  ros::Duration _timeOut = ros::Duration(5);
   BallTrackingRos *_context = nullptr;
 
 public:

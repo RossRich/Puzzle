@@ -42,7 +42,7 @@ void BallTracking::process(cv::Mat &color, cv::Mat &maskt, cv::Point2i *center, 
     }
 
     cv::minEnclosingCircle(cnt0, c, R);
-
+    
     if (center != nullptr)
       *center = c;
 
