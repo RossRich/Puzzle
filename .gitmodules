@@ -3,7 +3,7 @@
 	url = https://github.com/PX4/PX4-Autopilot.git
 	branch = master
 [submodule "src/mavlink_sitl_gazebo"]
-	path = src/mavlink_sitl_gazebo
+	path = src/PX4-SITL_gazebo
 	url = https://github.com/PX4/PX4-SITL_gazebo.git
 	branch = master
 [submodule "src/realsense-ros"]
