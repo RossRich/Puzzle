@@ -1,9 +1,11 @@
 [submodule "src/PX4-Autopilot"]
 	path = src/PX4-Autopilot
 	url = https://github.com/PX4/PX4-Autopilot.git
+	branch = master
 [submodule "src/mavlink_sitl_gazebo"]
 	path = src/mavlink_sitl_gazebo
 	url = https://github.com/PX4/PX4-SITL_gazebo.git
+	branch = master
 [submodule "src/realsense-ros"]
 	path = src/realsense-ros
 	url = https://github.com/IntelRealSense/realsense-ros.git
