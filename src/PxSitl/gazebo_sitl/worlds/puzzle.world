@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <sdf version="1.5">
-  <world name="default">
+  <world name="puzzle_world">
     <!-- A global light source -->
     <include>
       <uri>model://sun</uri>
@@ -17,8 +17,12 @@
       <uri>model://big_gun</uri>
     </include>
 
+    <include>
+      <uri>model://olive</uri>
+    </include>
+
     <physics name='default_physics' default='0' type='ode'>
-      <gravity>0 0 -9.8066</gravity>
+      <gravity>0 0 -9.8</gravity>
       <ode>
         <solver>
           <type>quick</type>
@@ -38,5 +42,7 @@
       <real_time_update_rate>250</real_time_update_rate>
       <magnetic_field>6.0e-6 2.3e-5 -4.2e-5</magnetic_field>
     </physics>
+
+    <plugin name="GunPlugin" filename="libGunPlugin.so" />
   </world>
 </sdf>

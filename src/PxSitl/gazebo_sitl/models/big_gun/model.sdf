@@ -1,6 +1,6 @@
 <?xml version='1.0'?>
 <sdf version='1.7'>
-  <model name='big_gun'>
+  <model name="big_gun">
     <static>1</static>
     <allow_auto_disable>1</allow_auto_disable>
     <pose>-5 0 0 0 0 0</pose>
@@ -56,6 +56,15 @@
         </geometry>
       </collision>
     </link>
+    
+    <link name="bullet_spawner">
+      <pose>.5 0 .95 0 0 0</pose>
+    </link>
+
+    <joint name="bullet_spawner_joint" type="fixed">
+      <parent>main</parent>
+      <child>bullet_spawner</child>
+    </joint>
 
     <include>
       <uri>model://camera</uri>
