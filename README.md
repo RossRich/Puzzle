@@ -46,11 +46,14 @@ source /use/share/gazebo.bash
 ```
 * для px4
 ```
-source ./workspaces/Puzzle/src/PX4-Autopilot/Tools/setup_gazebo.bash /workspaces/Puzzle/src/PX4-Autopilot /workspaces/Puzzle/src/PX4-Autopilot/build/px4_sitl_default
+source /workspaces/Puzzle/src/PX4-Autopilot/Tools/setup_gazebo.bash /workspaces/Puzzle/src/PX4-Autopilot /workspaces/Puzzle/src/PX4-Autopilot/build/px4_sitl_default
 ```
 * для puzzle
 ```
 export GAZEBO_MODEL_PATH=/workspaces/Puzzle/src/PxSitl/gazebo_sitl/models:$GAZEBO_MODEL_PATH
+```
+```
+export GAZEBO_PLUGIN_PATH=/workspaces/Puzzle/src/PxSitl/gazebo_sitl/plugins/build:$GAZEBO_PLUGIN_PATH
 ```
 * для ROS
 ```
