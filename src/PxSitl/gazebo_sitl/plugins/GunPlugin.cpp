@@ -1,9 +1,9 @@
 #include <gazebo/common/common.hh>
 #include <gazebo/gazebo.hh>
 #include <gazebo/physics/physics.hh>
+#include <gazebo/transport/transport.hh>
 #include <ignition/math/Pose3.hh>
 #include <ignition/math/Vector3.hh>
-#include <gazebo/transport/transport.hh>
 
 using namespace gazebo;
 using std::cout;
@@ -11,18 +11,31 @@ using std::endl;
 
 class GunPlugin : public ModelPlugin {
 private:
-  // std::vector bullets();
-  transport::PublicationPtr factoryPub;
+  transport::PublisherPtr factoryPub;
   transport::NodePtr node;
+  physics::Model_V bullets;
+  transport::SubscriberPtr factorySub;
+  physics::WorldPtr _thisWorld;
+  event::ConnectionPtr _newModelAdded;
 
 public:
   GunPlugin() : ModelPlugin(), node(new transport::Node()) {}
   ~GunPlugin() {}
 
-  void Load(physics::ModelPtr model, sdf::ElementPtr sdf) {
-    node->Init(model->GetName());
+  void factoryCallback(ConstFactoryPtr &msg) {
+    // gzmsg << "Total models: " << _thisWorld->ModelCount() << endl;
+  }
 
-    factoryPub = node->Advertise<msgs::Factory>("~/spawn_bullet");
+  void Load(physics::ModelPtr model, sdf::ElementPtr sdf) {
+
+    _thisWorld = model->GetWorld();
+
+    node->Init("puzzle_world");
+
+    factoryPub = node->Advertise<msgs::Factory>("~/factory");
+    factorySub = node->Subscribe("~/factory", &GunPlugin::factoryCallback, this);
+
+    _newModelAdded = event::Events::ConnectAddEntity(std::bind(&GunPlugin::onNewModel, this));
 
     auto bulletSpavner = model->GetLink("bullet_spawner");
 
@@ -67,10 +80,39 @@ public:
       return;
     }
 
-    oliveVisual->GetElement("transparency")->Set<int>(0);
+    oliveVisual->GetElement("transparency")->Set<int>(1);
     oliveModel->GetElement("static")->Set<int>(1);
 
-    world->InsertModelSDF(*sdfOlive.get());
+    msgs::Factory factoryMsg;
+    std::string bulletName = "bullet_";
+
+    for (int i = 0; i < 5; i++) {
+      oliveModel->GetAttribute("name")->Set<std::string>(bulletName + std::to_string(i));
+      bSpawnerPose.Pos() = bSpawnerPose.CoordPositionAdd(ignition::math::Vector3d(0, 0, 0.12));
+      factoryMsg.set_sdf(sdfOlive->ToString());
+      msgs::Set(factoryMsg.mutable_pose(), bSpawnerPose);
+      factoryPub->Publish(factoryMsg);
+    }
+
+    gzmsg << "Total models: " << world->ModelCount() << endl;
+
+    for (auto &&model : world->Models()) {
+      if (model->GetName().find(bulletName.c_str()) != std::string::npos) {
+        bullets.push_back(model);
+      }
+    }
+
+    gzmsg << "Total bullets: " << bullets.size() << endl;
+
+    for (auto &&bullet : bullets) {
+      sdf::ElementPtr visual = bullet->GetSDF()->FindElement("visual");
+      gzmsg << visual->ToString("");
+      break;
+    }
+  }
+
+  void onNewModel() {
+    
   }
 };
 
