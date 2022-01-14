@@ -19,6 +19,9 @@ protected slots: void onClickButton();
 public:
   GUIShootPlugin();
   ~GUIShootPlugin();
+
+  transport::PublisherPtr _shootPub;
+  transport::NodePtr _node;
 };
 
 #endif // _GAZEBO_SHOOT_PLUGIN_H_

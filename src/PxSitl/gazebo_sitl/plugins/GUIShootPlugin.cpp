@@ -5,6 +5,11 @@ GZ_REGISTER_GUI_PLUGIN(GUIShootPlugin);
 
 GUIShootPlugin::GUIShootPlugin() : GUIPlugin() {
 
+  _node = transport::NodePtr(new transport::Node());
+  _node->Init();
+
+  _shootPub = _node->Advertise<msgs::Empty>("~/gun_shoot");
+
   setStyleSheet("QFrame { background-color : rgba(100, 100, 100, 255); color : white; }");
   QHBoxLayout *mainLayout = new QHBoxLayout;
 
@@ -27,7 +32,11 @@ GUIShootPlugin::GUIShootPlugin() : GUIPlugin() {
   move(10, 10);
   resize(120, 40);
 }
+
 GUIShootPlugin::~GUIShootPlugin() {}
 
-void GUIShootPlugin::onClickButton() { gzmsg << "click\n"; }
-
+void GUIShootPlugin::onClickButton() {
+  msgs::Empty shootMsg;
+  shootMsg.set_unused(true);
+  _shootPub->Publish(shootMsg);
+}

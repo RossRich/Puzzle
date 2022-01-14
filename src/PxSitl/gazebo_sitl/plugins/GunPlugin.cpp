@@ -4,38 +4,130 @@
 #include <gazebo/transport/transport.hh>
 #include <ignition/math/Pose3.hh>
 #include <ignition/math/Vector3.hh>
+#include <map>
 
 using namespace gazebo;
 using std::cout;
 using std::endl;
+using ignition::math::Vector3d;
+using ignition::math::Quaterniond;
+using ignition::math::Pose3d;
 
 class GunPlugin : public ModelPlugin {
 private:
-  transport::PublisherPtr factoryPub;
-  transport::NodePtr node;
-  physics::Model_V bullets;
-  transport::SubscriberPtr factorySub;
+  uint8_t _bulletNum = 0;
+  std::string bulletName = "bullet_";
+  std::string bulletFilePath;
+  ignition::math::Pose3d _bulletSpawnPose;
+
+  transport::PublisherPtr _factoryPub;
+  transport::NodePtr _node;
+  // physics::Model_V bullets;
+  std::map<std::string, physics::ModelPtr> _bullets;
+  transport::SubscriberPtr _selectObject;
+  transport::SubscriberPtr _shootSub;
+  transport::PublisherPtr _visualPub;
   physics::WorldPtr _thisWorld;
+  physics::ModelPtr _thisModel;
+  physics::ModelPtr _target;
+
   event::ConnectionPtr _newModelAdded;
+  event::ConnectionPtr _updateWorld;
+
+  common::Time loopTimer;
 
 public:
-  GunPlugin() : ModelPlugin(), node(new transport::Node()) {}
+  GunPlugin() : ModelPlugin(), _node(new transport::Node()) {}
   ~GunPlugin() {}
 
-  void factoryCallback(ConstFactoryPtr &msg) {
-    // gzmsg << "Total models: " << _thisWorld->ModelCount() << endl;
+  bool createBullet(std::string &bulletSrt) {
+    sdf::SDFPtr bulletSdf(new sdf::SDF());
+    sdf::init(bulletSdf);
+
+    if (!sdf::readFile(bulletFilePath, bulletSdf)) {
+      gzerr << "Unable to read sdf file [" << bulletFilePath << "]\n";
+      return false;
+    }
+
+    sdf::ElementPtr bulletModel = bulletSdf->Root()->GetElement("model");
+    sdf::ElementPtr bulletVisual = bulletModel->GetElement("link")->GetElement("visual");
+
+    if (!bulletModel || !bulletModel) {
+      gzerr << "Invalid of bullet model\n";
+      return false;
+    }
+
+    // bulletVisual->GetElement("transparency")->Set<double>(1.0);
+    // bulletModel->GetElement("static")->Set<int>(1);
+    bulletModel->GetAttribute("name")->Set<std::string>(bulletName + std::to_string(++_bulletNum));
+
+    bulletSrt = bulletSdf->ToString();
+
+    return true;
+  }
+
+  void spawnBullet() {
+    msgs::Factory factoryMsg;
+
+    std::string bulletStr;
+
+    if (!createBullet(bulletStr)) {
+      gzerr << "Failed to create sdf model of bullet\n";
+      return;
+    }
+
+    factoryMsg.set_sdf(bulletStr);
+    msgs::Set(factoryMsg.mutable_pose(), _bulletSpawnPose);
+    _factoryPub->Publish(factoryMsg);
+  }
+
+  void shootCallback(ConstEmptyPtr &msg) {
+
+    spawnBullet();
+
+    physics::ModelPtr b = _thisWorld->ModelByName("bullet_0");
+
+    if (_bullets.empty()) {
+      gzerr << "Gun is empty\n";
+      return;
+    }
+
+    physics::LinkPtr l = b->GetLink("main");
+    msgs::Visual v = l->GetVisualMessage("visual");
+
+    v.set_name("bullet_0::main");
+    v.set_parent_name("bullet_0");
+
+    // b->SetStatic(false);
+    v.set_transparency(0.5);
+
+    _visualPub->Publish(v);
+    // l->AddRelativeForce(ignition::math::Vector3d(50, 0, 50));
+
+    /* sdf::ElementPtr sdfModel;
+    for (auto &&bullet : _bullets) {
+      sdfModel = bullet.second->GetSDF();
+      if (sdfModel) {
+        sdfModel->GetElement("static")->Set<int>(0);
+      }
+    } */
   }
 
   void Load(physics::ModelPtr model, sdf::ElementPtr sdf) {
 
     _thisWorld = model->GetWorld();
+    _thisModel = model;
 
-    node->Init("puzzle_world");
+    _node->Init("puzzle_world");
 
-    factoryPub = node->Advertise<msgs::Factory>("~/factory");
-    factorySub = node->Subscribe("~/factory", &GunPlugin::factoryCallback, this);
+    _factoryPub = _node->Advertise<msgs::Factory>("~/factory", 10, 1);
+    _selectObject = _node->Subscribe("~/selection", &GunPlugin::onSelectObjectCallback, this);
+    _shootSub = _node->Subscribe("~/gun_shoot", &GunPlugin::shootCallback, this);
+    _visualPub = _node->Advertise<msgs::Visual>("~/visual");
 
-    _newModelAdded = event::Events::ConnectAddEntity(std::bind(&GunPlugin::onNewModel, this));
+    _newModelAdded = event::Events::ConnectAddEntity(std::bind(&GunPlugin::onNewModel, this, std::placeholders::_1));
+    _updateWorld =
+        event::Events::ConnectWorldUpdateBegin(std::bind(&GunPlugin::onWorldUpdate, this, std::placeholders::_1));
 
     auto bulletSpavner = model->GetLink("bullet_spawner");
 
@@ -56,63 +148,49 @@ public:
       return;
     }
 
-    modelName.first.insert(0, "model://");
+    _bulletSpawnPose = bulletSpavner->WorldPose();
+    bulletFilePath = common::ModelDatabase::Instance()->GetModelFile(modelName.first.insert(0, "model://"));
 
-    auto bSpawnerPose = bulletSpavner->WorldPose();
+    loopTimer = _thisWorld->RealTime();
+  }
 
-    physics::WorldPtr world = model->GetWorld();
-    std::string filename = common::ModelDatabase::Instance()->GetModelFile(modelName.first);
-    gzmsg << filename << endl;
+  void onNewModel(std::string name) { gzmsg << "New model: " << name << endl; }
 
-    sdf::SDFPtr sdfOlive(new sdf::SDF());
-    sdf::init(sdfOlive);
+  void onWorldUpdate(const common::UpdateInfo &worldInfo) {
 
-    if (!sdf::readFile(filename, sdfOlive)) {
-      gzerr << "Unable to read sdf file [" << filename << "]\n";
-      return;
-    }
+    if (worldInfo.realTime >= loopTimer) {
+      
+      if(_target) {
+        ignition::math::Vector3d dir = _target->WorldPose().Pos() - _bulletSpawnPose.Pos();
 
-    sdf::ElementPtr oliveModel = sdfOlive->Root()->GetElement("model");
-    sdf::ElementPtr oliveVisual = oliveModel->GetElement("link")->GetElement("visual");
+        gzmsg << _target->WorldPose() << endl;
+        gzmsg << _bulletSpawnPose << endl;
+        gzmsg << dir << endl;
 
-    if (!oliveModel || !oliveModel) {
-      gzerr << "Invalid of bullet model\n";
-      return;
-    }
+        ignition::math::Pose3d p(_thisModel->WorldPose().Pos(), Quaterniond(dir.Normalized()));
+        physics::Link_V links = _thisModel->GetLinks();
+        
+        gzmsg << p << endl;
 
-    oliveVisual->GetElement("transparency")->Set<int>(1);
-    oliveModel->GetElement("static")->Set<int>(1);
-
-    msgs::Factory factoryMsg;
-    std::string bulletName = "bullet_";
-
-    for (int i = 0; i < 5; i++) {
-      oliveModel->GetAttribute("name")->Set<std::string>(bulletName + std::to_string(i));
-      bSpawnerPose.Pos() = bSpawnerPose.CoordPositionAdd(ignition::math::Vector3d(0, 0, 0.12));
-      factoryMsg.set_sdf(sdfOlive->ToString());
-      msgs::Set(factoryMsg.mutable_pose(), bSpawnerPose);
-      factoryPub->Publish(factoryMsg);
-    }
-
-    gzmsg << "Total models: " << world->ModelCount() << endl;
-
-    for (auto &&model : world->Models()) {
-      if (model->GetName().find(bulletName.c_str()) != std::string::npos) {
-        bullets.push_back(model);
+        for (auto &&link : links) {
+          // gzmsg << link->GetId() << link->GetName() << endl;
+          if(link->GetName() == "main") {
+            _thisModel->SetWorldPose(p);
+            break;
+          }
+        }
       }
-    }
 
-    gzmsg << "Total bullets: " << bullets.size() << endl;
-
-    for (auto &&bullet : bullets) {
-      sdf::ElementPtr visual = bullet->GetSDF()->FindElement("visual");
-      gzmsg << visual->ToString("");
-      break;
+      loopTimer+=common::Time(0, common::Time::MilToNano(250));
     }
   }
 
-  void onNewModel() {
-    
+  void onSelectObjectCallback(ConstSelectionPtr &object) {
+    if (object->selected()) {
+      _target = _thisWorld->ModelByName(object->name());
+      if (_target)
+        gzmsg << _target->GetName() << endl;
+    }
   }
 };
 

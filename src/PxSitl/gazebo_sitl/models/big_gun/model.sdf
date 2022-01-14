@@ -29,9 +29,9 @@
           </mesh>
         </geometry> -->
         <geometry>
-          <sphere>
-            <radius>0.5</radius>
-          </sphere>
+          <box>
+            <size>.7 1.7 .7</size>
+          </box>
         </geometry>
         <material>
           <script>

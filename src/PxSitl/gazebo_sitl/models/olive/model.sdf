@@ -21,7 +21,7 @@
       </inertial>
       <enable_wind>0</enable_wind>
       <kinematic>0</kinematic>
-      <visual name='visual'>
+      <visual name="visual">
         <geometry>
           <sphere>
             <radius>.06</radius>
