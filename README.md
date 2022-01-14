@@ -42,7 +42,7 @@ catkin build
 
 * Для Gazebo:
 ```
-source /use/share/gazebo.bash
+source /usr/share/gazebo/setup.bash
 ```
 * для px4
 ```
