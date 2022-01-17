@@ -7,14 +7,16 @@
 #include <map>
 
 using namespace gazebo;
+using ignition::math::Pose3d;
+using ignition::math::Quaterniond;
+using ignition::math::Vector3d;
 using std::cout;
 using std::endl;
-using ignition::math::Vector3d;
-using ignition::math::Quaterniond;
-using ignition::math::Pose3d;
 
 class GunPlugin : public ModelPlugin {
 private:
+
+  float rotationF = 0.1;
   uint8_t _bulletNum = 0;
   std::string bulletName = "bullet_";
   std::string bulletFilePath;
@@ -35,6 +37,7 @@ private:
   event::ConnectionPtr _updateWorld;
 
   common::Time loopTimer;
+  common::Time lastFrame;
 
 public:
   GunPlugin() : ModelPlugin(), _node(new transport::Node()) {}
@@ -157,32 +160,41 @@ public:
   void onNewModel(std::string name) { gzmsg << "New model: " << name << endl; }
 
   void onWorldUpdate(const common::UpdateInfo &worldInfo) {
-
+    common::Time dT = _thisWorld->SimTime() - lastFrame;
     if (worldInfo.realTime >= loopTimer) {
-      
-      if(_target) {
-        ignition::math::Vector3d dir = _target->WorldPose().Pos() - _bulletSpawnPose.Pos();
 
-        gzmsg << _target->WorldPose() << endl;
-        gzmsg << _bulletSpawnPose << endl;
-        gzmsg << dir << endl;
+      if (_target) {
+        Quaterniond modelRot = _thisModel->WorldPose().Rot();
+        Quaterniond targetRot = _target->WorldPose().Rot();
 
-        ignition::math::Pose3d p(_thisModel->WorldPose().Pos(), Quaterniond(dir.Normalized()));
+        Vector3d targetPos = _target->WorldPose().Pos();
+        Vector3d modelPos = _thisModel->WorldPose().Pos();
+
+        Vector3d dir = targetPos - modelPos;
+
+        rotationF += 5.0 * dT.Float();
+        gzmsg << rotationF << endl;
+
+        Quaterniond u;
+        u = u.Identity;
+        u.From2Axes(targetPos, modelPos);
+
+        ignition::math::Pose3d p(_thisModel->WorldPose().Pos(), u);
         physics::Link_V links = _thisModel->GetLinks();
-        
-        gzmsg << p << endl;
 
         for (auto &&link : links) {
           // gzmsg << link->GetId() << link->GetName() << endl;
-          if(link->GetName() == "main") {
+          if (link->GetName() == "main") {
             _thisModel->SetWorldPose(p);
             break;
           }
         }
       }
 
-      loopTimer+=common::Time(0, common::Time::MilToNano(250));
+      loopTimer += common::Time(0, common::Time::MilToNano(250));
     }
+
+    lastFrame = _thisWorld->SimTime();
   }
 
   void onSelectObjectCallback(ConstSelectionPtr &object) {

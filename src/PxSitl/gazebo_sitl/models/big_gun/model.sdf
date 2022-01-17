@@ -3,7 +3,7 @@
   <model name="big_gun">
     <static>1</static>
     <allow_auto_disable>1</allow_auto_disable>
-    <pose>-5 0 0 0 0 0</pose>
+    <pose>-5 0 .55 0 0 0</pose>
     <link name="main">
       <pose>0 0 0 0 0 0</pose>
       <self_collide>0</self_collide>
@@ -30,7 +30,7 @@
         </geometry> -->
         <geometry>
           <box>
-            <size>.7 1.7 .7</size>
+            <size>.7 1 .7</size>
           </box>
         </geometry>
         <material>
