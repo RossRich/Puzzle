@@ -23,7 +23,7 @@ target_link_libraries(test
   ${GAZEBO_LIBRARIES}
 )
 
-add_library(GunPlugin SHARED GunPlugin.cpp)
+add_library(GunPlugin SHARED GunPlugin.cpp Utils.hpp)
 target_link_libraries(GunPlugin
   ${GAZEBO_LIBRARIES}
 )

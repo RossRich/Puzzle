@@ -1,3 +1,4 @@
+#include "Utils.hpp"
 #include <gazebo/common/common.hh>
 #include <gazebo/gazebo.hh>
 #include <gazebo/physics/physics.hh>
@@ -15,16 +16,13 @@ using std::endl;
 
 class GunPlugin : public ModelPlugin {
 private:
-
   float rotationF = 0.1;
   uint8_t _bulletNum = 0;
   std::string bulletName = "bullet_";
   std::string bulletFilePath;
-  ignition::math::Pose3d _bulletSpawnPose;
 
   transport::PublisherPtr _factoryPub;
   transport::NodePtr _node;
-  // physics::Model_V bullets;
   std::map<std::string, physics::ModelPtr> _bullets;
   transport::SubscriberPtr _selectObject;
   transport::SubscriberPtr _shootSub;
@@ -32,6 +30,7 @@ private:
   physics::WorldPtr _thisWorld;
   physics::ModelPtr _thisModel;
   physics::ModelPtr _target;
+  physics::LinkPtr _bulletSpawnLink;
 
   event::ConnectionPtr _newModelAdded;
   event::ConnectionPtr _updateWorld;
@@ -53,7 +52,8 @@ public:
     }
 
     sdf::ElementPtr bulletModel = bulletSdf->Root()->GetElement("model");
-    sdf::ElementPtr bulletVisual = bulletModel->GetElement("link")->GetElement("visual");
+    sdf::ElementPtr bulletVisual =
+        bulletModel->GetElement("link")->GetElement("visual");
 
     if (!bulletModel || !bulletModel) {
       gzerr << "Invalid of bullet model\n";
@@ -62,7 +62,8 @@ public:
 
     // bulletVisual->GetElement("transparency")->Set<double>(1.0);
     // bulletModel->GetElement("static")->Set<int>(1);
-    bulletModel->GetAttribute("name")->Set<std::string>(bulletName + std::to_string(++_bulletNum));
+    bulletModel->GetAttribute("name")->Set<std::string>(
+        bulletName + std::to_string(++_bulletNum));
 
     bulletSrt = bulletSdf->ToString();
 
@@ -80,7 +81,7 @@ public:
     }
 
     factoryMsg.set_sdf(bulletStr);
-    msgs::Set(factoryMsg.mutable_pose(), _bulletSpawnPose);
+    msgs::Set(factoryMsg.mutable_pose(), _bulletSpawnLink->WorldPose());
     _factoryPub->Publish(factoryMsg);
   }
 
@@ -120,21 +121,9 @@ public:
 
     _thisWorld = model->GetWorld();
     _thisModel = model;
+    _bulletSpawnLink = model->GetLink("bullet_spawner");
 
-    _node->Init("puzzle_world");
-
-    _factoryPub = _node->Advertise<msgs::Factory>("~/factory", 10, 1);
-    _selectObject = _node->Subscribe("~/selection", &GunPlugin::onSelectObjectCallback, this);
-    _shootSub = _node->Subscribe("~/gun_shoot", &GunPlugin::shootCallback, this);
-    _visualPub = _node->Advertise<msgs::Visual>("~/visual");
-
-    _newModelAdded = event::Events::ConnectAddEntity(std::bind(&GunPlugin::onNewModel, this, std::placeholders::_1));
-    _updateWorld =
-        event::Events::ConnectWorldUpdateBegin(std::bind(&GunPlugin::onWorldUpdate, this, std::placeholders::_1));
-
-    auto bulletSpavner = model->GetLink("bullet_spawner");
-
-    if (!bulletSpavner) {
+    if (!_bulletSpawnLink) {
       gzerr << "Bullet spawner now find\n";
       return;
     }
@@ -144,16 +133,29 @@ public:
       return;
     }
 
-    auto modelName = sdf->GetElement("model")->Get<std::string>("name", "");
+    std::pair modelName =
+        sdf->GetElement("model")->Get<std::string>("name", "");
 
     if (modelName.first == "" || !modelName.second) {
       gzerr << "Invalid model name for spawn in plugin param\n";
       return;
     }
 
-    _bulletSpawnPose = bulletSpavner->WorldPose();
-    bulletFilePath = common::ModelDatabase::Instance()->GetModelFile(modelName.first.insert(0, "model://"));
+    _node->Init("puzzle_world");
+    _factoryPub = _node->Advertise<msgs::Factory>("~/factory", 10, 1);
+    _selectObject = _node->Subscribe("~/selection",
+                                     &GunPlugin::onSelectObjectCallback, this);
+    _shootSub =
+        _node->Subscribe("~/gun_shoot", &GunPlugin::shootCallback, this);
+    _visualPub = _node->Advertise<msgs::Visual>("~/visual");
 
+    _newModelAdded = event::Events::ConnectAddEntity(
+        std::bind(&GunPlugin::onNewModel, this, std::placeholders::_1));
+    _updateWorld = event::Events::ConnectWorldUpdateBegin(
+        std::bind(&GunPlugin::onWorldUpdate, this, std::placeholders::_1));
+
+    bulletFilePath = common::ModelDatabase::Instance()->GetModelFile(
+        modelName.first.insert(0, "model://"));
     loopTimer = _thisWorld->RealTime();
   }
 
@@ -166,32 +168,14 @@ public:
       if (_target) {
         Quaterniond modelRot = _thisModel->WorldPose().Rot();
         Quaterniond targetRot = _target->WorldPose().Rot();
-
         Vector3d targetPos = _target->WorldPose().Pos();
         Vector3d modelPos = _thisModel->WorldPose().Pos();
-
-        Vector3d dir = targetPos - modelPos;
-
-        rotationF += 5.0 * dT.Float();
-        gzmsg << rotationF << endl;
-
-        Quaterniond u;
-        u = u.Identity;
-        u.From2Axes(targetPos, modelPos);
-
-        ignition::math::Pose3d p(_thisModel->WorldPose().Pos(), u);
-        physics::Link_V links = _thisModel->GetLinks();
-
-        for (auto &&link : links) {
-          // gzmsg << link->GetId() << link->GetName() << endl;
-          if (link->GetName() == "main") {
-            _thisModel->SetWorldPose(p);
-            break;
-          }
-        }
+        Pose3d p(_thisModel->WorldPose().Pos(),
+                 Utils::lookAt(modelPos, targetPos));
+        _thisModel->SetWorldPose(p);
       }
 
-      loopTimer += common::Time(0, common::Time::MilToNano(250));
+      loopTimer += common::Time(0, common::Time::SecToNano(1 / 30));
     }
 
     lastFrame = _thisWorld->SimTime();
