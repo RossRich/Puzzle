@@ -28,6 +28,11 @@ target_link_libraries(GunPlugin
   ${GAZEBO_LIBRARIES}
 )
 
+add_library(BulletPlugin SHARED BulletPlugin.cpp)
+target_link_libraries(BulletPlugin 
+  ${GAZEBO_LIBRARIES}
+)
+
 add_library(GUIShootPlugin SHARED ${headers_MOC} GUIShootPlugin.cpp)
 target_link_libraries(GUIShootPlugin 
     ${GAZEBO_LIBRARIES}

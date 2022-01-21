@@ -8,6 +8,8 @@
 #include <map>
 
 using namespace gazebo;
+using gazebo::physics::LinkPtr;
+using gazebo::physics::ModelPtr;
 using ignition::math::Pose3d;
 using ignition::math::Quaterniond;
 using ignition::math::Vector3d;
@@ -52,7 +54,8 @@ public:
     }
 
     sdf::ElementPtr bulletModel = bulletSdf->Root()->GetElement("model");
-    sdf::ElementPtr bulletVisual = bulletModel->GetElement("link")->GetElement("visual");
+    sdf::ElementPtr bulletVisual =
+        bulletModel->GetElement("link")->GetElement("visual");
 
     if (!bulletModel || !bulletModel) {
       gzerr << "Invalid of bullet model\n";
@@ -61,7 +64,8 @@ public:
 
     // bulletVisual->GetElement("transparency")->Set<double>(1.0);
     // bulletModel->GetElement("static")->Set<int>(1);
-    bulletModel->GetAttribute("name")->Set<std::string>(bulletName + std::to_string(++_bulletNum));
+    bulletModel->GetAttribute("name")->Set<std::string>(
+        bulletName + std::to_string(++_bulletNum));
 
     bulletSrt = bulletSdf->ToString();
 
@@ -87,7 +91,7 @@ public:
 
     spawnBullet();
 
-    physics::ModelPtr b = _thisWorld->ModelByName("bullet_0");
+    /* physics::ModelPtr b = _thisWorld->ModelByName("bullet_0");
 
     if (_bullets.empty()) {
       gzerr << "Gun is empty\n";
@@ -98,17 +102,16 @@ public:
     msgs::Visual v = l->GetVisualMessage("visual");
 
     v.set_name("bullet_0::main");
-    v.set_parent_name("bullet_0");
+    v.set_parent_name("bullet_0"); */
 
     // b->SetStatic(false);
     // v.set_transparency(0.5);
-    _visualPub->Publish(v);
+    /* _visualPub->Publish(v);
 
-    Vector3d dir = _target->WorldPose().Pos() - _bulletSpawnLink->WorldPose().Pos();
-    l->AddForce(dir.Normalized() * 50);
+    Vector3d dir = _target->WorldPose().Pos() -
+    _bulletSpawnLink->WorldPose().Pos(); l->AddForce(dir.Normalized() * 50);
 
-    _target->GetChildLink("link")->AddForce(Vector3d::UnitX * 50);
-    
+    _target->GetChildLink("link")->AddForce(Vector3d::UnitX * 50); */
 
     /* sdf::ElementPtr sdfModel;
     for (auto &&bullet : _bullets) {
@@ -135,7 +138,8 @@ public:
       return;
     }
 
-    std::pair modelName = sdf->GetElement("model")->Get<std::string>("name", "");
+    std::pair modelName =
+        sdf->GetElement("model")->Get<std::string>("name", "");
 
     if (modelName.first == "" || !modelName.second) {
       gzerr << "Invalid model name for spawn in plugin param\n";
@@ -144,19 +148,34 @@ public:
 
     _node->Init("puzzle_world");
     _factoryPub = _node->Advertise<msgs::Factory>("~/factory", 10, 1);
-    _selectObject = _node->Subscribe("~/selection", &GunPlugin::onSelectObjectCallback, this);
-    _shootSub = _node->Subscribe("~/gun_shoot", &GunPlugin::shootCallback, this);
+    _selectObject = _node->Subscribe("~/selection",
+                                     &GunPlugin::onSelectObjectCallback, this);
+    _shootSub =
+        _node->Subscribe("~/gun_shoot", &GunPlugin::shootCallback, this);
     _visualPub = _node->Advertise<msgs::Visual>("~/visual");
 
-    _newModelAdded = event::Events::ConnectAddEntity(std::bind(&GunPlugin::onNewModel, this, std::placeholders::_1));
-    _updateWorld =
-        event::Events::ConnectWorldUpdateBegin(std::bind(&GunPlugin::onWorldUpdate, this, std::placeholders::_1));
+    _newModelAdded = event::Events::ConnectAddEntity(
+        std::bind(&GunPlugin::onNewModel, this, std::placeholders::_1));
+    _updateWorld = event::Events::ConnectWorldUpdateBegin(
+        std::bind(&GunPlugin::onWorldUpdate, this, std::placeholders::_1));
 
-    bulletFilePath = common::ModelDatabase::Instance()->GetModelFile(modelName.first.insert(0, "model://"));
+    bulletFilePath = common::ModelDatabase::Instance()->GetModelFile(
+        modelName.first.insert(0, "model://"));
     loopTimer = _thisWorld->RealTime();
   }
 
-  void onNewModel(std::string name) { gzmsg << "New model: " << name << endl; }
+  void onNewModel(std::string name) {
+    gzmsg << "New model: " << name << endl;
+
+    if (name == "bullet_1") {
+      gzmsg << "bullet_1 is found\n";
+
+      /* ModelPtr bm = _thisWorld->ModelByName(name);
+      if(bm) {
+        gzmsg << bm->GetSDF()->ToString("");
+      } */
+    }
+  }
 
   void onWorldUpdate(const common::UpdateInfo &worldInfo) {
     common::Time dT = _thisWorld->SimTime() - lastFrame;
@@ -167,7 +186,8 @@ public:
         Quaterniond targetRot = _target->WorldPose().Rot();
         Vector3d targetPos = _target->WorldPose().Pos();
         Vector3d modelPos = _thisModel->WorldPose().Pos();
-        Pose3d p(_thisModel->WorldPose().Pos(), Utils::lookAt(modelPos, targetPos));
+        Pose3d p(_thisModel->WorldPose().Pos(),
+                 Utils::lookAt(modelPos, targetPos));
         _thisModel->SetWorldPose(p);
       }
 
