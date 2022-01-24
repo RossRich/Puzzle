@@ -48,5 +48,7 @@
         </geometry>
       </collision>
     </link>
+
+    <plugin name="BulletPlugin" filename="libBulletPlugin.so"/>
   </model>
 </sdf>

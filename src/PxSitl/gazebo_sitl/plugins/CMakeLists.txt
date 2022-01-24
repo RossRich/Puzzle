@@ -28,7 +28,7 @@ target_link_libraries(GunPlugin
   ${GAZEBO_LIBRARIES}
 )
 
-add_library(BulletPlugin SHARED BulletPlugin.cpp)
+add_library(BulletPlugin SHARED BulletPlugin.cpp Utils.hpp)
 target_link_libraries(BulletPlugin 
   ${GAZEBO_LIBRARIES}
 )
