@@ -19,6 +19,9 @@ using transport::SubscriberPtr;
 
 class BulletPlugin : public ModelPlugin {
 private:
+  bool _msgIsAvailable = false;
+  bool _isGrounded = true;
+
   ModelPtr _thisModel;
   WorldPtr _thisWorld;
 
@@ -32,22 +35,44 @@ private:
   common::Time loopTimer;
   common::Time lastFrame;
 
-  void onTargetCallback(ConstPosePtr &targetPose) { _targetPose = msgs::ConvertIgn(*targetPose.get()); }
+  void onTargetCallback(ConstPosePtr &targetPose) {
+    _targetPose = msgs::ConvertIgn(*targetPose.get());
+    if (!_msgIsAvailable)
+      _msgIsAvailable = !_msgIsAvailable;
+  }
 
   void onWorldUpdate(const common::UpdateInfo &worldInfo) {
     common::Time dT = _thisWorld->SimTime() - lastFrame;
-    if (worldInfo.realTime >= loopTimer) {
-      Quaterniond modelRot = _thisModel->WorldPose().Rot();
-      Quaterniond targetRot = _targetPose.Rot();
-      Vector3d targetPos = _targetPose.Pos();
-      Vector3d modelPos = _thisModel->WorldPose().Pos();
-      Pose3d p(_thisModel->WorldPose().Pos(), Utils::lookAt(modelPos, targetPos));
-      _thisModel->SetWorldPose(p);
 
-      Vector3d fromTo = targetPos - modelPos;
-      Vector3d fromToXZ = Vector3d(fromTo.X(), 0.f, fromTo.Z());
-      gzmsg << "From To: " << fromTo << " From to XZ: " << fromToXZ << std::endl;
-      
+    if (worldInfo.realTime >= loopTimer) {
+
+      if (_msgIsAvailable && _isGrounded) {
+        Quaterniond modelRot = _thisModel->WorldPose().Rot();
+        Quaterniond targetRot = _targetPose.Rot();
+        Vector3d targetPos = _targetPose.Pos();
+        Vector3d modelPos = _thisModel->WorldPose().Pos();
+        Pose3d p(_thisModel->WorldPose().Pos(),
+                 Utils::lookAt(modelPos, targetPos));
+        _thisModel->SetWorldPose(p);
+
+        gzmsg << "target pose: " << _targetPose << " model pose: " << modelPos
+              << std::endl;
+
+        Vector3d fromTo = targetPos - modelPos;
+        Vector3d fromToXZ = Vector3d(fromTo.X(), fromTo.Y(), fromTo.Z());
+        // gzmsg << "From To: " << fromTo << " From to XZ: " << fromToXZ <<
+        // std::endl;
+
+        float x = fromToXZ.Length();
+        float y = fromTo.Z();
+
+        float v2 = (9.8 * x * x) / (2 * (y - tan(0) * x) * pow(cos(0), 2));
+        float v = sqrt(abs(v2));
+
+        _thisModel->SetGravityMode(true);
+        _thisModel->SetLinearVel(fromToXZ * v);
+        _isGrounded = false;
+      }
 
       loopTimer += common::Time(0, common::Time::SecToNano(1 / 30));
     }
@@ -62,11 +87,13 @@ public:
   void Load(ModelPtr model, ElementPtr sdf) {
     _thisModel = model;
     _thisWorld = model->GetWorld();
+    _thisModel->SetGravityMode(false);
 
     _node->Init(model->GetWorld()->Name());
-    _targetSub = _node->Subscribe("~/target", &BulletPlugin::onTargetCallback, this);
-    _updateWorld =
-        event::Events::ConnectWorldUpdateBegin(std::bind(&BulletPlugin::onWorldUpdate, this, std::placeholders::_1));
+    _targetSub =
+        _node->Subscribe("~/target", &BulletPlugin::onTargetCallback, this);
+    _updateWorld = event::Events::ConnectWorldUpdateBegin(
+        std::bind(&BulletPlugin::onWorldUpdate, this, std::placeholders::_1));
 
     loopTimer = _thisWorld->RealTime();
   }

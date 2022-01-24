@@ -151,6 +151,9 @@ public:
         msgs::Pose targetPoseMsg;
         msgs::Set(targetPoseMsg.mutable_orientation(), targetRot);
         msgs::Set(targetPoseMsg.mutable_position(), targetPos);
+
+        // gzmsg << "GunPlugin: target pose: " << targetPos << endl;
+
         _targetPub->Publish(targetPoseMsg);
       }
 
