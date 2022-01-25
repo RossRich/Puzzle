@@ -1,8 +1,6 @@
 <?xml version="1.0"?>
 <launch>
-    
-    
-     <!-- Launch Gazebo -->
+    <!-- Launch Gazebo -->
     <!-- gazebo congig -->
     <arg name="gui" default="true"/>
     <arg name="debug" default="false"/>

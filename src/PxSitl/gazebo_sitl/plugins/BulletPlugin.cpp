@@ -70,7 +70,7 @@ private:
         float v = sqrt(abs(v2));
 
         _thisModel->SetGravityMode(true);
-        _thisModel->SetLinearVel(fromToXZ * v);
+        _thisModel->SetLinearVel(fromToXZ.Normalized() * v);
         _isGrounded = false;
       }
 
