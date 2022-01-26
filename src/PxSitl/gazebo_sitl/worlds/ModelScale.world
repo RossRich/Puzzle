@@ -33,7 +33,7 @@
         </visual>
       </link>
 
-      <plugin name="model_visuals" filename="libtest.so"/>
+      <plugin name="model_visuals" filename="libModelScale.so"/>
     </model>
   </world>
 </sdf>

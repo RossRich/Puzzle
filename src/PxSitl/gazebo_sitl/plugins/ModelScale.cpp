@@ -4,7 +4,7 @@
 #include <gazebo/common/common.hh>
 #include <ignition/math/Vector3.hh>
 
-#include "test.hpp"
+#include "ModelScale.hpp"
 
 namespace gazebo
 {

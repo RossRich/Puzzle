@@ -19,7 +19,7 @@
     </include>
 
     <include>
-      <uri>model://big_gun</uri>
+      <uri>model://big_gun2</uri>
     </include>
 
     <physics name='default_physics' default='0' type='ode'>

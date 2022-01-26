@@ -18,8 +18,8 @@ link_directories(${GAZEBO_LIBRARY_DIRS})
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS}")
 
-add_library(test SHARED test.cpp)
-target_link_libraries(test
+add_library(ModelScale SHARED ModelScale.cpp)
+target_link_libraries(ModelScale
   ${GAZEBO_LIBRARIES}
 )
 
@@ -27,6 +27,12 @@ add_library(GunPlugin SHARED GunPlugin.cpp Utils.hpp)
 target_link_libraries(GunPlugin
   ${GAZEBO_LIBRARIES}
 )
+
+add_library(Gun2Plugin SHARED Gun2Plugin.cpp Utils.hpp)
+target_link_libraries(Gun2Plugin
+  ${GAZEBO_LIBRARIES}
+)
+
 
 add_library(BulletPlugin SHARED BulletPlugin.cpp Utils.hpp)
 target_link_libraries(BulletPlugin 
