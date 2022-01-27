@@ -33,6 +33,10 @@ target_link_libraries(Gun2Plugin
   ${GAZEBO_LIBRARIES}
 )
 
+add_library(PoseTestPlugin SHARED PoseTestPlugin.cpp Utils.hpp)
+target_link_libraries(PoseTestPlugin
+  ${GAZEBO_LIBRARIES}
+)
 
 add_library(BulletPlugin SHARED BulletPlugin.cpp Utils.hpp)
 target_link_libraries(BulletPlugin 
