@@ -18,6 +18,8 @@ using std::endl;
 
 class GunPlugin : public ModelPlugin {
 private:
+  double _maxSpeed = 1.;
+
   transport::NodePtr _node;
   transport::PublisherPtr _factoryPub;
   transport::PublisherPtr _targetPub;
@@ -30,6 +32,7 @@ private:
   ModelPtr _target;
   LinkPtr _baseLink;
   LinkPtr _boxLink;
+  LinkPtr _rotLink;
 
   event::ConnectionPtr _updateWorld;
 
@@ -57,6 +60,7 @@ public:
 
     _baseLink = model->GetLink("link");
     _boxLink = model->GetLink("link_0");
+    _rotLink = model->GetLink("link_1");
 
     Pose3d originalBasePose = _baseLink->WorldPose();
     Pose3d originalBoxPose = _boxLink->WorldPose();
@@ -84,7 +88,24 @@ public:
         Quaterniond targetRot = _target->WorldPose().Rot();
         Vector3d targetPos = _target->WorldPose().Pos();
         Vector3d modelPos = _thisModel->WorldPose().Pos();
+
+        Vector3d targetPosXY(targetPos.X(), targetPos.Y(), 0.f);
+
+        Vector3d rotPos = _rotLink->RelativePose().Pos();
+        Vector3d rotXY(rotPos.X(), rotPos.Y(), 0.f);
         
+        gazebo::physics::Joint_V js = _rotLink->GetParentJoints();
+        Pose3d jointPose = js.at(0)->InitialAnchorPose();
+
+        gzmsg << jointPose.Pos() + rotXY << endl;
+
+        Quaterniond newRot = _rotLink->RelativePose().Rot();
+        Quaterniond r = Utils::lookAt(jointPose.Pos() + rotXY, targetPosXY) * dT.Double() * _maxSpeed;
+
+        Pose3d p(jointPose.Pos() + rotXY, newRot + r);
+
+        _rotLink->SetRelativePose(p);
+        js.at(0)->
       }
 
       loopTimer += common::Time(0, common::Time::SecToNano(1 / 30));

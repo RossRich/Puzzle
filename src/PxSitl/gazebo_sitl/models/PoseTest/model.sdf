@@ -106,7 +106,7 @@
         </inertia>
         <pose>0 0 0 0 -0 0</pose>
       </inertial>
-      <pose>-0 -0 1.45583 0 -0 0</pose>
+      <pose>0 -0 1.45583 0 -0 0</pose>
       <gravity>1</gravity>
       <self_collide>0</self_collide>
       <kinematic>0</kinematic>
@@ -278,10 +278,25 @@
         </surface>
       </collision>
     </link>
-    <joint name='link_0_JOINT_2' type='fixed'>
+    <joint name='link_0_JOINT_2' type='revolute'>
       <parent>link_0</parent>
       <child>link_1</child>
-      <pose>0 0 0 0 -0 0</pose>
+      <pose>0 -1.5 0 0 -0 0</pose>
+      <axis>
+        <xyz>0 -1 -1</xyz>
+        <limit>
+          <lower>-1.79769e+308</lower>
+          <upper>1.79769e+308</upper>
+          <effort>-1</effort>
+          <velocity>-1</velocity>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+          <damping>0</damping>
+          <friction>0</friction>
+        </dynamics>
+      </axis>
       <physics>
         <ode>
           <limit>
