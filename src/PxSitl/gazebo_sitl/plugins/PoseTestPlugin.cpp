@@ -8,8 +8,10 @@
 #include <map>
 
 using namespace gazebo;
+using gazebo::physics::JointPtr;
 using gazebo::physics::LinkPtr;
 using gazebo::physics::ModelPtr;
+using gazebo::common::PID;
 using ignition::math::Pose3d;
 using ignition::math::Quaterniond;
 using ignition::math::Vector3d;
@@ -33,6 +35,9 @@ private:
   LinkPtr _baseLink;
   LinkPtr _boxLink;
   LinkPtr _rotLink;
+  JointPtr _rotJoint;
+
+  PID _rotPID;
 
   event::ConnectionPtr _updateWorld;
 
@@ -46,9 +51,14 @@ public:
 
   void printPose() {
     gzmsg << "---\n";
-    gzmsg << "ModelWorld " << _thisModel->WorldPose() << " Relative: " << _thisModel->RelativePose() << endl;
-    gzmsg << "BaseWorld: " << _baseLink->WorldPose() << " Relative: " << _baseLink->RelativePose() << endl;
-    gzmsg << "BoxWorld: " << _boxLink->WorldPose() << " Relative: " << _boxLink->RelativePose() << endl;
+    gzmsg << "ModelWorld " << _thisModel->WorldPose()
+          << " Relative: " << _thisModel->RelativePose() << endl;
+
+    gzmsg << "BaseWorld: " << _baseLink->WorldPose()
+          << " Relative: " << _baseLink->RelativePose() << endl;
+
+    gzmsg << "BoxWorld: " << _boxLink->WorldPose()
+          << " Relative: " << _boxLink->RelativePose() << endl;
   }
 
   void Load(physics::ModelPtr model, sdf::ElementPtr sdf) {
@@ -57,21 +67,31 @@ public:
     _thisModel = model;
 
     _baseLink = model->GetLink("link");
-    _boxLink = model->GetLink("link_0");
-    _rotLink = model->GetLink("link_1");
+    // _boxVisual = _baseLink->Get
+    _boxLink = model->GetLink("link_1");
+    _rotJoint = model->GetJoint("link_0_JOINT_2");
 
-    Pose3d originalBasePose = _baseLink->WorldPose();
-    Pose3d originalBoxPose = _boxLink->WorldPose();
+    if(!_rotJoint) {
+      gzerr << "Joint not found\n";
+      return;
+    }
+
+    _rotPID = PID(10.0, 0.0, 20.0, 3.14, - 3.14);
+    model->GetJointController()->SetPositionPID(_rotJoint->GetScopedName(), _rotPID);
+
+    /* Pose3d originalBasePose = _baseLink->WorldPose();
+    Pose3d originalBoxPose = _boxVisual->WorldPose(); */
     Pose3d originalModelPose = _thisModel->WorldPose();
 
     _node->Init(_thisWorld->Name());
     _factoryPub = _node->Advertise<msgs::Factory>("~/factory", 10, 1);
     _visualPub = _node->Advertise<msgs::Visual>("~/visual");
 
-    _selectObject = _node->Subscribe("~/selection", &GunPlugin::onSelectObjectCallback, this);
+    _selectObject = _node->Subscribe("~/selection",
+                                     &GunPlugin::onSelectObjectCallback, this);
 
-    _updateWorld =
-        event::Events::ConnectWorldUpdateBegin(std::bind(&GunPlugin::onWorldUpdate, this, std::placeholders::_1));
+    _updateWorld = event::Events::ConnectWorldUpdateBegin(
+        std::bind(&GunPlugin::onWorldUpdate, this, std::placeholders::_1));
 
     loopTimer = t = _thisWorld->RealTime();
   }
@@ -88,45 +108,35 @@ public:
 
         Vector3d targetPosXY(targetPos.X(), targetPos.Y(), 0.f);
 
-        Vector3d rotPos = _rotLink->RelativePose().Pos();
+        Vector3d rotPos = _boxLink->RelativePose().Pos();
         Vector3d rotXY(rotPos.X(), rotPos.Y(), 0.f);
 
-        gazebo::physics::Joint_V js = _rotLink->GetParentJoints();
+        gazebo::physics::Joint_V js = _boxLink->GetParentJoints();
         Pose3d jointPose = js.at(0)->InitialAnchorPose();
 
         // gzmsg << jointPose.Pos() + rotXY << endl;
 
-        Quaterniond newRot = _rotLink->RelativePose().Rot();
-        Quaterniond r = Utils::lookAt(rotXY, targetPosXY) * dT.Double() * _maxSpeed;
+        Quaterniond newRot = _boxLink->RelativePose().Rot();
+        Quaterniond r =
+            Utils::lookAt(rotXY, targetPosXY) * dT.Double() * _maxSpeed;
 
         Pose3d p(rotXY, newRot + r);
 
         Vector3d newDir = targetPosXY - rotXY;
         double len = newDir.Length();
         double dot = Vector3d::UnitX.Dot(newDir.Normalized());
-        
 
-       /*  if (abs(dot - (-1.0f)) < 0.000001f)
-          dot = 3.14;
+        /*  if (abs(dot - (-1.0f)) < 0.000001f)
+           dot = 3.14;
 
-        if (abs(dot - (1.0f)) < 0.000001f)
-          dot = 1; */
+         if (abs(dot - (1.0f)) < 0.000001f)
+           dot = 1; */
 
         double rotAngle = acos(dot);
-
-        if (rotAngle > 0.0 && _thisWorld->SimTime() - t > 1) {
-          // gzmsg << js.at(0)->GetName();
-          double w = (((len * rotAngle)) * 1) / len;
-          gzmsg << "Dot: " << dot << endl;
-          gzmsg << "rot: " << rotAngle << " len: " << len << " w: " << w << endl;
-          js.at(0)->SetVelocity(0, w);
-          t = _thisWorld->SimTime() + common::Time(0, common::Time::SecToNano(1));
-        }
-
+        _thisModel->GetJointController()->SetPositionTarget(_rotJoint->GetScopedName(), rotAngle);
+        gzmsg << "Rot: " << rotAngle << endl;
         
-        // _rotLink->SetRelativePose(p);
       }
-
       loopTimer += common::Time(0, common::Time::SecToNano(1 / 30));
     }
 
