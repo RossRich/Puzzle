@@ -14,19 +14,19 @@
 
     <include>
       <uri>model://big_box</uri>
-      <pose>5 0 0 0 0 0</pose>
+      <pose>5 0 .75 0 0 1</pose>
     </include>
 
      <include>
       <uri>model://big_box</uri>
       <name>big_box_1</name>
-      <pose>0 7 0 0 0 0</pose>
+      <pose>0 7 .75 0 0 1</pose>
     </include>
 
      <include>
       <uri>model://big_box</uri>
       <name>big_box_2</name>
-      <pose>0 -5 0 0 0 0</pose>
+      <pose>0 -5 .75 0 0 0</pose>
     </include>
 
     <gui fullscreen='0'>

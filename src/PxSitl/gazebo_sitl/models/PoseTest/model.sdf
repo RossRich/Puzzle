@@ -1,6 +1,7 @@
 <?xml version='1.0'?>
 <sdf version='1.7'>
   <model name='PoseTest'>
+    <pose>0 0 .1 0 -0 0</pose>
     <link name='link'>
       <inertial>
         <mass>500</mass>
@@ -335,6 +336,8 @@
     </joint>
     <static>0</static>
     <allow_auto_disable>1</allow_auto_disable>
-    <plugin name='PoseTestPlugin' filename='libPoseTestPlugin.so'/>
+    <plugin name='PoseTestPlugin' filename='libPoseTestPlugin.so'>
+      
+    </plugin>
   </model>
 </sdf>

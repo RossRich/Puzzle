@@ -76,7 +76,7 @@ public:
       return;
     }
 
-    _rotPID = PID(10.0, 0.0, 20.0, 3.14, - 3.14);
+    _rotPID = PID(10.0, 0.0, 20.0, 2*3.14, - 2*3.14);
     model->GetJointController()->SetPositionPID(_rotJoint->GetScopedName(), _rotPID);
 
     /* Pose3d originalBasePose = _baseLink->WorldPose();
@@ -132,9 +132,17 @@ public:
          if (abs(dot - (1.0f)) < 0.000001f)
            dot = 1; */
 
+
         double rotAngle = acos(dot);
+
+        if(newDir.X() < 0 && newDir.Y() < 0) {
+          rotAngle *= -1; 
+        } else if(newDir.X() > 0 && newDir.Y() < 0) {
+          rotAngle *= -1; 
+        }
+
         _thisModel->GetJointController()->SetPositionTarget(_rotJoint->GetScopedName(), rotAngle);
-        gzmsg << "Rot: " << rotAngle << endl;
+        gzmsg << "Rot: " << rotAngle << " Dot: " << dot << " dir: " << newDir << endl;
         
       }
       loopTimer += common::Time(0, common::Time::SecToNano(1 / 30));
