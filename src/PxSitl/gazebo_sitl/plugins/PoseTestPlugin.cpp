@@ -8,10 +8,10 @@
 #include <map>
 
 using namespace gazebo;
+using gazebo::common::PID;
 using gazebo::physics::JointPtr;
 using gazebo::physics::LinkPtr;
 using gazebo::physics::ModelPtr;
-using gazebo::common::PID;
 using ignition::math::Pose3d;
 using ignition::math::Quaterniond;
 using ignition::math::Vector3d;
@@ -37,6 +37,7 @@ private:
   LinkPtr _rotLink;
   JointPtr _rotJoint;
 
+  double _pTerm, _iTerm, _dTerm = 0.0;
   PID _rotPID;
 
   event::ConnectionPtr _updateWorld;
@@ -51,14 +52,11 @@ public:
 
   void printPose() {
     gzmsg << "---\n";
-    gzmsg << "ModelWorld " << _thisModel->WorldPose()
-          << " Relative: " << _thisModel->RelativePose() << endl;
+    gzmsg << "ModelWorld " << _thisModel->WorldPose() << " Relative: " << _thisModel->RelativePose() << endl;
 
-    gzmsg << "BaseWorld: " << _baseLink->WorldPose()
-          << " Relative: " << _baseLink->RelativePose() << endl;
+    gzmsg << "BaseWorld: " << _baseLink->WorldPose() << " Relative: " << _baseLink->RelativePose() << endl;
 
-    gzmsg << "BoxWorld: " << _boxLink->WorldPose()
-          << " Relative: " << _boxLink->RelativePose() << endl;
+    gzmsg << "BoxWorld: " << _boxLink->WorldPose() << " Relative: " << _boxLink->RelativePose() << endl;
   }
 
   void Load(physics::ModelPtr model, sdf::ElementPtr sdf) {
@@ -71,12 +69,21 @@ public:
     _boxLink = model->GetLink("link_1");
     _rotJoint = model->GetJoint("link_0_JOINT_2");
 
-    if(!_rotJoint) {
+    if (!_rotJoint) {
       gzerr << "Joint not found\n";
       return;
     }
 
-    _rotPID = PID(10.0, 0.0, 20.0, 2*3.14, - 2*3.14);
+    if (!sdf->Get<double>("p_term", _pTerm, 1.))
+      gzwarn << "No p_term of PID coefficient. Use default 1.0\n";
+
+    if (!sdf->Get<double>("i_term", _iTerm, 0.))
+      gzwarn << "No i_term of PID coefficient. Use default 0.0\n";
+
+    if (!sdf->Get<double>("d_term", _dTerm, 2.))
+      gzwarn << "No d_term of PID coefficient. Use default 2.0\n";
+
+    _rotPID = PID(_pTerm, _iTerm, _dTerm, 2 * 3.14, -2 * 3.14);
     model->GetJointController()->SetPositionPID(_rotJoint->GetScopedName(), _rotPID);
 
     /* Pose3d originalBasePose = _baseLink->WorldPose();
@@ -87,11 +94,10 @@ public:
     _factoryPub = _node->Advertise<msgs::Factory>("~/factory", 10, 1);
     _visualPub = _node->Advertise<msgs::Visual>("~/visual");
 
-    _selectObject = _node->Subscribe("~/selection",
-                                     &GunPlugin::onSelectObjectCallback, this);
+    _selectObject = _node->Subscribe("~/selection", &GunPlugin::onSelectObjectCallback, this);
 
-    _updateWorld = event::Events::ConnectWorldUpdateBegin(
-        std::bind(&GunPlugin::onWorldUpdate, this, std::placeholders::_1));
+    _updateWorld =
+        event::Events::ConnectWorldUpdateBegin(std::bind(&GunPlugin::onWorldUpdate, this, std::placeholders::_1));
 
     loopTimer = t = _thisWorld->RealTime();
   }
@@ -117,8 +123,7 @@ public:
         // gzmsg << jointPose.Pos() + rotXY << endl;
 
         Quaterniond newRot = _boxLink->RelativePose().Rot();
-        Quaterniond r =
-            Utils::lookAt(rotXY, targetPosXY) * dT.Double() * _maxSpeed;
+        Quaterniond r = Utils::lookAt(rotXY, targetPosXY) * dT.Double() * _maxSpeed;
 
         Pose3d p(rotXY, newRot + r);
 
@@ -132,18 +137,16 @@ public:
          if (abs(dot - (1.0f)) < 0.000001f)
            dot = 1; */
 
-
         double rotAngle = acos(dot);
 
-        if(newDir.X() < 0 && newDir.Y() < 0) {
-          rotAngle *= -1; 
-        } else if(newDir.X() > 0 && newDir.Y() < 0) {
-          rotAngle *= -1; 
+        if (newDir.X() < 0 && newDir.Y() < 0) {
+          rotAngle *= -1;
+        } else if (newDir.X() > 0 && newDir.Y() < 0) {
+          rotAngle *= -1;
         }
 
         _thisModel->GetJointController()->SetPositionTarget(_rotJoint->GetScopedName(), rotAngle);
         gzmsg << "Rot: " << rotAngle << " Dot: " << dot << " dir: " << newDir << endl;
-        
       }
       loopTimer += common::Time(0, common::Time::SecToNano(1 / 30));
     }
