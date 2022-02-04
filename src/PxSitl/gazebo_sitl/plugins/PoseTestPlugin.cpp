@@ -30,15 +30,19 @@ private:
   transport::SubscriberPtr _shootSub;
 
   physics::WorldPtr _thisWorld;
+
   ModelPtr _thisModel;
   ModelPtr _target;
-  LinkPtr _baseLink;
-  LinkPtr _boxLink;
-  LinkPtr _rotLink;
-  JointPtr _rotJoint;
+
+  LinkPtr _pitchLink;
+  LinkPtr _yawLink;
+
+  JointPtr _yawJoint;
+  JointPtr _pitchJoint;
 
   double _pTerm, _iTerm, _dTerm = 0.0;
-  PID _rotPID;
+  PID _yawPID;
+  PID _pitchPID;
 
   event::ConnectionPtr _updateWorld;
 
@@ -52,11 +56,8 @@ public:
 
   void printPose() {
     gzmsg << "---\n";
-    gzmsg << "ModelWorld " << _thisModel->WorldPose() << " Relative: " << _thisModel->RelativePose() << endl;
-
-    gzmsg << "BaseWorld: " << _baseLink->WorldPose() << " Relative: " << _baseLink->RelativePose() << endl;
-
-    gzmsg << "BoxWorld: " << _boxLink->WorldPose() << " Relative: " << _boxLink->RelativePose() << endl;
+    gzmsg << "ModelWorld " << _thisModel->WorldPose()
+          << " Relative: " << _thisModel->RelativePose() << endl;
   }
 
   void Load(physics::ModelPtr model, sdf::ElementPtr sdf) {
@@ -64,13 +65,14 @@ public:
     _thisWorld = model->GetWorld();
     _thisModel = model;
 
-    _baseLink = model->GetLink("link");
-    // _boxVisual = _baseLink->Get
-    _boxLink = model->GetLink("link_1");
-    _rotJoint = model->GetJoint("link_0_JOINT_2");
+    _pitchLink = model->GetLink("pitch_1");
+    _yawLink = model->GetLink("yaw_1");
 
-    if (!_rotJoint) {
-      gzerr << "Joint not found\n";
+    _yawJoint = model->GetJoint("base_yaw_1");
+    _pitchJoint = model->GetJoint("yaw_1_pitch_1");
+
+    if (!_yawJoint || !_pitchJoint) {
+      gzerr << "Invalid joints\n";
       return;
     }
 
@@ -83,21 +85,23 @@ public:
     if (!sdf->Get<double>("d_term", _dTerm, 2.))
       gzwarn << "No d_term of PID coefficient. Use default 2.0\n";
 
-    _rotPID = PID(_pTerm, _iTerm, _dTerm, 2 * 3.14, -2 * 3.14);
-    model->GetJointController()->SetPositionPID(_rotJoint->GetScopedName(), _rotPID);
+    _yawPID = PID(_pTerm, _iTerm, _dTerm, 2 * 3.14, -2 * 3.14);
+    model->GetJointController()->SetPositionPID(_yawJoint->GetScopedName(),
+                                                _yawPID);
 
-    /* Pose3d originalBasePose = _baseLink->WorldPose();
-    Pose3d originalBoxPose = _boxVisual->WorldPose(); */
-    Pose3d originalModelPose = _thisModel->WorldPose();
+    _pitchPID = PID(_pTerm, _iTerm, _dTerm, 2 * 3.14, -2 * 3.14);
+    model->GetJointController()->SetPositionPID(_pitchJoint->GetScopedName(),
+                                                _pitchPID);
 
     _node->Init(_thisWorld->Name());
     _factoryPub = _node->Advertise<msgs::Factory>("~/factory", 10, 1);
     _visualPub = _node->Advertise<msgs::Visual>("~/visual");
 
-    _selectObject = _node->Subscribe("~/selection", &GunPlugin::onSelectObjectCallback, this);
+    _selectObject = _node->Subscribe("~/selection",
+                                     &GunPlugin::onSelectObjectCallback, this);
 
-    _updateWorld =
-        event::Events::ConnectWorldUpdateBegin(std::bind(&GunPlugin::onWorldUpdate, this, std::placeholders::_1));
+    _updateWorld = event::Events::ConnectWorldUpdateBegin(
+        std::bind(&GunPlugin::onWorldUpdate, this, std::placeholders::_1));
 
     loopTimer = t = _thisWorld->RealTime();
   }
@@ -107,35 +111,17 @@ public:
     if (worldInfo.realTime >= loopTimer) {
 
       if (_target) {
-        Quaterniond modelRot = _thisModel->WorldPose().Rot();
-        Quaterniond targetRot = _target->WorldPose().Rot();
         Vector3d targetPos = _target->WorldPose().Pos();
-        Vector3d modelPos = _thisModel->WorldPose().Pos();
-
         Vector3d targetPosXY(targetPos.X(), targetPos.Y(), 0.f);
 
-        Vector3d rotPos = _boxLink->RelativePose().Pos();
-        Vector3d rotXY(rotPos.X(), rotPos.Y(), 0.f);
+        Vector3d yawPose = _yawLink->WorldPose().Pos();
+        Vector3d yawXY(yawPose.X(), yawPose.Y(), 0.f);
 
-        gazebo::physics::Joint_V js = _boxLink->GetParentJoints();
-        Pose3d jointPose = js.at(0)->InitialAnchorPose();
+        Vector3d pitchPose = _pitchLink->WorldPose().Pos();
 
-        // gzmsg << jointPose.Pos() + rotXY << endl;
-
-        Quaterniond newRot = _boxLink->RelativePose().Rot();
-        Quaterniond r = Utils::lookAt(rotXY, targetPosXY) * dT.Double() * _maxSpeed;
-
-        Pose3d p(rotXY, newRot + r);
-
-        Vector3d newDir = targetPosXY - rotXY;
+        Vector3d newDir = targetPosXY - yawXY;
         double len = newDir.Length();
         double dot = Vector3d::UnitX.Dot(newDir.Normalized());
-
-        /*  if (abs(dot - (-1.0f)) < 0.000001f)
-           dot = 3.14;
-
-         if (abs(dot - (1.0f)) < 0.000001f)
-           dot = 1; */
 
         double rotAngle = acos(dot);
 
@@ -145,8 +131,10 @@ public:
           rotAngle *= -1;
         }
 
-        _thisModel->GetJointController()->SetPositionTarget(_rotJoint->GetScopedName(), rotAngle);
-        gzmsg << "Rot: " << rotAngle << " Dot: " << dot << " dir: " << newDir << endl;
+        _thisModel->GetJointController()->SetPositionTarget(
+            _yawJoint->GetScopedName(), rotAngle);
+        gzmsg << "Rot: " << rotAngle << " Dot: " << dot << " dir: " << newDir
+              << endl;
       }
       loopTimer += common::Time(0, common::Time::SecToNano(1 / 30));
     }
