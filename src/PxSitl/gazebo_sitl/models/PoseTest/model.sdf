@@ -3,21 +3,21 @@
   <model name='PoseTest'>
     <link name='base'>
       <inertial>
-        <mass>42.715</mass>
+        <mass>123.399</mass>
         <inertia>
-          <ixx>0.890251</ixx>
+          <ixx>8.44047</ixx>
           <ixy>0</ixy>
           <ixz>0</ixz>
-          <iyy>0.890251</iyy>
+          <iyy>8.44047</iyy>
           <iyz>0</iyz>
-          <izz>1.77979</izz>
+          <izz>0.222118</izz>
         </inertia>
         <pose>0 0 0 0 -0 0</pose>
       </inertial>
       <self_collide>0</self_collide>
       <enable_wind>0</enable_wind>
       <kinematic>0</kinematic>
-      <pose>0 -0 0.125 0 -0 0</pose>
+      <pose>0 0 0.125 0 -0 0</pose>
       <gravity>1</gravity>
       <visual name='visual_1'>
         <geometry>
@@ -34,6 +34,10 @@
           <shader type='pixel'>
             <normal_map>__default__</normal_map>
           </shader>
+          <ambient>0.1 0.1 0.1 1</ambient>
+          <diffuse>0.1 0.1 0.1 1</diffuse>
+          <specular>0.01 0.01 0.01 1</specular>
+          <emissive>0 0 0 1</emissive>
         </material>
         <pose>0 0 0.5 0 -0 0</pose>
         <transparency>0</transparency>
@@ -54,6 +58,10 @@
           <shader type='pixel'>
             <normal_map>__default__</normal_map>
           </shader>
+          <ambient>0.87 0.26 0.07 1</ambient>
+          <diffuse>0.87 0.26 0.07 1</diffuse>
+          <specular>0.87 0.26 0.07 1</specular>
+          <emissive>0 0 0 1</emissive>
         </material>
         <pose>0 0 0 0 -0 0</pose>
         <transparency>0</transparency>
@@ -73,6 +81,10 @@
           <shader type='pixel'>
             <normal_map>__default__</normal_map>
           </shader>
+          <ambient>0.175 0.175 0.175 1</ambient>
+          <diffuse>0.175 0.175 0.175 1</diffuse>
+          <specular>0.175 0.175 0.175 1</specular>
+          <emissive>0 0 0 1</emissive>
         </material>
         <pose>0 0 -0.055 0 -0 0</pose>
         <transparency>0</transparency>
@@ -462,7 +474,7 @@
         </inertia>
         <pose>0 0 0 0 -0 0</pose>
       </inertial>
-      <pose>-0 0 1.06 1.57 -0 0</pose>
+      <pose>0 0 1.06 0 -0 0</pose>
       <self_collide>0</self_collide>
       <enable_wind>0</enable_wind>
       <kinematic>0</kinematic>
@@ -482,8 +494,12 @@
           <shader type='pixel'>
             <normal_map>__default__</normal_map>
           </shader>
+          <ambient>0.1 0.1 0.1 1</ambient>
+          <diffuse>0.1 0.1 0.1 1</diffuse>
+          <specular>0.01 0.01 0.01 1</specular>
+          <emissive>0 0 0 1</emissive>
         </material>
-        <pose>0 0 -0.11 0 -0 0</pose>
+        <pose>0 0.11 0 1.57 -0 0</pose>
         <transparency>0</transparency>
         <cast_shadows>1</cast_shadows>
       </visual>
@@ -501,6 +517,10 @@
           <shader type='pixel'>
             <normal_map>__default__</normal_map>
           </shader>
+          <ambient>0.87 0.26 0.07 1</ambient>
+          <diffuse>0.87 0.26 0.07 1</diffuse>
+          <specular>0.87 0.26 0.07 1</specular>
+          <emissive>0 0 0 1</emissive>
         </material>
         <pose>0 0 0 0 -0 0</pose>
         <transparency>0</transparency>
@@ -564,7 +584,7 @@
       <collision name='collision_2'>
         <laser_retro>0</laser_retro>
         <max_contacts>10</max_contacts>
-        <pose>0 0 -0.11 0 -0 0</pose>
+        <pose>0 0.11 0 1.57 -0 0</pose>
         <geometry>
           <cylinder>
             <radius>0.06</radius>
@@ -618,13 +638,12 @@
         </surface>
       </collision>
     </link>
-
     <joint name='base_yaw_1' type='revolute'>
       <parent>base</parent>
       <child>yaw_1</child>
       <pose>0 0 0 0 -0 0</pose>
       <axis>
-        <xyz>0 -1 -0</xyz>
+        <xyz>0 0 -1</xyz>
         <limit>
           <lower>-1.79769e+308</lower>
           <upper>1.79769e+308</upper>
@@ -702,11 +721,10 @@
     </joint>
     <static>0</static>
     <allow_auto_disable>1</allow_auto_disable>
-    
     <plugin name='PoseTestPlugin' filename='libPoseTestPlugin.so'>
-      <p_term>4</p_term>
+      <p_term>1</p_term>
       <i_term>0</i_term>
-      <d_term>5.8</d_term>
+      <d_term>4</d_term>
     </plugin>
   </model>
 </sdf>

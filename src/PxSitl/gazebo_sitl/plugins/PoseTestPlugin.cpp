@@ -112,31 +112,33 @@ public:
 
       if (_target) {
         Vector3d targetPos = _target->WorldPose().Pos();
-        Vector3d targetPosXY(targetPos.X(), targetPos.Y(), 0.f);
 
         Vector3d yawPose = _yawLink->WorldPose().Pos();
         Vector3d yawXY(yawPose.X(), yawPose.Y(), 0.f);
+        Vector3d targetPosXY(targetPos.X(), targetPos.Y(), 0.f);
+        Vector3d dirForYaw = targetPosXY - yawXY;
+        double angleForYaw = acos(Vector3d::UnitX.Dot(dirForYaw.Normalized()));
 
         Vector3d pitchPose = _pitchLink->WorldPose().Pos();
+        // Vector3d pitchPoseXZ(0.0, pitchPose.Y(), pitchPose.Z());
+        // Vector3d targetPosXZ(0.0, targetPos.Y(), targetPos.Z());
+        Vector3d dirForPitch = targetPos - pitchPose;
+        Vector3d antiZ = Vector3d::UnitZ * -1;
+        double angleForPitch = acos(antiZ.Dot(dirForPitch.Normalized()));
 
-        Vector3d newDir = targetPosXY - yawXY;
-        double len = newDir.Length();
-        double dot = Vector3d::UnitX.Dot(newDir.Normalized());
-
-        double rotAngle = acos(dot);
-
-        if (newDir.X() < 0 && newDir.Y() < 0) {
-          rotAngle *= -1;
-        } else if (newDir.X() > 0 && newDir.Y() < 0) {
-          rotAngle *= -1;
+        if (dirForYaw.X() > 0 && dirForYaw.Y() > 0) {
+          angleForYaw *= -1;
+        } else if (dirForYaw.X() < 0 && dirForYaw.Y() > 0) {
+          angleForYaw *= -1;
         }
 
-        _thisModel->GetJointController()->SetPositionTarget(
-            _yawJoint->GetScopedName(), rotAngle);
-        gzmsg << "Rot: " << rotAngle << " Dot: " << dot << " dir: " << newDir
-              << endl;
+        _thisModel->GetJointController()->SetPositionTarget(_yawJoint->GetScopedName(), angleForYaw);
+        _thisModel->GetJointController()->SetPositionTarget(_pitchJoint->GetScopedName(), angleForPitch);
+
+        // gzmsg << "Yaw: " << angleForYaw << " Pitch: " << angleForPitch << endl;
+        // gzmsg << "YawRot: " << dirForYaw << " PitchRow: " << dirForPitch << endl;
       }
-      loopTimer += common::Time(0, common::Time::SecToNano(1 / 30));
+      loopTimer += common::Time(0, common::Time::SecToNano(0.25));
     }
 
     lastFrame = _thisWorld->SimTime();
