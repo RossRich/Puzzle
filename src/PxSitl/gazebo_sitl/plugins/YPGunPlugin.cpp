@@ -8,6 +8,8 @@
 #include <map>
 
 using namespace gazebo;
+using gazebo::common::PID;
+using gazebo::physics::JointPtr;
 using gazebo::physics::LinkPtr;
 using gazebo::physics::ModelPtr;
 using ignition::math::Pose3d;
@@ -33,11 +35,18 @@ private:
   physics::WorldPtr _thisWorld;
   ModelPtr _thisModel;
   ModelPtr _target;
+
   LinkPtr _bulletSpawnLink;
   LinkPtr _yawLink;
   LinkPtr _pitchLink;
 
-  event::ConnectionPtr _newModelAdded;
+  JointPtr _yawJoint;
+  JointPtr _pitchJoint;
+
+  double _pTerm, _iTerm, _dTerm = 0.0;
+  PID _yawPID;
+  PID _pitchPID;
+
   event::ConnectionPtr _updateWorld;
 
   common::Time loopTimer;
@@ -94,14 +103,18 @@ public:
 
     _thisWorld = model->GetWorld();
     _thisModel = model;
-    _bulletSpawnLink = model->GetLink("bullet_spawner");
-    _yawLink = model->GetLink("link_2");
-    _pitchLink = model->GetLink("link_3");
 
-    /* if(!_yawLink || !_pitchLink) {
-      gzerr << "No yaw or pith link\n";
+    _bulletSpawnLink = model->GetLink("bullet_spawner");
+    _pitchLink = model->GetLink("pitch_1");
+    _yawLink = model->GetLink("yaw_1");
+
+    _yawJoint = model->GetJoint("base_yaw_1");
+    _pitchJoint = model->GetJoint("yaw_1_pitch_1");
+
+    if (!_yawJoint || !_pitchJoint) {
+      gzerr << "Invalid joints\n";
       return;
-    } */
+    }
 
     if (!_bulletSpawnLink) {
       gzerr << "Bullet spawner now find\n";
@@ -120,6 +133,23 @@ public:
       return;
     }
 
+    if (!sdf->Get<double>("p_term", _pTerm, 1.))
+      gzwarn << "No p_term of PID coefficient. Use default 1.0\n";
+
+    if (!sdf->Get<double>("i_term", _iTerm, 0.))
+      gzwarn << "No i_term of PID coefficient. Use default 0.0\n";
+
+    if (!sdf->Get<double>("d_term", _dTerm, 2.))
+      gzwarn << "No d_term of PID coefficient. Use default 2.0\n";
+
+    _yawPID = PID(_pTerm, _iTerm, _dTerm, 2 * 3.14, -2 * 3.14);
+    model->GetJointController()->SetPositionPID(_yawJoint->GetScopedName(),
+                                                _yawPID);
+
+    _pitchPID = PID(_pTerm, _iTerm, _dTerm, 2 * 3.14, -2 * 3.14);
+    model->GetJointController()->SetPositionPID(_pitchJoint->GetScopedName(),
+                                                _pitchPID);
+
     _node->Init(_thisWorld->Name());
     _factoryPub = _node->Advertise<msgs::Factory>("~/factory", 10, 1);
     _visualPub = _node->Advertise<msgs::Visual>("~/visual");
@@ -137,46 +167,46 @@ public:
     loopTimer = _thisWorld->RealTime();
   }
 
-  /* void onNewModel(std::string name) {
-    gzmsg << "New model: " << name << endl;
-
-    if (name == "bullet_1") {
-      gzmsg << "bullet_1 is found\n";
-    }
-  } */
-
   void onWorldUpdate(const common::UpdateInfo &worldInfo) {
     common::Time dT = _thisWorld->SimTime() - lastFrame;
     if (worldInfo.realTime >= loopTimer) {
 
       if (_target) {
-        Quaterniond modelRot = _thisModel->WorldPose().Rot();
-        Quaterniond targetRot = _target->WorldPose().Rot();
         Vector3d targetPos = _target->WorldPose().Pos();
-        Vector3d modelPos = _thisModel->WorldPose().Pos();
-        Pose3d p(_thisModel->WorldPose().Pos(), Utils::lookAt(_yawLink->RelativePose().Pos(), targetPos));
-        // _thisModel->SetWorldPose(p);
-        // _yawLink->SetRelativePose(Pose3d(_yawLink->RelativePose().Pos(), p.Rot()));
-        _yawLink->SetRelativePose(Pose3d(_yawLink->RelativePose().Pos(), p.Rot()));
 
+        Vector3d yawPose = _yawLink->WorldPose().Pos();
+        Vector3d yawXY(yawPose.X(), yawPose.Y(), 0.f);
+        Vector3d targetPosXY(targetPos.X(), targetPos.Y(), 0.f);
+        Vector3d dirForYaw = targetPosXY - yawXY;
+        double angleForYaw = acos(Vector3d::UnitX.Dot(dirForYaw.Normalized()));
 
-        msgs::Pose targetPoseMsg;
-        msgs::Set(targetPoseMsg.mutable_orientation(), targetRot);
-        msgs::Set(targetPoseMsg.mutable_position(), targetPos);
+        Vector3d pitchPose = _pitchLink->WorldPose().Pos();
+        // Vector3d pitchPoseXZ(0.0, pitchPose.Y(), pitchPose.Z());
+        // Vector3d targetPosXZ(0.0, targetPos.Y(), targetPos.Z());
+        Vector3d dirForPitch = targetPos - pitchPose;
+        Vector3d antiZ = Vector3d::UnitZ * -1;
+        double angleForPitch = acos(antiZ.Dot(dirForPitch.Normalized()));
 
-        // gzmsg << "GunPlugin: target pose: " << targetPos << endl;
+        if (dirForYaw.X() > 0 && dirForYaw.Y() > 0) {
+          angleForYaw *= -1;
+        } else if (dirForYaw.X() < 0 && dirForYaw.Y() > 0) {
+          angleForYaw *= -1;
+        }
 
-        _targetPub->Publish(targetPoseMsg);
+        _thisModel->GetJointController()->SetPositionTarget(_yawJoint->GetScopedName(), angleForYaw);
+        _thisModel->GetJointController()->SetPositionTarget(_pitchJoint->GetScopedName(), angleForPitch);
+
+        // gzmsg << "Yaw: " << angleForYaw << " Pitch: " << angleForPitch << endl;
+        // gzmsg << "YawRot: " << dirForYaw << " PitchRow: " << dirForPitch << endl;
       }
-
-      loopTimer += common::Time(0, common::Time::SecToNano(1 / 30));
+      loopTimer += common::Time(0, common::Time::SecToNano(0.25));
     }
 
     lastFrame = _thisWorld->SimTime();
   }
 
   void onSelectObjectCallback(ConstSelectionPtr &object) {
-    if (object->selected()) {
+    if (object->selected() && (object->name() != _thisModel->GetName())) {
       _target = _thisWorld->ModelByName(object->name());
       if (_target)
         gzmsg << _target->GetName() << endl;

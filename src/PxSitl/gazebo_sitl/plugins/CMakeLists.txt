@@ -28,8 +28,8 @@ target_link_libraries(GunPlugin
   ${GAZEBO_LIBRARIES}
 )
 
-add_library(Gun2Plugin SHARED Gun2Plugin.cpp Utils.hpp)
-target_link_libraries(Gun2Plugin
+add_library(YPGunPlugin SHARED YPGunPlugin.cpp Utils.hpp)
+target_link_libraries(YPGunPlugin
   ${GAZEBO_LIBRARIES}
 )
 
