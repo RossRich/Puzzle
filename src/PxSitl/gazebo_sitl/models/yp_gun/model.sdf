@@ -1,6 +1,6 @@
 <?xml version='1.0'?>
 <sdf version='1.7'>
-  <model name='YP Gun'>
+  <model name='yp_gun'>
     <link name='base'>
       <inertial>
         <mass>123.399</mass>

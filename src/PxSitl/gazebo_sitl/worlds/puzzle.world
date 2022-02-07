@@ -22,6 +22,48 @@
       <uri>model://yp_gun</uri>
     </include>
 
+
+    <include>
+      <uri>model://iris_depth_camera</uri>
+      <name>iris_1</name>
+      <kinematic>true</kinematic>
+      <pose>1.5 0 2 0 0 0</pose>
+    </include>
+
+    <include>
+      <uri>model://iris_depth_camera</uri>
+      <name>iris_2</name>
+      <link name="base_link">
+        <kinematic>1</kinematic>
+      </link>
+      <pose>-1.5 0 2 0 0 0</pose>
+    </include>
+
+    <include>
+      <link name="iris::base_link">
+        <kinematic>1</kinematic>
+      </link>
+      <uri>model://iris</uri>
+      <name>iris_222</name>
+      
+      <pose>-1.5 0 3 0 0 0</pose>
+    </include>
+
+    <include>
+      <uri>model://iris_depth_camera</uri>
+      <name>iris_3</name>
+      <kinematic>true</kinematic>
+      <pose>0 1.5 2 0 0 0</pose>
+    </include>
+
+    <include>
+      <uri>model://iris_depth_camera</uri>
+      <name>iris_4</name>
+      <kinematic>true</kinematic>
+      <pose>0 -1.5 2 0 0 0</pose>
+    </include>
+    
+
     <physics name='default_physics' default='0' type='ode'>
       <gravity>0 0 -9.8</gravity>
       <ode>

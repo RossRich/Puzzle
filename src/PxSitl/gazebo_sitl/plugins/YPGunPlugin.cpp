@@ -196,8 +196,16 @@ public:
         _thisModel->GetJointController()->SetPositionTarget(_yawJoint->GetScopedName(), angleForYaw);
         _thisModel->GetJointController()->SetPositionTarget(_pitchJoint->GetScopedName(), angleForPitch);
 
-        // gzmsg << "Yaw: " << angleForYaw << " Pitch: " << angleForPitch << endl;
+        gzmsg << "Yaw: " << angleForYaw << " Pitch: " << angleForPitch << endl;
         // gzmsg << "YawRot: " << dirForYaw << " PitchRow: " << dirForPitch << endl;
+
+        msgs::Pose targetPoseMsg;
+        msgs::Set(targetPoseMsg.mutable_orientation(), _target->WorldPose().Rot());
+        msgs::Set(targetPoseMsg.mutable_position(), targetPos);
+
+        // gzmsg << "GunPlugin: target pose: " << targetPos << endl;
+
+        _targetPub->Publish(targetPoseMsg);
       }
       loopTimer += common::Time(0, common::Time::SecToNano(0.25));
     }

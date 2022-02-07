@@ -51,8 +51,12 @@ private:
         Quaterniond targetRot = _targetPose.Rot();
         Vector3d targetPos = _targetPose.Pos();
         Vector3d modelPos = _thisModel->WorldPose().Pos();
-        Pose3d p(_thisModel->WorldPose().Pos(),
-                 Utils::lookAt(modelPos, targetPos));
+
+        Vector3d antiZ = Vector3d::UnitX;
+        double angle = acos(antiZ.Dot((targetPos - modelPos).Normalized()));
+        gzmsg << "angle: " << angle << std::endl;
+
+        Pose3d p(_thisModel->WorldPose().Pos(), Utils::lookAt(modelPos, targetPos));
         _thisModel->SetWorldPose(p);
 
         gzmsg << "target pose: " << _targetPose << " model pose: " << modelPos
@@ -66,11 +70,11 @@ private:
         float x = fromToXZ.Length();
         float y = fromTo.Z();
 
-        float v2 = (9.8 * x * x) / (2 * (y - tan(0) * x) * pow(cos(0), 2));
+        float v2 = (9.8 * x * x) / (2 * (y - tan(angle) * x) * pow(cos(angle), 2));
         float v = sqrt(abs(v2));
 
         _thisModel->SetGravityMode(true);
-        _thisModel->SetLinearVel(fromToXZ.Normalized() * v);
+        _thisModel->SetLinearVel(fromTo.Normalized() * v);
         _isGrounded = false;
       }
 
