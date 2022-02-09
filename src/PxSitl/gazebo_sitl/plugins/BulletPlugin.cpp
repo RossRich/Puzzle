@@ -53,6 +53,7 @@ private:
         Vector3d modelPos = _thisModel->WorldPose().Pos();
 
         Vector3d antiZ = Vector3d::UnitX;
+        
         double angle = acos(antiZ.Dot((targetPos - modelPos).Normalized()));
         gzmsg << "angle: " << angle << std::endl;
 

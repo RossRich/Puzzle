@@ -3,14 +3,14 @@
   <model name='yp_gun'>
     <link name='base'>
       <inertial>
-        <mass>123.399</mass>
+        <mass>500</mass>
         <inertia>
-          <ixx>8.44047</ixx>
+          <ixx>10</ixx>
           <ixy>0</ixy>
           <ixz>0</ixz>
-          <iyy>8.44047</iyy>
+          <iyy>10</iyy>
           <iyz>0</iyz>
-          <izz>0.222118</izz>
+          <izz>10</izz>
         </inertia>
         <pose>0 0 0 0 -0 0</pose>
       </inertial>
@@ -73,10 +73,6 @@
           <shader type='pixel'>
             <normal_map>__default__</normal_map>
           </shader>
-          <ambient>0.175 0.175 0.175 1</ambient>
-          <diffuse>0.175 0.175 0.175 1</diffuse>
-          <specular>0.175 0.175 0.175 1</specular>
-          <emissive>0 0 0 1</emissive>
         </material>
         <pose>0 0 -0.055 0 -0 0</pose>
         <transparency>0</transparency>
@@ -298,7 +294,7 @@
         </inertia>
         <pose>0 0 0 0 -0 0</pose>
       </inertial>
-      <pose>0 0.22 1.06 0 -0 0</pose>
+      <pose>0 0.22 1.135 0 -0 0</pose>
       <self_collide>0</self_collide>
       <enable_wind>0</enable_wind>
       <kinematic>0</kinematic>
@@ -469,7 +465,7 @@
         </inertia>
         <pose>0 0 0 0 -0 0</pose>
       </inertial>
-      <pose>0 0 1.06 0 -0 0</pose>
+      <pose>0 0 1.135 0 -0 0</pose>
       <self_collide>0</self_collide>
       <enable_wind>0</enable_wind>
       <kinematic>0</kinematic>
@@ -699,7 +695,7 @@
           <limit>
             <cfm>0</cfm>
             <erp>0.2</erp>
-          </limit>
+          </limit>`
           <suspension>
             <cfm>0</cfm>
             <erp>0.2</erp>
@@ -712,9 +708,9 @@
     <allow_auto_disable>1</allow_auto_disable>
 
     <plugin name='YPGunPlugin' filename='libYPGunPlugin.so'>
-      <p_term>1</p_term>
+      <p_term>.8</p_term>
       <i_term>0</i_term>
-      <d_term>4</d_term>
+      <d_term>6</d_term>
       <model name='olive'/>
     </plugin>
 

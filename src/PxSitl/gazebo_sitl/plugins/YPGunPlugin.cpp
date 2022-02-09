@@ -85,14 +85,13 @@ public:
   void spawnBullet() {
     msgs::Factory factoryMsg;
 
-    std::string bulletStr;
-
-    if (!createBullet(bulletStr)) {
+    std::string bulletSdf;
+    if (!createBullet(bulletSdf)) {
       gzerr << "Failed to create sdf model of bullet\n";
       return;
     }
 
-    factoryMsg.set_sdf(bulletStr);
+    factoryMsg.set_sdf(bulletSdf);
     msgs::Set(factoryMsg.mutable_pose(), _bulletSpawnLink->WorldPose());
     _factoryPub->Publish(factoryMsg);
   }
@@ -100,7 +99,6 @@ public:
   void shootCallback(ConstEmptyPtr &msg) { spawnBullet(); }
 
   void Load(physics::ModelPtr model, sdf::ElementPtr sdf) {
-
     _thisWorld = model->GetWorld();
     _thisModel = model;
 
@@ -142,11 +140,11 @@ public:
     if (!sdf->Get<double>("d_term", _dTerm, 2.))
       gzwarn << "No d_term of PID coefficient. Use default 2.0\n";
 
-    _yawPID = PID(_pTerm, _iTerm, _dTerm, 2 * 3.14, -2 * 3.14);
+    _yawPID = PID(_pTerm, _iTerm, _dTerm, 3.14, -3.14);
     model->GetJointController()->SetPositionPID(_yawJoint->GetScopedName(),
                                                 _yawPID);
 
-    _pitchPID = PID(_pTerm, _iTerm, _dTerm, 2 * 3.14, -2 * 3.14);
+    _pitchPID = PID(_pTerm, _iTerm, _dTerm, 3.14, -3.14);
     model->GetJointController()->SetPositionPID(_pitchJoint->GetScopedName(),
                                                 _pitchPID);
 
@@ -174,12 +172,6 @@ public:
       if (_target) {
         Vector3d targetPos = _target->WorldPose().Pos();
 
-        Vector3d yawPose = _yawLink->WorldPose().Pos();
-        Vector3d yawXY(yawPose.X(), yawPose.Y(), 0.f);
-        Vector3d targetPosXY(targetPos.X(), targetPos.Y(), 0.f);
-        Vector3d dirForYaw = targetPosXY - yawXY;
-        double angleForYaw = acos(Vector3d::UnitX.Dot(dirForYaw.Normalized()));
-
         Vector3d pitchPose = _pitchLink->WorldPose().Pos();
         // Vector3d pitchPoseXZ(0.0, pitchPose.Y(), pitchPose.Z());
         // Vector3d targetPosXZ(0.0, targetPos.Y(), targetPos.Z());
@@ -187,17 +179,33 @@ public:
         Vector3d antiZ = Vector3d::UnitZ * -1;
         double angleForPitch = acos(antiZ.Dot(dirForPitch.Normalized()));
 
+        Quaterniond q(pitchPose, angleForPitch);
+        gzmsg << q.Euler() << endl;
+
+        Vector3d yawPose = q.Euler();
+        Vector3d yawXY(pitchPose.X(), pitchPose.Y(), 0.f);
+        Vector3d targetPosXY(targetPos.X(), targetPos.Y(), 0.f);
+        Vector3d dirForYaw = targetPosXY - yawXY;
+        double angleForYaw = acos(Vector3d::UnitX.Dot(dirForYaw.Normalized()));
+
         if (dirForYaw.X() > 0 && dirForYaw.Y() > 0) {
           angleForYaw *= -1;
         } else if (dirForYaw.X() < 0 && dirForYaw.Y() > 0) {
           angleForYaw *= -1;
         }
+        
+
+        /* if (dirForYaw.X() > 0 && dirForYaw.Y() > 0) {
+          angleForYaw *= -1;
+        } else if (dirForYaw.X() < 0 && dirForYaw.Y() > 0) {
+          angleForYaw *= -1;
+        } */
 
         _thisModel->GetJointController()->SetPositionTarget(_yawJoint->GetScopedName(), angleForYaw);
         _thisModel->GetJointController()->SetPositionTarget(_pitchJoint->GetScopedName(), angleForPitch);
 
         gzmsg << "Yaw: " << angleForYaw << " Pitch: " << angleForPitch << endl;
-        // gzmsg << "YawRot: " << dirForYaw << " PitchRow: " << dirForPitch << endl;
+        gzmsg << "YawRot: " << dirForYaw << " PitchRow: " << dirForPitch << endl;
 
         msgs::Pose targetPoseMsg;
         msgs::Set(targetPoseMsg.mutable_orientation(), _target->WorldPose().Rot());
@@ -214,7 +222,7 @@ public:
   }
 
   void onSelectObjectCallback(ConstSelectionPtr &object) {
-    if (object->selected() && (object->name() != _thisModel->GetName())) {
+    if (object->selected() && (object->name() != _thisModel->GetName()) && (object->name() != "asphalt_plane")) {
       _target = _thisWorld->ModelByName(object->name());
       if (_target)
         gzmsg << _target->GetName() << endl;
