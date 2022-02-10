@@ -43,7 +43,8 @@ private:
   JointPtr _yawJoint;
   JointPtr _pitchJoint;
 
-  double _pTerm, _iTerm, _dTerm = 0.0;
+  double _pYaw, _iYaw, _dYaw = 0.0;
+  double _pPitch, _iPitch, _dPitch = 0.0;
   PID _yawPID;
   PID _pitchPID;
 
@@ -66,7 +67,8 @@ public:
     }
 
     sdf::ElementPtr bulletModel = bulletSdf->Root()->GetElement("model");
-    sdf::ElementPtr bulletVisual = bulletModel->GetElement("link")->GetElement("visual");
+    sdf::ElementPtr bulletVisual =
+        bulletModel->GetElement("link")->GetElement("visual");
 
     if (!bulletModel || !bulletModel) {
       gzerr << "Invalid of bullet model\n";
@@ -75,7 +77,8 @@ public:
 
     // bulletVisual->GetElement("transparency")->Set<double>(1.0);
     // bulletModel->GetElement("static")->Set<int>(1);
-    bulletModel->GetAttribute("name")->Set<std::string>(bulletName + std::to_string(++_bulletNum));
+    bulletModel->GetAttribute("name")->Set<std::string>(
+        bulletName + std::to_string(++_bulletNum));
 
     bulletSrt = bulletSdf->ToString();
 
@@ -124,27 +127,36 @@ public:
       return;
     }
 
-    std::pair modelName = sdf->GetElement("model")->Get<std::string>("name", "");
+    std::pair modelName =
+        sdf->GetElement("model")->Get<std::string>("name", "");
 
     if (modelName.first == "" || !modelName.second) {
       gzerr << "Invalid model name for spawn in plugin param\n";
       return;
     }
 
-    if (!sdf->Get<double>("p_term", _pTerm, 1.))
-      gzwarn << "No p_term of PID coefficient. Use default 1.0\n";
+    if (!sdf->Get<double>("p_yaw", _pYaw, 1.))
+      gzwarn << "No p_yaw of PID coefficient. Use default 1.0\n";
 
-    if (!sdf->Get<double>("i_term", _iTerm, 0.))
-      gzwarn << "No i_term of PID coefficient. Use default 0.0\n";
+    if (!sdf->Get<double>("i_yaw", _iYaw, 0.0))
+      gzwarn << "No i_yaw of PID coefficient. Use default 0.0\n";
 
-    if (!sdf->Get<double>("d_term", _dTerm, 2.))
-      gzwarn << "No d_term of PID coefficient. Use default 2.0\n";
+    if (!sdf->Get<double>("d_yaw", _dYaw, 2.0))
+      gzwarn << "No d_yaw of PID coefficient. Use default 2.0\n";
 
-    _yawPID = PID(_pTerm, _iTerm, _dTerm, 3.14, -3.14);
+    _yawPID = PID(_pYaw, _iYaw, _dYaw, 3.14, -3.14);
     model->GetJointController()->SetPositionPID(_yawJoint->GetScopedName(),
                                                 _yawPID);
 
-    _pitchPID = PID(_pTerm, _iTerm, _dTerm, 3.14, -3.14);
+    if (!sdf->Get<double>("p_pitch", _pPitch, 1.))
+      gzwarn << "No p_pitch of PID coefficient. Use default 1.0\n";
+
+    if (!sdf->Get<double>("i_pitch", _iPitch, 0.))
+      gzwarn << "No i_pitch of PID coefficient. Use default 0.0\n";
+
+    if (!sdf->Get<double>("d_pitch", _dPitch, 2.))
+      gzwarn << "No d_pitch of PID coefficient. Use default 2.0\n";
+    _pitchPID = PID(_pPitch, _iPitch, _dPitch, 3.14, -3.14);
     model->GetJointController()->SetPositionPID(_pitchJoint->GetScopedName(),
                                                 _pitchPID);
 
@@ -153,15 +165,20 @@ public:
     _visualPub = _node->Advertise<msgs::Visual>("~/visual");
     _targetPub = _node->Advertise<msgs::Pose>("~/target", 5, 1);
 
-    _selectObject = _node->Subscribe("~/selection", &GunPlugin::onSelectObjectCallback, this);
-    _shootSub = _node->Subscribe("~/gun_shoot", &GunPlugin::shootCallback, this);
+    _selectObject = _node->Subscribe("~/selection",
+                                     &GunPlugin::onSelectObjectCallback, this);
+    _shootSub =
+        _node->Subscribe("~/gun_shoot", &GunPlugin::shootCallback, this);
 
-    // _newModelAdded = event::Events::ConnectAddEntity(std::bind(&GunPlugin::onNewModel, this, std::placeholders::_1));
+    // _newModelAdded =
+    // event::Events::ConnectAddEntity(std::bind(&GunPlugin::onNewModel, this,
+    // std::placeholders::_1));
 
-    _updateWorld =
-        event::Events::ConnectWorldUpdateBegin(std::bind(&GunPlugin::onWorldUpdate, this, std::placeholders::_1));
+    _updateWorld = event::Events::ConnectWorldUpdateBegin(
+        std::bind(&GunPlugin::onWorldUpdate, this, std::placeholders::_1));
 
-    bulletFilePath = common::ModelDatabase::Instance()->GetModelFile(modelName.first.insert(0, "model://"));
+    bulletFilePath = common::ModelDatabase::Instance()->GetModelFile(
+        modelName.first.insert(0, "model://"));
     loopTimer = _thisWorld->RealTime();
   }
 
@@ -186,17 +203,19 @@ public:
         Vector3d dirForYaw = targetPosXY - yawXY;
         double angleForYaw = acos(Vector3d::UnitX.Dot(dirForYaw.Normalized()));
 
-        if (dirForYaw.X() > 0 && dirForYaw.Y() > 0) {
+
+
+        /* if (dirForYaw.X() > 0 && dirForYaw.Y() > 0) {
           angleForYaw *= -1;
         } else if (dirForYaw.X() < 0 && dirForYaw.Y() > 0) {
           angleForYaw *= -1;
-        }
+        } */
 
         _thisModel->GetJointController()->SetPositionTarget(_yawJoint->GetScopedName(), angleForYaw);
         _thisModel->GetJointController()->SetPositionTarget(_pitchJoint->GetScopedName(), angleForPitch);
 
-        // gzmsg << "Yaw: " << angleForYaw << " Pitch: " << angleForPitch << endl;
-        // gzmsg << "YawRot: " << dirForYaw << " PitchRow: " << dirForPitch << endl;
+        gzmsg << "Yaw: " << angleForYaw << " Pitch: " << angleForPitch; 
+        gzmsg << " YawRot: " << dirForYaw << " PitchRow: " << dirForPitch << endl;
 
         msgs::Pose targetPoseMsg;
         msgs::Set(targetPoseMsg.mutable_orientation(), _target->WorldPose().Rot());
@@ -213,7 +232,8 @@ public:
   }
 
   void onSelectObjectCallback(ConstSelectionPtr &object) {
-    if (object->selected() && (object->name() != _thisModel->GetName()) && (object->name() != "asphalt_plane")) {
+    if (object->selected() && (object->name() != _thisModel->GetName()) &&
+        (object->name() != "asphalt_plane")) {
       _target = _thisWorld->ModelByName(object->name());
       if (_target)
         gzmsg << _target->GetName() << endl;
