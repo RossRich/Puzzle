@@ -179,11 +179,9 @@ public:
         Vector3d antiZ = Vector3d::UnitZ * -1;
         double angleForPitch = acos(antiZ.Dot(dirForPitch.Normalized()));
 
-        Quaterniond q(pitchPose, angleForPitch);
-        gzmsg << q.Euler() << endl;
-
-        Vector3d yawPose = q.Euler();
-        Vector3d yawXY(pitchPose.X(), pitchPose.Y(), 0.f);
+        Vector3d yawPose = _yawLink->WorldPose().Pos();
+        // Vector3d yawPose = pitchPose;
+        Vector3d yawXY(yawPose.X(), yawPose.Y(), 0.f);
         Vector3d targetPosXY(targetPos.X(), targetPos.Y(), 0.f);
         Vector3d dirForYaw = targetPosXY - yawXY;
         double angleForYaw = acos(Vector3d::UnitX.Dot(dirForYaw.Normalized()));
@@ -193,19 +191,12 @@ public:
         } else if (dirForYaw.X() < 0 && dirForYaw.Y() > 0) {
           angleForYaw *= -1;
         }
-        
-
-        /* if (dirForYaw.X() > 0 && dirForYaw.Y() > 0) {
-          angleForYaw *= -1;
-        } else if (dirForYaw.X() < 0 && dirForYaw.Y() > 0) {
-          angleForYaw *= -1;
-        } */
 
         _thisModel->GetJointController()->SetPositionTarget(_yawJoint->GetScopedName(), angleForYaw);
         _thisModel->GetJointController()->SetPositionTarget(_pitchJoint->GetScopedName(), angleForPitch);
 
-        gzmsg << "Yaw: " << angleForYaw << " Pitch: " << angleForPitch << endl;
-        gzmsg << "YawRot: " << dirForYaw << " PitchRow: " << dirForPitch << endl;
+        // gzmsg << "Yaw: " << angleForYaw << " Pitch: " << angleForPitch << endl;
+        // gzmsg << "YawRot: " << dirForYaw << " PitchRow: " << dirForPitch << endl;
 
         msgs::Pose targetPoseMsg;
         msgs::Set(targetPoseMsg.mutable_orientation(), _target->WorldPose().Rot());
