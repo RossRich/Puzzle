@@ -818,9 +818,9 @@
     <allow_auto_disable>1</allow_auto_disable>
 
     <plugin name='YPGunPlugin' filename='libYPGunPlugin.so'>
-      <p_yaw>1</p_yaw>
+      <p_yaw>0.5</p_yaw>
       <i_yaw>0</i_yaw>
-      <d_yaw>15</d_yaw>
+      <d_yaw>9</d_yaw>
 
       <p_pitch>1</p_pitch>
       <i_pitch>0</i_pitch>

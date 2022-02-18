@@ -48,6 +48,10 @@ private:
   PID _yawPID;
   PID _pitchPID;
 
+  Vector3d _lastDir = Vector3d::UnitX;
+  double _lastAngle = .0;
+  double _lastAngle2 = .0;
+
   event::ConnectionPtr _updateWorld;
 
   common::Time loopTimer;
@@ -67,8 +71,7 @@ public:
     }
 
     sdf::ElementPtr bulletModel = bulletSdf->Root()->GetElement("model");
-    sdf::ElementPtr bulletVisual =
-        bulletModel->GetElement("link")->GetElement("visual");
+    sdf::ElementPtr bulletVisual = bulletModel->GetElement("link")->GetElement("visual");
 
     if (!bulletModel || !bulletModel) {
       gzerr << "Invalid of bullet model\n";
@@ -77,8 +80,7 @@ public:
 
     // bulletVisual->GetElement("transparency")->Set<double>(1.0);
     // bulletModel->GetElement("static")->Set<int>(1);
-    bulletModel->GetAttribute("name")->Set<std::string>(
-        bulletName + std::to_string(++_bulletNum));
+    bulletModel->GetAttribute("name")->Set<std::string>(bulletName + std::to_string(++_bulletNum));
 
     bulletSrt = bulletSdf->ToString();
 
@@ -127,8 +129,7 @@ public:
       return;
     }
 
-    std::pair modelName =
-        sdf->GetElement("model")->Get<std::string>("name", "");
+    std::pair modelName = sdf->GetElement("model")->Get<std::string>("name", "");
 
     if (modelName.first == "" || !modelName.second) {
       gzerr << "Invalid model name for spawn in plugin param\n";
@@ -145,8 +146,7 @@ public:
       gzwarn << "No d_yaw of PID coefficient. Use default 2.0\n";
 
     _yawPID = PID(_pYaw, _iYaw, _dYaw, 3.14, -3.14);
-    model->GetJointController()->SetPositionPID(_yawJoint->GetScopedName(),
-                                                _yawPID);
+    model->GetJointController()->SetPositionPID(_yawJoint->GetScopedName(), _yawPID);
 
     if (!sdf->Get<double>("p_pitch", _pPitch, 1.))
       gzwarn << "No p_pitch of PID coefficient. Use default 1.0\n";
@@ -157,28 +157,24 @@ public:
     if (!sdf->Get<double>("d_pitch", _dPitch, 2.))
       gzwarn << "No d_pitch of PID coefficient. Use default 2.0\n";
     _pitchPID = PID(_pPitch, _iPitch, _dPitch, 3.14, -3.14);
-    model->GetJointController()->SetPositionPID(_pitchJoint->GetScopedName(),
-                                                _pitchPID);
+    model->GetJointController()->SetPositionPID(_pitchJoint->GetScopedName(), _pitchPID);
 
     _node->Init(_thisWorld->Name());
     _factoryPub = _node->Advertise<msgs::Factory>("~/factory", 10, 1);
     _visualPub = _node->Advertise<msgs::Visual>("~/visual");
     _targetPub = _node->Advertise<msgs::Pose>("~/target", 5, 1);
 
-    _selectObject = _node->Subscribe("~/selection",
-                                     &GunPlugin::onSelectObjectCallback, this);
-    _shootSub =
-        _node->Subscribe("~/gun_shoot", &GunPlugin::shootCallback, this);
+    _selectObject = _node->Subscribe("~/selection", &GunPlugin::onSelectObjectCallback, this);
+    _shootSub = _node->Subscribe("~/gun_shoot", &GunPlugin::shootCallback, this);
 
     // _newModelAdded =
     // event::Events::ConnectAddEntity(std::bind(&GunPlugin::onNewModel, this,
     // std::placeholders::_1));
 
-    _updateWorld = event::Events::ConnectWorldUpdateBegin(
-        std::bind(&GunPlugin::onWorldUpdate, this, std::placeholders::_1));
+    _updateWorld =
+        event::Events::ConnectWorldUpdateBegin(std::bind(&GunPlugin::onWorldUpdate, this, std::placeholders::_1));
 
-    bulletFilePath = common::ModelDatabase::Instance()->GetModelFile(
-        modelName.first.insert(0, "model://"));
+    bulletFilePath = common::ModelDatabase::Instance()->GetModelFile(modelName.first.insert(0, "model://"));
     loopTimer = _thisWorld->RealTime();
   }
 
@@ -201,29 +197,76 @@ public:
         Vector3d yawXY(yawPose.X(), yawPose.Y(), 0.f);
         Vector3d targetPosXY(targetPos.X(), targetPos.Y(), 0.f);
         Vector3d dirForYaw = targetPosXY - yawXY;
-        double angleForYaw = acos(Vector3d::UnitX.Dot(dirForYaw.Normalized()));
+
+        if (_lastDir != dirForYaw.Normalized()) {
+
+          double angleForYaw = acos(_lastDir.Dot(dirForYaw.Normalized()));
+          double angleForYaw2 = -atan2(dirForYaw.Normalized().Y(), dirForYaw.Normalized().X());
+
+          double OX = dirForYaw.X();
+          double OY = dirForYaw.Y();
+          double lastOx = _lastDir.X();
+          double lastOy = _lastDir.Y();
+
+          bool isThroughZero = false;
+          bool isThroughPI = false;
+
+          // OX > 0 && lastOY < 0 && OY > 0 -> go to up through the zero
+          // OX > 0 && lastOY > 0 && OY < 0 -> go to down through the zero
+
+          // OX < 0 && lasrOY < 0 && OY > 0 -> go to up through the PI
+          // OX < 0 && lasrOY > 0 && OY < 0 -> go to down through the PI
+
+          if(OX >= 0) {
+            
+            if(lastOy < 0 && OY > 0) {
+              isThroughZero = true;
+              isThroughPI = false;
+            } else if (lastOy > 0 && OY < 0) {
+              isThroughZero = true;
+              isThroughPI = false;
+            }
+
+          } else {
+
+            if(lastOy < 0 && OY > 0) {
+              isThroughPI = true;
+              isThroughZero = false;
+            } else if (lastOy > 0 && OY < 0) {
+              isThroughPI = true;
+              isThroughZero = false;
+            }
+
+          }
+
+          gzmsg << "Go through PI: " << isThroughPI << " Go through zero: " << isThroughZero << endl;
+
+          double rotDir = abs(angleForYaw2) - _lastAngle2; 
+          _lastAngle2 = abs(angleForYaw2);
+       
+          if(rotDir > 0)
+            _lastAngle += angleForYaw;
+          else 
+            _lastAngle -= angleForYaw;
 
 
+          _lastDir = dirForYaw.Normalized();
+          gzmsg << angleForYaw << " " << angleForYaw2;
+         
+          // _thisModel->GetJointController()->SetPositionTarget(_pitchJoint->GetScopedName(), angleForPitch);
+          _thisModel->GetJointController()->SetPositionTarget(_yawJoint->GetScopedName(), _lastAngle);
 
-        /* if (dirForYaw.X() > 0 && dirForYaw.Y() > 0) {
-          angleForYaw *= -1;
-        } else if (dirForYaw.X() < 0 && dirForYaw.Y() > 0) {
-          angleForYaw *= -1;
-        } */
+          // gzmsg << "Yaw: " << angleForYaw << " Pitch: " << angleForPitch;
+          // gzmsg << " YawRot: " << dirForYaw << " PitchRow: " << dirForPitch << endl;
 
-        _thisModel->GetJointController()->SetPositionTarget(_yawJoint->GetScopedName(), angleForYaw);
-        _thisModel->GetJointController()->SetPositionTarget(_pitchJoint->GetScopedName(), angleForPitch);
+          msgs::Pose targetPoseMsg;
+          msgs::Set(targetPoseMsg.mutable_orientation(), _target->WorldPose().Rot());
+          msgs::Set(targetPoseMsg.mutable_position(), targetPos);
 
-        gzmsg << "Yaw: " << angleForYaw << " Pitch: " << angleForPitch; 
-        gzmsg << " YawRot: " << dirForYaw << " PitchRow: " << dirForPitch << endl;
+          // gzmsg << "GunPlugin: target pose: " << targetPos << endl;
 
-        msgs::Pose targetPoseMsg;
-        msgs::Set(targetPoseMsg.mutable_orientation(), _target->WorldPose().Rot());
-        msgs::Set(targetPoseMsg.mutable_position(), targetPos);
-
-        // gzmsg << "GunPlugin: target pose: " << targetPos << endl;
-
-        _targetPub->Publish(targetPoseMsg);
+          _targetPub->Publish(targetPoseMsg);
+        }
       }
       loopTimer += common::Time(0, common::Time::SecToNano(0.25));
     }
@@ -232,8 +275,7 @@ public:
   }
 
   void onSelectObjectCallback(ConstSelectionPtr &object) {
-    if (object->selected() && (object->name() != _thisModel->GetName()) &&
-        (object->name() != "asphalt_plane")) {
+    if (object->selected() && (object->name() != _thisModel->GetName()) && (object->name() != "asphalt_plane")) {
       _target = _thisWorld->ModelByName(object->name());
       if (_target)
         gzmsg << _target->GetName() << endl;
