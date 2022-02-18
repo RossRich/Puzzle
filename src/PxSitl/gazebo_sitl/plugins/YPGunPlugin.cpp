@@ -49,7 +49,7 @@ private:
   PID _pitchPID;
 
   Vector3d _lastDir = Vector3d::UnitX;
-  double _lastAngle = .0;
+  double _lastYawAngle = .0;
   double _lastAngle2 = .0;
 
   event::ConnectionPtr _updateWorld;
@@ -192,7 +192,7 @@ public:
         Vector3d antiZ = Vector3d::UnitZ * -1;
         double angleForPitch = acos(antiZ.Dot(dirForPitch.Normalized()));
 
-        Vector3d yawPose = _yawLink->WorldPose().Pos();
+        Vector3d yawPose = _yawLink->WorldPose().Pos() + Vector3d(0.0, 0.04, 0.0);
         // Vector3d yawPose = pitchPose;
         Vector3d yawXY(yawPose.X(), yawPose.Y(), 0.f);
         Vector3d targetPosXY(targetPos.X(), targetPos.Y(), 0.f);
@@ -214,8 +214,8 @@ public:
           // OX > 0 && lastOY < 0 && OY > 0 -> go to up through the zero
           // OX > 0 && lastOY > 0 && OY < 0 -> go to down through the zero
 
-          // OX < 0 && lasrOY < 0 && OY > 0 -> go to up through the PI
-          // OX < 0 && lasrOY > 0 && OY < 0 -> go to down through the PI
+          // OX < 0 && lastOY < 0 && OY > 0 -> go to up through the PI
+          // OX < 0 && lastOY > 0 && OY < 0 -> go to down through the PI
 
           if(OX >= 0) {
             
@@ -241,23 +241,35 @@ public:
 
           gzmsg << "Go through PI: " << isThroughPI << " Go through zero: " << isThroughZero << endl;
 
-          double rotDir = abs(angleForYaw2) - _lastAngle2; 
-          _lastAngle2 = abs(angleForYaw2);
-       
-          if(rotDir > 0)
-            _lastAngle += angleForYaw;
-          else 
-            _lastAngle -= angleForYaw;
+          if(isThroughPI && OY > 0) {
+            _lastYawAngle += angleForYaw;
+          } else if(isThroughPI && OY < 0) {
+            _lastYawAngle -= angleForYaw;
+          } else if(isThroughZero && OY > 0) {
+            _lastYawAngle -= angleForYaw;
+          } else if(isThroughZero && OY < 0) {
+            _lastYawAngle += angleForYaw;
+          } else {
+            double rotDir = angleForYaw2 - _lastAngle2; 
 
+            if(rotDir > 0) {
+              _lastYawAngle += angleForYaw;
+            } else {
+              _lastYawAngle -= angleForYaw;
+            }
+          }
 
+          _lastAngle2 = angleForYaw2;
           _lastDir = dirForYaw.Normalized();
-          gzmsg << angleForYaw << " " << angleForYaw2;
+          gzmsg << "atan2: " << angleForYaw2;
          
-          // _thisModel->GetJointController()->SetPositionTarget(_pitchJoint->GetScopedName(), angleForPitch);
-          _thisModel->GetJointController()->SetPositionTarget(_yawJoint->GetScopedName(), _lastAngle);
+          _thisModel->GetJointController()->SetPositionTarget(_pitchJoint->GetScopedName(), angleForPitch);
+          _thisModel->GetJointController()->SetPositionTarget(_yawJoint->GetScopedName(), _lastYawAngle);
 
-          // gzmsg << "Yaw: " << angleForYaw << " Pitch: " << angleForPitch;
-          // gzmsg << " YawRot: " << dirForYaw << " PitchRow: " << dirForPitch << endl;
+          gzmsg << "Yaw: " << angleForYaw;//<< " Pitch: " << angleForPitch;
+          gzmsg << " YawRot: " << dirForYaw;//<< " PitchRow: " << dirForPitch;
+
+          gzmsg << endl;
 
           msgs::Pose targetPoseMsg;
           msgs::Set(targetPoseMsg.mutable_orientation(), _target->WorldPose().Rot());

@@ -3,7 +3,7 @@
   <model name='yp_gun'>
     <link name='base'>
       <inertial>
-        <mass>500</mass>
+        <mass>2000</mass>
         <inertia>
           <ixx>10</ixx>
           <ixy>0</ixy>
@@ -90,8 +90,8 @@
         <surface>
           <friction>
             <ode>
-              <mu>1</mu>
-              <mu2>1</mu2>
+              <mu>100</mu>
+              <mu2>100</mu2>
               <fdir1>0 0 0</fdir1>
               <slip1>0</slip1>
               <slip2>0</slip2>
@@ -818,9 +818,9 @@
     <allow_auto_disable>1</allow_auto_disable>
 
     <plugin name='YPGunPlugin' filename='libYPGunPlugin.so'>
-      <p_yaw>0.5</p_yaw>
+      <p_yaw>0.3</p_yaw>
       <i_yaw>0</i_yaw>
-      <d_yaw>9</d_yaw>
+      <d_yaw>8</d_yaw>
 
       <p_pitch>1</p_pitch>
       <i_pitch>0</i_pitch>
