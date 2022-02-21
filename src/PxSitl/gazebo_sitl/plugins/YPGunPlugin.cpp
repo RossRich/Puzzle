@@ -5,6 +5,7 @@
 #include <gazebo/transport/transport.hh>
 #include <ignition/math/Pose3.hh>
 #include <ignition/math/Vector3.hh>
+#include <ignition/transport/Node.hh>
 #include <map>
 
 using namespace gazebo;
@@ -24,6 +25,8 @@ private:
   uint8_t _bulletNum = 0;
   std::string bulletName = "bullet_";
   std::string bulletFilePath;
+
+  ignition::transport::Node _ignNode;
 
   transport::NodePtr _node;
   transport::PublisherPtr _factoryPub;
@@ -58,7 +61,7 @@ private:
   common::Time lastFrame;
 
 public:
-  GunPlugin() : ModelPlugin(), _node(new transport::Node()) {}
+  GunPlugin() : ModelPlugin(), _node(new transport::Node()), _ignNode() {}
   ~GunPlugin() {}
 
   bool createBullet(std::string &bulletSrt) {
@@ -129,6 +132,12 @@ public:
       return;
     }
 
+    // gzmsg << "Link rel \n" << "yaw: " << _yawLink->RelativePose().Pos() << " pitch: " <<
+    // _pitchLink->RelativePose().Pos() << endl;
+
+    // gzmsg << "Link world \n" << "yaw: " << _yawLink->WorldPose().Pos() << " pitch: " << _pitchLink->WorldPose().Pos()
+    // << endl;
+
     std::pair modelName = sdf->GetElement("model")->Get<std::string>("name", "");
 
     if (modelName.first == "" || !modelName.second) {
@@ -178,6 +187,98 @@ public:
     loopTimer = _thisWorld->RealTime();
   }
 
+  /*
+   * \brief Calculate a value for shortest rotation
+   * \param[out] rotAngle
+   * \param[in] diraction
+   * \param[in] lastDiraction
+   * \param[in] nowAtan2
+   * \param[in] lastAtan2
+   */
+  bool rotation(double &rotAngle, double &lastRotAngle, Vector3d &diraction, Vector3d &lastDiraction) {
+    Vector3d nDir = diraction.Normalized();
+    Vector3d nLastDir = lastDiraction.Normalized();
+
+    double angleForRot = acos(nLastDir.Dot(nDir));
+    double atanForRot = -atan2(nDir.Y(), nDir.X());
+    
+    if (nLastDir == nDir || angleForRot < 0.1)
+      return false;
+
+    double OX = nDir.X();
+    double OY = nDir.Y();
+    double lastOx = nLastDir.X();
+    double lastOy = nLastDir.Y();
+
+    bool isThroughZero = false;
+    bool isThroughPI = false;
+
+    /*
+     * lastOx > 0 && lastOY < 0 && OY > 0 -> go to up through the zero
+     * lastOx > 0 && lastOY > 0 && OY < 0 -> go to down through the zero
+     *
+     * lastOx < 0 && lastOY < 0 && OY > 0 -> go to up through the PI
+     * lastOx < 0 && lastOY > 0 && OY < 0 -> go to down through the PI
+     */
+
+    if (lastOx >= 0) {
+
+      if (lastOy < 0 && OY > 0) {
+        isThroughZero = true;
+        isThroughPI = false;
+      } else if (lastOy > 0 && OY < 0) {
+        isThroughZero = true;
+        isThroughPI = false;
+      }
+
+    } else {
+
+      if (lastOy < 0 && OY > 0) {
+        isThroughPI = true;
+        isThroughZero = false;
+      } else if (lastOy > 0 && OY < 0) {
+        isThroughPI = true;
+        isThroughZero = false;
+      }
+
+      return true;
+    }
+
+    gzmsg << "Go through PI: " << isThroughPI << " Go through zero: " << isThroughZero << endl;
+
+    /*
+     * isThroughPI && OY > 0 -> increment a angle
+     * isThroughPI && OY < 0 -> decrement a angle
+     *
+     * isThroughZero && OY > 0 -> increment a angle
+     * isThroughZero && OY < 0 -> decrement a angle
+     *
+     * else standart logic
+     */
+
+    if (isThroughPI && OY > 0) {
+      // _lastYawAngle += angleForYaw;
+
+    } else if (isThroughPI && OY < 0) {
+      // _lastYawAngle -= angleForYaw;
+      rotAngle = -rotAngle;
+    } else if (isThroughZero && OY > 0) {
+      // _lastYawAngle -= angleForYaw;
+      rotAngle = -rotAngle;
+    } else if (isThroughZero && OY < 0) {
+      // _lastYawAngle += angleForYaw;
+    } else {
+      double rotDir = atanForRot - lastAtan2;
+
+      if (rotDir > 0) {
+        // _lastYawAngle += angleForYaw;
+      } else {
+        // _lastYawAngle -= angleForYaw;
+        rotAngle = -rotAngle;
+      }
+    }
+  }
+
   void onWorldUpdate(const common::UpdateInfo &worldInfo) {
     common::Time dT = _thisWorld->SimTime() - lastFrame;
     if (worldInfo.realTime >= loopTimer) {
@@ -186,99 +287,52 @@ public:
         Vector3d targetPos = _target->WorldPose().Pos();
 
         Vector3d pitchPose = _pitchLink->WorldPose().Pos();
-        // Vector3d pitchPoseXZ(0.0, pitchPose.Y(), pitchPose.Z());
-        // Vector3d targetPosXZ(0.0, targetPos.Y(), targetPos.Z());
         Vector3d dirForPitch = targetPos - pitchPose;
         Vector3d antiZ = Vector3d::UnitZ * -1;
         double angleForPitch = acos(antiZ.Dot(dirForPitch.Normalized()));
 
-        Vector3d yawPose = _yawLink->WorldPose().Pos() + Vector3d(0.0, 0.04, 0.0);
-        // Vector3d yawPose = pitchPose;
-        Vector3d yawXY(yawPose.X(), yawPose.Y(), 0.f);
-        Vector3d targetPosXY(targetPos.X(), targetPos.Y(), 0.f);
+        Vector3d offset = _pitchLink->RelativePose().Pos();
+        Vector3d yawPose = _yawLink->WorldPose().Pos() + Vector3d(offset.X(), offset.Y(), 0.);
+        Vector3d yawXY(yawPose.X(), yawPose.Y(), 0.);
+        Vector3d targetPosXY(targetPos.X(), targetPos.Y(), 0.);
         Vector3d dirForYaw = targetPosXY - yawXY;
 
-        if (_lastDir != dirForYaw.Normalized()) {
-
-          double angleForYaw = acos(_lastDir.Dot(dirForYaw.Normalized()));
-          double angleForYaw2 = -atan2(dirForYaw.Normalized().Y(), dirForYaw.Normalized().X());
-
-          double OX = dirForYaw.X();
-          double OY = dirForYaw.Y();
-          double lastOx = _lastDir.X();
-          double lastOy = _lastDir.Y();
-
-          bool isThroughZero = false;
-          bool isThroughPI = false;
-
-          // OX > 0 && lastOY < 0 && OY > 0 -> go to up through the zero
-          // OX > 0 && lastOY > 0 && OY < 0 -> go to down through the zero
-
-          // OX < 0 && lastOY < 0 && OY > 0 -> go to up through the PI
-          // OX < 0 && lastOY > 0 && OY < 0 -> go to down through the PI
-
-          if(OX >= 0) {
-            
-            if(lastOy < 0 && OY > 0) {
-              isThroughZero = true;
-              isThroughPI = false;
-            } else if (lastOy > 0 && OY < 0) {
-              isThroughZero = true;
-              isThroughPI = false;
-            }
-
-          } else {
-
-            if(lastOy < 0 && OY > 0) {
-              isThroughPI = true;
-              isThroughZero = false;
-            } else if (lastOy > 0 && OY < 0) {
-              isThroughPI = true;
-              isThroughZero = false;
-            }
-
-          }
-
-          gzmsg << "Go through PI: " << isThroughPI << " Go through zero: " << isThroughZero << endl;
-
-          if(isThroughPI && OY > 0) {
-            _lastYawAngle += angleForYaw;
-          } else if(isThroughPI && OY < 0) {
-            _lastYawAngle -= angleForYaw;
-          } else if(isThroughZero && OY > 0) {
-            _lastYawAngle -= angleForYaw;
-          } else if(isThroughZero && OY < 0) {
-            _lastYawAngle += angleForYaw;
-          } else {
-            double rotDir = angleForYaw2 - _lastAngle2; 
-
-            if(rotDir > 0) {
-              _lastYawAngle += angleForYaw;
-            } else {
-              _lastYawAngle -= angleForYaw;
-            }
-          }
+        if (rotation(angleForYaw, dirForYaw, _lastDir, angleForYaw2, _lastAngle2)) {
+          _lastYawAngle += angleForYaw;
 
           _lastAngle2 = angleForYaw2;
           _lastDir = dirForYaw.Normalized();
           gzmsg << "atan2: " << angleForYaw2;
-         
-          _thisModel->GetJointController()->SetPositionTarget(_pitchJoint->GetScopedName(), angleForPitch);
-          _thisModel->GetJointController()->SetPositionTarget(_yawJoint->GetScopedName(), _lastYawAngle);
 
-          gzmsg << "Yaw: " << angleForYaw;//<< " Pitch: " << angleForPitch;
-          gzmsg << " YawRot: " << dirForYaw;//<< " PitchRow: " << dirForPitch;
+          _thisModel->GetJointController()->SetPositionTarget(_pitchJoint->GetScopedName(), angleForPitch);
+
+          double rLastYawAngle = round(_lastYawAngle * 100.0) / 100.0;
+          _thisModel->GetJointController()->SetPositionTarget(_yawJoint->GetScopedName(), rLastYawAngle);
+
+          gzmsg << "Yaw: " << angleForYaw;   //<< " Pitch: " << angleForPitch;
+          gzmsg << " YawRot: " << dirForYaw; //<< " PitchRow: " << dirForPitch;
+          gzmsg << " lastYawAngle: " << _lastYawAngle;
+          gzmsg << " target pose: " << targetPos;
 
           gzmsg << endl;
 
-          msgs::Pose targetPoseMsg;
-          msgs::Set(targetPoseMsg.mutable_orientation(), _target->WorldPose().Rot());
-          msgs::Set(targetPoseMsg.mutable_position(), targetPos);
-
-          // gzmsg << "GunPlugin: target pose: " << targetPos << endl;
-
-          _targetPub->Publish(targetPoseMsg);
+          ignition::msgs::Marker markerMsg;
+          markerMsg.set_ns("default");
+          markerMsg.set_id(1);
+          markerMsg.set_action(ignition::msgs::Marker_Action::Marker_Action_ADD_MODIFY);
+          markerMsg.set_type(ignition::msgs::Marker_Type::Marker_Type_SPHERE);
+          ignition::msgs::Material *markerMatMsg = markerMsg.mutable_material();
+          markerMatMsg->mutable_script()->set_name("Gazebo/BlueLaser");
+          ignition::msgs::Set(markerMsg.mutable_pose(), Pose3d(yawPose, Quaterniond::Identity));
+          ignition::msgs::Set(markerMsg.mutable_scale(), Vector3d(0.01, 0.01, 0.01));
+          _ignNode.Request("/marker", markerMsg);
         }
+
+        msgs::Pose targetPoseMsg;
+        msgs::Set(targetPoseMsg.mutable_orientation(), _target->WorldPose().Rot());
+        msgs::Set(targetPoseMsg.mutable_position(), targetPos);
+
+        _targetPub->Publish(targetPoseMsg);
       }
       loopTimer += common::Time(0, common::Time::SecToNano(0.25));
     }

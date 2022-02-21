@@ -2,6 +2,14 @@
 <sdf version="1.5">
   <world name="puzzle_world">
 
+    <scene>
+      <sky>
+        <clouds>
+          <speed>12</speed>
+        </clouds>
+      </sky>
+    </scene>
+
     <gui>
       <plugin name="ShootButton" filename="libGUIShootPlugin.so"/>
     </gui>
@@ -25,14 +33,14 @@
     <include>
       <uri>model://iris_depth_camera</uri>
       <name>iris_1</name>
-      <pose>3.5 0 2 0 0 0</pose>
+      <pose>3.5 0 2 0 0 0</pose>\
       <static>true</static>
     </include>
 
     <include>
       <uri>model://big_box4</uri>
       <name>box_1</name>
-      <pose>3.5 3.5 0 0 0 0</pose>
+      <pose>3.5 3.5 1.5 0 0 0</pose>
     </include>
 
     <include>
@@ -45,7 +53,7 @@
     <include>
       <uri>model://big_box4</uri>
       <name>box_4</name>
-      <pose>3.5 -3.5 0 0 0 0</pose>
+      <pose>3.5 -3.5 1.5 0 0 0</pose>
     </include>
 
 
@@ -66,7 +74,7 @@
      <include>
       <uri>model://big_box4</uri>
       <name>box_2</name>
-      <pose>-3.5 3.5 0 0 0 0</pose>
+      <pose>-3.5 3.5 1.5 0 0 0</pose>
     </include>
 
     <include>
@@ -79,7 +87,7 @@
      <include>
       <uri>model://big_box4</uri>
       <name>box_3</name>
-      <pose>-3.5 -3.5 0 0 0 0</pose>
+      <pose>-3.5 -3.5 1.5 0 0 0</pose>
     </include>
     
     <physics name='default_physics' default='0' type='ode'>

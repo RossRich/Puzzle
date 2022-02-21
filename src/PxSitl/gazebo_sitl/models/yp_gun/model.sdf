@@ -1,6 +1,7 @@
 <?xml version='1.0'?>
 <sdf version='1.7'>
   <model name='yp_gun'>
+    <pose>0.5 0.5 0 0 0 0</pose>
     <link name='base'>
       <inertial>
         <mass>2000</mass>
@@ -370,6 +371,28 @@
         <transparency>0</transparency>
         <cast_shadows>1</cast_shadows>
       </visual>
+
+      <visual name='visual_3'>
+        <pose>0 0 -3.26 0 -0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.005</radius>
+            <length>5</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <script>
+            <name>Gazebo/RedBright</name>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+          </script>
+        </material>
+        <transparency>0</transparency>
+        <cast_shadows>0</cast_shadows>
+        <meta>
+          <layer>2</layer>
+        </meta>
+      </visual>
+
       <collision name='collision_3'>
         <laser_retro>0</laser_retro>
         <max_contacts>10</max_contacts>
@@ -818,8 +841,8 @@
     <allow_auto_disable>1</allow_auto_disable>
 
     <plugin name='YPGunPlugin' filename='libYPGunPlugin.so'>
-      <p_yaw>0.3</p_yaw>
-      <i_yaw>0</i_yaw>
+      <p_yaw>0.5</p_yaw>
+      <i_yaw>0.06</i_yaw>
       <d_yaw>8</d_yaw>
 
       <p_pitch>1</p_pitch>
