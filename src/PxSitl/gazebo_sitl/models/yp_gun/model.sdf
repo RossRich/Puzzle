@@ -845,9 +845,9 @@
       <i_yaw>0.06</i_yaw>
       <d_yaw>8</d_yaw>
 
-      <p_pitch>1</p_pitch>
+      <p_pitch>0.3</p_pitch>
       <i_pitch>0</i_pitch>
-      <d_pitch>15</d_pitch>
+      <d_pitch>6</d_pitch>
 
       <model name='olive'/>
     </plugin>

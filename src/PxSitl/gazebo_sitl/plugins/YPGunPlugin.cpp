@@ -51,9 +51,13 @@ private:
   PID _yawPID;
   PID _pitchPID;
 
-  Vector3d _lastDir = Vector3d::UnitX;
+  Vector3d _lastYawDir = Vector3d::UnitX;
   double _lastYawAngle = .0;
-  double _lastAngle2 = .0;
+  double _lastYawAtan2 = .0;
+
+  Vector3d _lastPitchDir = Vector3d::UnitZ * -1;
+  double _lastPitchAngle = .0;
+  double _lastPitchAtan2 = .0;
 
   event::ConnectionPtr _updateWorld;
 
@@ -113,6 +117,14 @@ public:
     _bulletSpawnLink = model->GetLink("bullet_spawner");
     _pitchLink = model->GetLink("pitch_1");
     _yawLink = model->GetLink("yaw_1");
+
+    if(!_bulletSpawnLink || !_pitchLink || !_yawLink) {
+      gzerr << "Invalid links\n";
+      return;
+    }
+
+    gzmsg << "_lastYawDir: " << _lastYawDir << endl;
+    gzmsg << "_lastPitchDir: " << _lastPitchDir << endl;
 
     _yawJoint = model->GetJoint("base_yaw_1");
     _pitchJoint = model->GetJoint("yaw_1_pitch_1");
@@ -190,18 +202,22 @@ public:
   /*
    * \brief Calculate a value for shortest rotation
    * \param[out] rotAngle
-   * \param[in] diraction
+   * \param[out] lastAtan2
+   * \param[in] nowDiraction
    * \param[in] lastDiraction
-   * \param[in] nowAtan2
-   * \param[in] lastAtan2
+   * \return true - if a rotation available
    */
-  bool rotation(double &rotAngle, double &lastRotAngle, Vector3d &diraction, Vector3d &lastDiraction) {
-    Vector3d nDir = diraction.Normalized();
+  bool rotationInYaw(double &rotAngle, double &lastAtan2, Vector3d &nowDiraction, Vector3d &lastDiraction) {
+    Vector3d nDir = nowDiraction.Normalized();
     Vector3d nLastDir = lastDiraction.Normalized();
 
     double angleForRot = acos(nLastDir.Dot(nDir));
-    double atanForRot = -atan2(nDir.Y(), nDir.X());
-    
+    double atan2ForRot = -atan2(nDir.Y(), nDir.X());
+
+    /* gzmsg << "rotation\n";
+    gzmsg << "angleForRot: " << angleForRot << endl;
+    gzmsg << "atan2ForRot: " << atan2ForRot << endl; */
+
     if (nLastDir == nDir || angleForRot < 0.1)
       return false;
 
@@ -240,8 +256,6 @@ public:
         isThroughPI = true;
         isThroughZero = false;
       }
-
-      return true;
     }
 
     gzmsg << "Go through PI: " << isThroughPI << " Go through zero: " << isThroughZero << endl;
@@ -257,26 +271,26 @@ public:
      */
 
     if (isThroughPI && OY > 0) {
-      // _lastYawAngle += angleForYaw;
-
+      rotAngle += angleForRot;
     } else if (isThroughPI && OY < 0) {
-      // _lastYawAngle -= angleForYaw;
-      rotAngle = -rotAngle;
+      rotAngle -= angleForRot;
     } else if (isThroughZero && OY > 0) {
-      // _lastYawAngle -= angleForYaw;
-      rotAngle = -rotAngle;
+      rotAngle -= angleForRot;
     } else if (isThroughZero && OY < 0) {
-      // _lastYawAngle += angleForYaw;
+      rotAngle += angleForRot;
     } else {
-      double rotDir = atanForRot - lastAtan2;
+      double rotDir = atan2ForRot - lastAtan2;
 
       if (rotDir > 0) {
-        // _lastYawAngle += angleForYaw;
+        rotAngle += angleForRot;
       } else {
-        // _lastYawAngle -= angleForYaw;
-        rotAngle = -rotAngle;
+        rotAngle -= angleForRot;
       }
     }
+
+    lastAtan2 = atan2ForRot;
+
+    return true;
   }
 
   void onWorldUpdate(const common::UpdateInfo &worldInfo) {
@@ -288,8 +302,17 @@ public:
 
         Vector3d pitchPose = _pitchLink->WorldPose().Pos();
         Vector3d dirForPitch = targetPos - pitchPose;
+
+        gzmsg << "dirForPitch: " << dirForPitch << endl;
+        
+
         Vector3d antiZ = Vector3d::UnitZ * -1;
         double angleForPitch = acos(antiZ.Dot(dirForPitch.Normalized()));
+
+        if(angleForPitch >= 0.1) {
+          double rLastPitchAngle = round(angleForPitch * 100.0) / 100.0;
+          _thisModel->GetJointController()->SetPositionTarget(_pitchJoint->GetScopedName(), rLastPitchAngle);
+        }
 
         Vector3d offset = _pitchLink->RelativePose().Pos();
         Vector3d yawPose = _yawLink->WorldPose().Pos() + Vector3d(offset.X(), offset.Y(), 0.);
@@ -297,24 +320,17 @@ public:
         Vector3d targetPosXY(targetPos.X(), targetPos.Y(), 0.);
         Vector3d dirForYaw = targetPosXY - yawXY;
 
-        if (rotation(angleForYaw, dirForYaw, _lastDir, angleForYaw2, _lastAngle2)) {
-          _lastYawAngle += angleForYaw;
+        if (rotationInYaw(_lastYawAngle, _lastYawAtan2, dirForYaw, _lastYawDir)) {
 
-          _lastAngle2 = angleForYaw2;
-          _lastDir = dirForYaw.Normalized();
-          gzmsg << "atan2: " << angleForYaw2;
-
-          _thisModel->GetJointController()->SetPositionTarget(_pitchJoint->GetScopedName(), angleForPitch);
-
+          _lastYawDir = dirForYaw;
+          
           double rLastYawAngle = round(_lastYawAngle * 100.0) / 100.0;
           _thisModel->GetJointController()->SetPositionTarget(_yawJoint->GetScopedName(), rLastYawAngle);
 
-          gzmsg << "Yaw: " << angleForYaw;   //<< " Pitch: " << angleForPitch;
-          gzmsg << " YawRot: " << dirForYaw; //<< " PitchRow: " << dirForPitch;
-          gzmsg << " lastYawAngle: " << _lastYawAngle;
-          gzmsg << " target pose: " << targetPos;
-
-          gzmsg << endl;
+          // gzmsg << "Yaw: " << angleForYaw;   //<< " Pitch: " << angleForPitch;
+          // gzmsg << " YawRot: " << dirForYaw; //<< " PitchRow: " << dirForPitch;
+          // gzmsg << " lastYawAngle: " << _lastYawAngle;
+          // gzmsg << " target pose: " << targetPos;
 
           ignition::msgs::Marker markerMsg;
           markerMsg.set_ns("default");
