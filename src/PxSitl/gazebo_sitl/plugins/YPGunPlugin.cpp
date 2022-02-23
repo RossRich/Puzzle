@@ -200,12 +200,12 @@ public:
   }
 
   /*
-   * \brief Calculate a value for shortest rotation
-   * \param[out] rotAngle
-   * \param[out] lastAtan2
-   * \param[in] nowDiraction
-   * \param[in] lastDiraction
-   * \return true - if a rotation available
+   * \brief Calculate a value for shortest a yaw rotation 
+   * \param[out] rotAngle An angle for rotation
+   * \param[out] lastAtan2 Variable for store the angle that calculate direction of rotation
+   * \param[in] nowDiraction A direction of vector3
+   * \param[in] lastDiraction Last direction of vector3
+   * \return true if a rotation available
    */
   bool rotationInYaw(double &rotAngle, double &lastAtan2, Vector3d &nowDiraction, Vector3d &lastDiraction) {
     Vector3d nDir = nowDiraction.Normalized();
@@ -295,20 +295,15 @@ public:
 
   void onWorldUpdate(const common::UpdateInfo &worldInfo) {
     common::Time dT = _thisWorld->SimTime() - lastFrame;
+    
     if (worldInfo.realTime >= loopTimer) {
 
       if (_target) {
         Vector3d targetPos = _target->WorldPose().Pos();
-
         Vector3d pitchPose = _pitchLink->WorldPose().Pos();
         Vector3d dirForPitch = targetPos - pitchPose;
-
-        gzmsg << "dirForPitch: " << dirForPitch << endl;
-        
-
         Vector3d antiZ = Vector3d::UnitZ * -1;
         double angleForPitch = acos(antiZ.Dot(dirForPitch.Normalized()));
-
         if(angleForPitch >= 0.1) {
           double rLastPitchAngle = round(angleForPitch * 100.0) / 100.0;
           _thisModel->GetJointController()->SetPositionTarget(_pitchJoint->GetScopedName(), rLastPitchAngle);
@@ -319,20 +314,17 @@ public:
         Vector3d yawXY(yawPose.X(), yawPose.Y(), 0.);
         Vector3d targetPosXY(targetPos.X(), targetPos.Y(), 0.);
         Vector3d dirForYaw = targetPosXY - yawXY;
-
         if (rotationInYaw(_lastYawAngle, _lastYawAtan2, dirForYaw, _lastYawDir)) {
-
           _lastYawDir = dirForYaw;
-          
           double rLastYawAngle = round(_lastYawAngle * 100.0) / 100.0;
           _thisModel->GetJointController()->SetPositionTarget(_yawJoint->GetScopedName(), rLastYawAngle);
 
-          // gzmsg << "Yaw: " << angleForYaw;   //<< " Pitch: " << angleForPitch;
+          gzmsg << "Yaw: " << _lastYawAngle << " Pitch: " << angleForPitch;
           // gzmsg << " YawRot: " << dirForYaw; //<< " PitchRow: " << dirForPitch;
           // gzmsg << " lastYawAngle: " << _lastYawAngle;
           // gzmsg << " target pose: " << targetPos;
 
-          ignition::msgs::Marker markerMsg;
+          /* ignition::msgs::Marker markerMsg;
           markerMsg.set_ns("default");
           markerMsg.set_id(1);
           markerMsg.set_action(ignition::msgs::Marker_Action::Marker_Action_ADD_MODIFY);
@@ -341,18 +333,17 @@ public:
           markerMatMsg->mutable_script()->set_name("Gazebo/BlueLaser");
           ignition::msgs::Set(markerMsg.mutable_pose(), Pose3d(yawPose, Quaterniond::Identity));
           ignition::msgs::Set(markerMsg.mutable_scale(), Vector3d(0.01, 0.01, 0.01));
-          _ignNode.Request("/marker", markerMsg);
+          _ignNode.Request("/marker", markerMsg); */
         }
 
         msgs::Pose targetPoseMsg;
-        msgs::Set(targetPoseMsg.mutable_orientation(), _target->WorldPose().Rot());
+        msgs::Set(targetPoseMsg.mutable_orientation(), Quaterniond::Identity);
         msgs::Set(targetPoseMsg.mutable_position(), targetPos);
 
         _targetPub->Publish(targetPoseMsg);
       }
       loopTimer += common::Time(0, common::Time::SecToNano(0.25));
     }
-
     lastFrame = _thisWorld->SimTime();
   }
 

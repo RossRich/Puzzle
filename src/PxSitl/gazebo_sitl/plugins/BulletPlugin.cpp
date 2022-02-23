@@ -47,35 +47,19 @@ private:
     if (worldInfo.realTime >= loopTimer) {
 
       if (_msgIsAvailable && _isGrounded) {
-        Quaterniond modelRot = _thisModel->WorldPose().Rot();
-        Quaterniond targetRot = _targetPose.Rot();
         Vector3d targetPos = _targetPose.Pos();
         Vector3d modelPos = _thisModel->WorldPose().Pos();
-
-        Vector3d antiZ = Vector3d::UnitX;
-        
-        double angle = acos(antiZ.Dot((targetPos - modelPos).Normalized()));
-        gzmsg << "angle: " << angle << std::endl;
-
-        Pose3d p(_thisModel->WorldPose().Pos(), Utils::lookAt(modelPos, targetPos));
-        _thisModel->SetWorldPose(p);
-
-        gzmsg << "target pose: " << _targetPose << " model pose: " << modelPos
-              << std::endl;
-
         Vector3d fromTo = targetPos - modelPos;
-        Vector3d fromToXZ = Vector3d(fromTo.X(), fromTo.Y(), fromTo.Z());
-        // gzmsg << "From To: " << fromTo << " From to XZ: " << fromToXZ <<
-        // std::endl;
+        double angle = 3.14 - acos(Vector3d::UnitZ.Dot(fromTo.Normalized()));
 
+        Vector3d fromToXZ = Vector3d(fromTo.X(), fromTo.Y(), fromTo.Z());
         float x = fromToXZ.Length();
         float y = fromTo.Z();
-
-        float v2 = (9.8 * x * x) / (2 * (y - tan(angle) * x) * pow(cos(angle), 2));
+        float v2 = (9.8 * x * x) / (2. * (y - tan(angle) * x) * pow(cos(angle), 2.));
         float v = sqrt(abs(v2));
 
         _thisModel->SetGravityMode(true);
-        _thisModel->SetLinearVel(fromTo.Normalized() * v);
+        _thisModel->SetLinearVel(fromTo * v);
         _isGrounded = false;
       }
 
