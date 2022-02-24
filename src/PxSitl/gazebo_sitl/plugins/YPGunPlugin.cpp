@@ -123,8 +123,8 @@ public:
       return;
     }
 
-    gzmsg << "_lastYawDir: " << _lastYawDir << endl;
-    gzmsg << "_lastPitchDir: " << _lastPitchDir << endl;
+    // gzmsg << "_lastYawDir: " << _lastYawDir << endl;
+    // gzmsg << "_lastPitchDir: " << _lastPitchDir << endl;
 
     _yawJoint = model->GetJoint("base_yaw_1");
     _pitchJoint = model->GetJoint("yaw_1_pitch_1");
@@ -214,9 +214,10 @@ public:
     double angleForRot = acos(nLastDir.Dot(nDir));
     double atan2ForRot = -atan2(nDir.Y(), nDir.X());
 
-    /* gzmsg << "rotation\n";
-    gzmsg << "angleForRot: " << angleForRot << endl;
-    gzmsg << "atan2ForRot: " << atan2ForRot << endl; */
+    // gzmsg << "rotation\n";
+    // gzmsg << "angleForRot: " << angleForRot << endl;
+    // gzmsg << "atan2ForRot: " << atan2ForRot << endl;
+    // gzmsg << "New dir: " << nDir << " lastDir: " << nLastDir << endl;
 
     if (nLastDir == nDir || angleForRot < 0.1)
       return false;
@@ -237,7 +238,7 @@ public:
      * lastOx < 0 && lastOY > 0 && OY < 0 -> go to down through the PI
      */
 
-    if (lastOx >= 0) {
+    if (OX >= 0) {
 
       if (lastOy < 0 && OY > 0) {
         isThroughZero = true;
@@ -306,7 +307,7 @@ public:
         double angleForPitch = acos(antiZ.Dot(dirForPitch.Normalized()));
         if(angleForPitch >= 0.1) {
           double rLastPitchAngle = round(angleForPitch * 100.0) / 100.0;
-          _thisModel->GetJointController()->SetPositionTarget(_pitchJoint->GetScopedName(), rLastPitchAngle);
+          _thisModel->GetJointController()->SetPositionTarget(_pitchJoint->GetScopedName(), angleForPitch);
         }
 
         Vector3d offset = _pitchLink->RelativePose().Pos();
@@ -317,9 +318,9 @@ public:
         if (rotationInYaw(_lastYawAngle, _lastYawAtan2, dirForYaw, _lastYawDir)) {
           _lastYawDir = dirForYaw;
           double rLastYawAngle = round(_lastYawAngle * 100.0) / 100.0;
-          _thisModel->GetJointController()->SetPositionTarget(_yawJoint->GetScopedName(), rLastYawAngle);
+          _thisModel->GetJointController()->SetPositionTarget(_yawJoint->GetScopedName(), _lastYawAngle);
 
-          gzmsg << "Yaw: " << _lastYawAngle << " Pitch: " << angleForPitch;
+          // gzmsg << "Yaw: " << _lastYawAngle; //<< " Pitch: " << angleForPitch;
           // gzmsg << " YawRot: " << dirForYaw; //<< " PitchRow: " << dirForPitch;
           // gzmsg << " lastYawAngle: " << _lastYawAngle;
           // gzmsg << " target pose: " << targetPos;
@@ -342,7 +343,7 @@ public:
 
         _targetPub->Publish(targetPoseMsg);
       }
-      loopTimer += common::Time(0, common::Time::SecToNano(0.25));
+      loopTimer += common::Time(0, common::Time::SecToNano(0.5));
     }
     lastFrame = _thisWorld->SimTime();
   }

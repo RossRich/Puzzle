@@ -561,11 +561,11 @@
       </collision>
     </link>
 
-    <!-- <include>
+    <include>
       <uri>model://realsense_camera</uri>
       <pose>0.118478 0.227346 0.397057 0 1.5624 0</pose>
-      <kinematic>true</kinematic>
-    </include> -->
+      <!-- <kinematic>true</kinematic> -->
+    </include>
 
     <link name='yaw_1'>
       <inertial>
@@ -769,23 +769,11 @@
       </physics>
     </joint>
 
-    <!-- <joint name='pitch_1_rs_camera' type='fixed'>
+    <joint name='pitch_1_rs_camera' type='fixed'>
       <parent>realsense_camera::link</parent>
       <child>pitch_1</child>
       <pose>0 0 0 0 -0 0</pose>
-      <physics>
-        <ode>
-          <limit>
-            <cfm>0</cfm>
-            <erp>0.2</erp>
-          </limit>
-          <suspension>
-            <cfm>0</cfm>
-            <erp>0.2</erp>
-          </suspension>
-        </ode>
-      </physics>
-    </joint> -->
+    </joint>
 
     <joint name='pitch_1_bullet_spawner' type='fixed'>
       <parent>bullet_spawner</parent>
@@ -841,13 +829,13 @@
     <allow_auto_disable>1</allow_auto_disable>
 
     <plugin name='YPGunPlugin' filename='libYPGunPlugin.so'>
-      <p_yaw>0.5</p_yaw>
-      <i_yaw>0.06</i_yaw>
+      <p_yaw>4.32</p_yaw>
+      <i_yaw>0</i_yaw>
       <d_yaw>8</d_yaw>
 
-      <p_pitch>0.3</p_pitch>
+      <p_pitch>40</p_pitch>
       <i_pitch>0</i_pitch>
-      <d_pitch>6</d_pitch>
+      <d_pitch>10</d_pitch>
 
       <model name='olive'/>
     </plugin>
