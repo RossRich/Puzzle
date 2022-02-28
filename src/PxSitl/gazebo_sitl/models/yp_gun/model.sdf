@@ -1,7 +1,7 @@
 <?xml version='1.0'?>
 <sdf version='1.7'>
   <model name='yp_gun'>
-    <pose>0.5 0.5 0 0 0 0</pose>
+    <pose>0 0 0 0 0 0</pose>
     <link name='base'>
       <inertial>
         <mass>2000</mass>
@@ -13,7 +13,7 @@
           <iyz>0</iyz>
           <izz>10</izz>
         </inertia>
-        <pose>0 0 0 0 -0 0</pose>
+        <pose>0 0 0 0 0 0</pose>
       </inertial>
       <self_collide>0</self_collide>
       <enable_wind>0</enable_wind>
@@ -32,9 +32,6 @@
             <name>Gazebo/FlatBlack</name>
             <uri>file://media/materials/scripts/gazebo.material</uri>
           </script>
-          <shader type='pixel'>
-            <normal_map>__default__</normal_map>
-          </shader>
         </material>
         <pose>0 0 0.5 0 -0 0</pose>
         <transparency>0</transparency>
@@ -52,11 +49,8 @@
             <name>Gazebo/RedBright</name>
             <uri>file://media/materials/scripts/gazebo.material</uri>
           </script>
-          <shader type='pixel'>
-            <normal_map>__default__</normal_map>
-          </shader>
         </material>
-        <pose>0 0 0 0 -0 0</pose>
+        <pose>0 0 0 0 0 0</pose>
         <transparency>0</transparency>
         <cast_shadows>1</cast_shadows>
       </visual>
@@ -71,9 +65,6 @@
             <name>Gazebo/DarkGrey</name>
             <uri>file://media/materials/scripts/gazebo.material</uri>
           </script>
-          <shader type='pixel'>
-            <normal_map>__default__</normal_map>
-          </shader>
         </material>
         <pose>0 0 -0.055 0 -0 0</pose>
         <transparency>0</transparency>
@@ -312,13 +303,6 @@
             <name>Gazebo/RedBright</name>
             <uri>file://media/materials/scripts/gazebo.material</uri>
           </script>
-          <shader type='pixel'>
-            <normal_map>__default__</normal_map>
-          </shader>
-          <emissive>0 0 0 1</emissive>
-          <ambient>0.87 0.26 0.07 1</ambient>
-          <diffuse>0.87 0.26 0.07 1</diffuse>
-          <specular>0.87 0.26 0.07 1</specular>
         </material>
         <transparency>0</transparency>
         <cast_shadows>1</cast_shadows>
@@ -336,13 +320,6 @@
             <uri>file://media/materials/scripts/gazebo.material</uri>
             <name>Gazebo/FlatBlack</name>
           </script>
-          <shader type='pixel'>
-            <normal_map>__default__</normal_map>
-          </shader>
-          <ambient>0.1 0.1 0.1 1</ambient>
-          <diffuse>0.1 0.1 0.1 1</diffuse>
-          <specular>0.01 0.01 0.01 1</specular>
-          <emissive>0 0 0 1</emissive>
         </material>
         <pose>0 0 -0.41 0 -0 0</pose>
         <transparency>0</transparency>
@@ -360,13 +337,6 @@
             <name>Gazebo/RedBright</name>
             <uri>file://media/materials/scripts/gazebo.material</uri>
           </script>
-          <shader type='pixel'>
-            <normal_map>__default__</normal_map>
-          </shader>
-          <ambient>0.87 0.26 0.07 1</ambient>
-          <diffuse>0.87 0.26 0.07 1</diffuse>
-          <specular>0.87 0.26 0.07 1</specular>
-          <emissive>0 0 0 1</emissive>
         </material>
         <transparency>0</transparency>
         <cast_shadows>1</cast_shadows>
@@ -562,9 +532,8 @@
     </link>
 
     <include>
-      <uri>model://realsense_camera</uri>
+      <uri>model://depth_camera</uri>
       <pose>0.118478 0.227346 0.397057 0 1.5624 0</pose>
-      <!-- <kinematic>true</kinematic> -->
     </include>
 
     <link name='yaw_1'>
@@ -597,9 +566,6 @@
             <name>Gazebo/FlatBlack</name>
             <uri>file://media/materials/scripts/gazebo.material</uri>
           </script>
-          <shader type='pixel'>
-            <normal_map>__default__</normal_map>
-          </shader>
         </material>
         <pose>0 0.11 0 1.57 -0 0</pose>
         <transparency>0</transparency>
@@ -616,9 +582,6 @@
             <name>Gazebo/RedBright</name>
             <uri>file://media/materials/scripts/gazebo.material</uri>
           </script>
-          <shader type='pixel'>
-            <normal_map>__default__</normal_map>
-          </shader>
         </material>
         <pose>0 0 0 0 -0 0</pose>
         <transparency>0</transparency>
@@ -770,7 +733,7 @@
     </joint>
 
     <joint name='pitch_1_rs_camera' type='fixed'>
-      <parent>realsense_camera::link</parent>
+      <parent>depth_camera::link</parent>
       <child>pitch_1</child>
       <pose>0 0 0 0 -0 0</pose>
     </joint>
