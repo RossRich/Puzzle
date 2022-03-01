@@ -50,10 +50,10 @@ source /workspaces/Puzzle/src/PX4-Autopilot/Tools/setup_gazebo.bash /workspaces/
 ```
 * для puzzle
 ```
-export GAZEBO_MODEL_PATH=/workspaces/Puzzle/src/PxSitl/gazebo_sitl/models:$GAZEBO_MODEL_PATH
+export GAZEBO_MODEL_PATH=/workspaces/Puzzle/src/puzzle_gazebo/models:$GAZEBO_MODEL_PATH
 ```
 ```
-export GAZEBO_PLUGIN_PATH=/workspaces/Puzzle/src/PxSitl/gazebo_sitl/plugins/build:$GAZEBO_PLUGIN_PATH
+export GAZEBO_PLUGIN_PATH=/workspaces/Puzzle/src/puzzle_gazebo/plugins/build:$GAZEBO_PLUGIN_PATH
 ```
 * для ROS
 ```
@@ -62,7 +62,7 @@ source devel/setup.bash
 ----
 Запуск симулятора:
 ```
-roslaunch PxSitl iris_puzzle.launch
+roslaunch puzzle_gazebo launcher.launch
 ```
 ## Ошибки
 

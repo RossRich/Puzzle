@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
     <!-- Launch Gazebo -->
-    <!-- gazebo congig -->
+    <!-- gazebo config -->
     <arg name="gui" default="true"/>
     <arg name="debug" default="false"/>
     <arg name="verbose" default="false"/>
