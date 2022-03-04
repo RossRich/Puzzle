@@ -7,5 +7,6 @@ logs/
 src/PX4-Autopilot/
 src/mavlink_sitl_gazebo/
 src/PxSitl/tmp/
+src/PxSitl/TMP/
 tmp/
 opencv/

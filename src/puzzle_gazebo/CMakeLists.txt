@@ -186,6 +186,8 @@ install(FILES
   # myfile1
   launch/launcher.launch
   launch/single_uav_spawn.launch
+  launch/takeoff.launch
+
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 

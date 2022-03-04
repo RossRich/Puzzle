@@ -2,6 +2,8 @@
 <launch>
   <arg name="world_name" default="$(find puzzle_gazebo)/worlds/puzzle.world"/>
   <arg name="verbose" default="true"/>
+  <arg name="model" default="iris_puzzle"/>
+  
   
   <!-- gazebo -->
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
@@ -9,23 +11,27 @@
     <arg name="verbose" value="$(arg verbose)"/>
   </include>
 
-  <!-- iris -->
-  <include file="$(find puzzle_gazebo)/launch/single_uav_spawn.launch">
-    <arg name="model" value="iris_puzzle"/>
-    <arg name="x" default="5"/>
-    <arg name="y" default="0"/>
-    <arg name="z" default=".2"/>
-    <arg name="Y" default="3.14"/>
-  </include>
-
   <!-- mavros -->
-  <arg name="fcu_url" default="udp://:14540@localhost:14580"/>
-  <include file="$(find mavros)/launch/px4.launch">
-      <arg name="fcu_url" value="$(arg fcu_url)"/>
-      <arg name="gcs_url" value=""/>
-      <arg name="tgt_system" value="1"/>
-      <arg name="tgt_component" value="1"/>
-  </include>
+  <arg name="ID" value="1"/>
+  <group ns="$(arg model)$(arg ID)">
+    <!-- iris -->
+    <include file="$(find puzzle_gazebo)/launch/single_uav_spawn.launch">
+      <arg name="model" value="$(arg model)"/>
+      <arg name="ID" value="$(arg ID)"/>
+      <arg name="x" value="5"/>
+      <arg name="y" value="0"/>
+      <arg name="z" value=".2"/>
+      <arg name="Y" value="3.14"/>
+    </include>
 
+    <arg name="fcu_url" default="udp://:14540@localhost:14580"/>
+    <include file="$(find mavros)/launch/px4.launch">
+        <arg name="fcu_url" value="$(arg fcu_url)"/>
+        <arg name="gcs_url" value=""/>
+        <arg name="tgt_system" value="$(arg ID)"/>
+        <arg name="tgt_component" value="1"/>
+    </include>
+  </group>
+  
   <node pkg="tf" type="static_transform_publisher" name="tf_depth_camera" args="0 0 0 -1.57 0 -1.57 base_link camera_link 10"/>
 </launch>
