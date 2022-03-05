@@ -1,18 +1,23 @@
 <?xml version="1.0"?>
 <launch>
+  <env name="GAZEBO_MODEL_PATH" value="$(find puzzle_gazebo)/models:$(optenv GAZEBO_MODEL_PATH)" />
+  <env name="GAZEBO_PLUGIN_PATH" value="$(find puzzle_gazebo)/plugins/build:$(optenv GAZEBO_PLUGIN_PATH)" />
+
   <arg name="world_name" default="$(find puzzle_gazebo)/worlds/puzzle.world"/>
   <arg name="verbose" default="true"/>
+  <arg name="gui" default="true"/>
   <arg name="model" default="iris_puzzle"/>
-  
   
   <!-- gazebo -->
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
     <arg name="world_name" value="$(arg world_name)"/>
     <arg name="verbose" value="$(arg verbose)"/>
+    <arg name="gui" default="$(arg gui)"/>
   </include>
 
   <!-- mavros -->
-  <arg name="ID" value="1"/>
+  <!-- start id must be equivals 0 -->
+  <arg name="ID" value="0"/>
   <group ns="$(arg model)$(arg ID)">
     <!-- iris -->
     <include file="$(find puzzle_gazebo)/launch/single_uav_spawn.launch">
@@ -28,7 +33,7 @@
     <include file="$(find mavros)/launch/px4.launch">
         <arg name="fcu_url" value="$(arg fcu_url)"/>
         <arg name="gcs_url" value=""/>
-        <arg name="tgt_system" value="$(arg ID)"/>
+        <arg name="tgt_system" value="$(eval 1 + arg('ID'))"/>
         <arg name="tgt_component" value="1"/>
     </include>
   </group>

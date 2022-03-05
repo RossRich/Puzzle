@@ -34,8 +34,9 @@
 
     <node name="sitl_$(arg ID)" pkg="px4" type="px4" output="screen" 
         args="$(find px4)/build/px4_sitl_default/etc 
-            -s etc/init.d-posix/rcS -i $(arg ID) 
-            -w $(arg vehicle)_$(arg ID) 
+            -s etc/init.d-posix/rcS 
+            -i $(arg ID) 
+            -w sitl_$(arg vehicle)_$(arg ID) 
             $(arg px4_command_arg1)"
     />
 
@@ -49,7 +50,8 @@
         --video_uri=$(arg video_uri) 
         --mavlink_cam_udp_port=$(arg mavlink_cam_udp_port) 
         --sdf_tag=$(arg sdf_tag) 
-        --stdout $(find puzzle_gazebo)/models/$(arg model)/$(arg model).sdf.jinja 
+        --stdout 
+        $(find puzzle_gazebo)/models/$(arg model)/$(arg model).sdf.jinja 
         $(find puzzle_gazebo)"
     />
     

@@ -2,7 +2,7 @@
 <launch>
 
     <node name="offboard_node_uav0" pkg="PxSitl" type="PxSitl_node" output="screen">
-        <param name="vehicle_name" value="/iris_puzzle1" type="string"/>
+        <param name="vehicle_name" value="/iris_puzzle0" type="string"/>
     </node>
 
     <!-- <node name="offboard_node_uav1" pkg="PxSitl" type="PxSitl_node" output="screen">

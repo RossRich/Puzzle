@@ -6,7 +6,7 @@
     <arg name="debug" default="false"/>
     <arg name="verbose" default="false"/>
     <arg name="paused" default="false"/>
-    <arg name="world" default="$(find PxSitl)/gazebo_sitl/worlds/puzzle.world"/>
+    <arg name="world" default="$(find px4)/Tools/sitl_gazebo/worlds/empty.world"/>
 
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
         <arg name="gui" default="$(arg gui)"/>
@@ -19,7 +19,7 @@
     <!-- common px4 setup  -->
     <arg name="est" default="ekf2"/>
     <arg name="vehicle" default="iris"/>
-    <arg name="model" default="iris_puzzle"/>
+    <arg name="model" default="iris"/>
 
     <!-- spawn vehicle -->
     <arg name="spawner" value="single_uav_spawn.launch"/>
@@ -30,7 +30,7 @@
     <!-- UAV 0 -->
     <arg name="id_uav0" value="0"/>
     <group ns="$(arg vehicle)$(arg id_uav0)">
-        <include file="$(find PxSitl)/launch/$(arg spawner)">
+        <include file="$(find puzzle_gazebo)/launch/$(arg spawner)">
             <arg name="x" default="0"/>
             <arg name="y" default="0"/>
             <arg name="z" default="0"/>
@@ -63,7 +63,7 @@
     <!-- UAV 1 -->
     <arg name="id_uav1" value="1"/>
     <group ns="$(arg vehicle)$(arg id_uav1)">
-        <include file="$(find PxSitl)/launch/$(arg spawner)">
+        <include file="$(find puzzle_gazebo)/launch/$(arg spawner)">
             <arg name="x" default="2"/>
             <arg name="y" default="0"/>
             <arg name="z" default="0"/>
