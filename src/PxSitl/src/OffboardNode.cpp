@@ -4,6 +4,8 @@
 #include <mavros_msgs/CommandBool.h>
 #include <mavros_msgs/State.h>
 #include <stdlib.h>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 using mavros_msgs::State;
 using mavros_msgs::SetMode;
@@ -25,6 +27,7 @@ void poseCb(const geometry_msgs::PoseStampedConstPtr &msg) {
 int main(int argc, char *argv[])
 {       
     std::string vehicleName = "";
+    
     
 
     ros::init(argc, argv, "offboard");
@@ -58,8 +61,13 @@ int main(int argc, char *argv[])
     geometry_msgs::PoseStamped pose;
     pose.pose.position.x = 0;
     pose.pose.position.y = 0;
-    pose.pose.position.z = 2.1;
+    pose.pose.position.z = .8;
 
+    tf2::Quaternion q;
+    q.setRPY(0, 0, 3.14);
+
+    tf2::convert(q, pose.pose.orientation);
+    
     for(int i = 100; ros::ok() && i > 0; --i){
         localPosPub.publish(pose);
         ros::spinOnce();

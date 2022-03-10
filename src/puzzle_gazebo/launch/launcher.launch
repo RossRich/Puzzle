@@ -3,8 +3,12 @@
   <env name="GAZEBO_MODEL_PATH" value="$(find puzzle_gazebo)/models:$(optenv GAZEBO_MODEL_PATH)" />
   <env name="GAZEBO_PLUGIN_PATH" value="$(find puzzle_gazebo)/plugins/build:$(optenv GAZEBO_PLUGIN_PATH)" />
 
+  <remap from="/iris_puzzle0/camera/depth/image_raw" to="/camera/aligned_depth_to_color/image_raw"/>
+  <remap from="/iris_puzzle0/camera/rgb/image_raw" to="/camera/color/image_raw"/>
+  <remap from="/iris_puzzle0/camera/rgb/camera_info" to="/camera/color/camera_info"/>
+  
   <arg name="world_name" default="$(find puzzle_gazebo)/worlds/puzzle.world"/>
-  <arg name="verbose" default="true"/>
+  <arg name="verbose" default="false"/>
   <arg name="gui" default="true"/>
   <arg name="model" default="iris_puzzle"/>
   
@@ -19,6 +23,7 @@
   <!-- start id must be equivals 0 -->
   <arg name="ID" value="0"/>
   <group ns="$(arg model)$(arg ID)">
+    
     <!-- iris -->
     <include file="$(find puzzle_gazebo)/launch/single_uav_spawn.launch">
       <arg name="model" value="$(arg model)"/>
@@ -37,6 +42,6 @@
         <arg name="tgt_component" value="1"/>
     </include>
   </group>
-  
+
   <node pkg="tf" type="static_transform_publisher" name="tf_depth_camera" args="0 0 0 -1.57 0 -1.57 base_link camera_link 10"/>
 </launch>

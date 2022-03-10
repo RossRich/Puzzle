@@ -17,7 +17,7 @@
           <iyz>0</iyz>
           <izz>.05</izz>
         </inertia>
-        <mass>.3</mass>
+        <mass>.03</mass>
       </inertial>
       <enable_wind>0</enable_wind>
       <kinematic>0</kinematic>

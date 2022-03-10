@@ -633,6 +633,7 @@
           <plugin filename="libgazebo_ros_openni_kinect.so" name="camera_controller">
             <cameraName>{{ namespase }}/camera</cameraName>
             <alwaysOn>1</alwaysOn>
+            <useDepth16UC1Format>true</useDepth16UC1Format>
             <updateRate>20</updateRate>
             <pointCloudCutoff>0.02</pointCloudCutoff>
             <pointCloudCutoffMax>18</pointCloudCutoffMax>

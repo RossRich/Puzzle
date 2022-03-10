@@ -531,7 +531,7 @@
       </collision>
     </link>
 
-    <model name="gun_depth_vision">
+    <!-- <model name="gun_depth_vision">
       <pose>0.118478 0.227346 0.397057 0 1.5624 0</pose>
       <link name="link">
         <inertial>
@@ -569,9 +569,6 @@
             </clip>
             <noise>
               <type>gaussian</type>
-              <!-- Noise is sampled independently per pixel on each frame.
-                  That pixel's noise value is added to each of its color
-                  channels, which at that point lie in the range [0,1]. -->
               <mean>0.0</mean>
               <stddev>0.007</stddev>
             </noise>
@@ -596,7 +593,7 @@
           </plugin>
         </sensor>
       </link>
-    </model>
+    </model> -->
 
     <link name='yaw_1'>
       <inertial>
@@ -795,11 +792,11 @@
       </physics>
     </joint>
 
-    <joint name='pitch_1_rs_camera' type='fixed'>
+    <!-- <joint name='pitch_1_rs_camera' type='fixed'>
       <parent>gun_depth_vision::link</parent>
       <child>pitch_1</child>
       <pose>0 0 0 0 -0 0</pose>
-    </joint>
+    </joint> -->
 
     <joint name='pitch_1_bullet_spawner' type='fixed'>
       <parent>bullet_spawner</parent>
