@@ -15,6 +15,7 @@
 #include <std_srvs/Empty.h>
 #include <visualization_msgs/Marker.h>
 #include <geometry_msgs/Point.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 using sensor_msgs::CameraInfoConstPtr;
 using visualization_msgs::Marker;

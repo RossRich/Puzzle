@@ -17,8 +17,10 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   realsense2_camera
   tf2_ros
+  tf2
   image_geometry
   visualization_msgs
+  tf2_geometry_msgs
 )
 
 find_package(cv_bridge REQUIRED)
@@ -117,7 +119,7 @@ find_package(OpenCV 4.2.0 REQUIRED)
 catkin_package(
  INCLUDE_DIRS include include/PxSitl/Vision
  LIBRARIES ${PROJECT_NAME} video_handler
- CATKIN_DEPENDS roscpp std_msgs sensor_msgs cv_bridge image_transport tf2_ros image_geometry
+ CATKIN_DEPENDS roscpp std_msgs sensor_msgs cv_bridge image_transport tf2 tf2_ros tf2_geometry_msgs image_geometry
 #  DEPENDS system_lib
 )
 

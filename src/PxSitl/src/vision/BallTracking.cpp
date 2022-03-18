@@ -22,8 +22,8 @@ void BallTracking::process(cv::Mat &color, cv::Mat &maskt, cv::Point2i *center, 
 
   cv::inRange(frame, cv::Scalar(_threshold[0]), cv::Scalar(_threshold[1]), mask);
 
-  cv::erode(mask, mask, cv::Mat(), cv::Point2i(), 5);
-  cv::dilate(mask, mask, cv::Mat(), cv::Point2i(), 6);
+  // cv::erode(mask, mask, cv::Mat(), cv::Point2i(), 5);
+  // cv::dilate(mask, mask, cv::Mat(), cv::Point2i(), 6);
 
   maskt = mask.clone();
 
@@ -42,7 +42,7 @@ void BallTracking::process(cv::Mat &color, cv::Mat &maskt, cv::Point2i *center, 
     }
 
     cv::minEnclosingCircle(cnt0, c, R);
-    
+
     if (center != nullptr)
       *center = c;
 

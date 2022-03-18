@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
     ROS_INFO("No camera resolution in params. Trying to request resolution from CameraInfo...");
     CameraInfoConstPtr cameraInfo;
     try {
-      cameraInfo = ros::topic::waitForMessage<CameraInfo>("/camera/color/camera_info", nh, ros::Duration(5));
+      cameraInfo = ros::topic::waitForMessage<CameraInfo>("/camera/color/camera_info", nh);
     } catch (const ros::Exception &e) {
       ROS_ERROR("%s", e.what());
       ROS_ERROR("No camera rosolution. Exit.");
@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
   ballTracking.setStrategy(new StrategyWait(&ballTracking));
   ballTracking.wait();
 
-  ros::Rate loop_rate(31);
+  ros::Rate loop_rate(61);
   
   while (ros::ok()) {
     ballTracking.loop();

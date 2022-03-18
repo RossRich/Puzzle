@@ -342,7 +342,7 @@
         <cast_shadows>1</cast_shadows>
       </visual>
 
-      <visual name='visual_3'>
+      <!-- <visual name='visual_3'>
         <pose>0 0 -3.26 0 -0 0</pose>
         <geometry>
           <cylinder>
@@ -361,7 +361,7 @@
         <meta>
           <layer>2</layer>
         </meta>
-      </visual>
+      </visual> -->
 
       <collision name='collision_3'>
         <laser_retro>0</laser_retro>

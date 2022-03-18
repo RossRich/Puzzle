@@ -20,7 +20,7 @@ using transport::SubscriberPtr;
 class BulletPlugin : public ModelPlugin {
 private:
   bool _msgIsAvailable = false;
-  bool _isGrounded = true;
+  bool _isNoGravity = true;
 
   ModelPtr _thisModel;
   WorldPtr _thisWorld;
@@ -33,7 +33,6 @@ private:
   event::ConnectionPtr _updateWorld;
 
   common::Time loopTimer;
-  common::Time lastFrame;
 
   void onTargetCallback(ConstPosePtr &targetPose) {
     _targetPose = msgs::ConvertIgn(*targetPose.get());
@@ -42,11 +41,9 @@ private:
   }
 
   void onWorldUpdate(const common::UpdateInfo &worldInfo) {
-    common::Time dT = _thisWorld->SimTime() - lastFrame;
-
     if (worldInfo.realTime >= loopTimer) {
 
-      if (_msgIsAvailable && _isGrounded) {
+      if (_msgIsAvailable && _isNoGravity) {
         Vector3d targetPos = _targetPose.Pos();
         Vector3d modelPos = _thisModel->WorldPose().Pos();
         Vector3d fromTo = targetPos - modelPos;
@@ -60,13 +57,11 @@ private:
 
         _thisModel->SetGravityMode(true);
         _thisModel->SetLinearVel(fromTo.Normalized() * v);
-        _isGrounded = false;
+        _isNoGravity = false;
       }
 
       loopTimer += common::Time(0, common::Time::SecToNano(1 / 30));
     }
-
-    lastFrame = _thisWorld->SimTime();
   }
 
 public:
@@ -77,12 +72,9 @@ public:
     _thisModel = model;
     _thisWorld = model->GetWorld();
     _thisModel->SetGravityMode(false);
-
     _node->Init(model->GetWorld()->Name());
-    _targetSub =
-        _node->Subscribe("~/target", &BulletPlugin::onTargetCallback, this);
-    _updateWorld = event::Events::ConnectWorldUpdateBegin(
-        std::bind(&BulletPlugin::onWorldUpdate, this, std::placeholders::_1));
+    _targetSub = _node->Subscribe("~/target", &BulletPlugin::onTargetCallback, this);
+    _updateWorld = event::Events::ConnectWorldUpdateBegin(std::bind(&BulletPlugin::onWorldUpdate, this, std::placeholders::_1));
 
     loopTimer = _thisWorld->RealTime();
   }

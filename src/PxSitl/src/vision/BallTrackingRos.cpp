@@ -7,7 +7,8 @@ BallTrackingRos::BallTrackingRos(ros::NodeHandle &nh, VideoHandler &vh) : _nh(nh
     return;
   }
 
-  _strategySrv = _nh.advertiseService("strategy_srv", &BallTrackingRos::runSetupSrv, this);
+  _strategySrv =
+      _nh.advertiseService("strategy_srv", &BallTrackingRos::runSetupSrv, this);
   ROS_INFO("Change strategy server ready");
 
   _ballPub = _nh.advertise<Marker>("ball", 5, false);
@@ -18,7 +19,9 @@ BallTrackingRos::~BallTrackingRos() {
   delete _state;
 }
 
-bool BallTrackingRos::runSetupSrv(std_srvs::EmptyRequest &request, std_srvs::EmptyResponse &response) { return true; }
+bool BallTrackingRos::runSetupSrv(std_srvs::EmptyRequest &request, std_srvs::EmptyResponse &response) {
+  return true;
+}
 
 bool BallTrackingRos::loadParam() {
 
@@ -29,8 +32,7 @@ bool BallTrackingRos::loadParam() {
 
   ROS_INFO("Reads camera info...");
   try {
-    _cameraInfo =
-        ros::topic::waitForMessage<sensor_msgs::CameraInfo>("/camera/color/camera_info", _nh, ros::Duration(5));
+    _cameraInfo = ros::topic::waitForMessage<sensor_msgs::CameraInfo>("/camera/color/camera_info", _nh);
   } catch (const ros::Exception &e) {
     ROS_ERROR("%s", e.what());
     ROS_ERROR("Failed to get camera info. Exit.");
@@ -54,7 +56,7 @@ bool BallTrackingRos::loadParam() {
 void BallTrackingRos::drawBallPos(geometry_msgs::Pose p) {
   Marker m;
 
-  m.header.frame_id = "camera_link";
+  m.header.frame_id = "map";
   m.header.stamp = ros::Time::now();
   m.ns = "ball_pos";
   m.id = 0;
@@ -82,7 +84,7 @@ void BallTrackingRos::drawBallPos(geometry_msgs::Pose p) {
 void BallTrackingRos::drawPredicted(std::list<geometry_msgs::Point> list) {
   Marker m;
 
-  m.header.frame_id = "camera_link";
+  m.header.frame_id = "map";
   m.header.stamp = ros::Time::now();
   m.ns = "ball_pred";
   m.id = 2;
@@ -114,7 +116,7 @@ void BallTrackingRos::drawPredicted(std::list<geometry_msgs::Point> list) {
 void BallTrackingRos::drawBallDiract(geometry_msgs::Pose pose) {
   Marker m;
 
-  m.header.frame_id = "camera_link";
+  m.header.frame_id = "map";
   m.header.stamp = ros::Time::now();
   m.ns = "ball_diract";
   m.id = 1;
@@ -142,7 +144,7 @@ void BallTrackingRos::drawBallDiract(geometry_msgs::Pose pose) {
 void BallTrackingRos::draBallTrajectory(std::list<cv::Point3d> &bt) {
   Marker line;
 
-  line.header.frame_id = "camera_link";
+  line.header.frame_id = "map";
   line.header.stamp = ros::Time::now();
 
   line.id = 0;
@@ -207,7 +209,8 @@ void BallTrackingRos::shutdown() {
 }
 
 void StateWait::tracking() {
-  StrategyTracking *ts = new StrategyTracking(_context->getVideoHandler(), _context);
+  StrategyTracking *ts =
+      new StrategyTracking(_context->getVideoHandler(), _context);
 
   if (!ts->init()) {
     delete ts;
@@ -270,6 +273,7 @@ void StrategyTracking::execute() {
     return;
   }
 
+  cv::Mat tmpFrame = _frame.clone();
   cv::Mat mask;
   cv::Point2i center = {0, 0};
   uint16_t radius = 0;
@@ -279,12 +283,7 @@ void StrategyTracking::execute() {
   // ROS_DEBUG("RADIUS: %d", radius);
 
   if (radius != 0) {
-    cv::circle(_frame, center, radius + 7.0, cv::Scalar::all(128), 1, cv::LINE_4);
-    cv::circle(_frame, center, 3, cv::Scalar(0, 255, 0), cv::FILLED, cv::LINE_8);
-
     std::stringstream info;
-    info << "CENTER: " << center << " RADIUS: " << radius;
-    cv::Point2f textPos = {center.x + radius + 15.0f, center.y - 15.0f};
 
     try {
       uint16_t deametr = radius + radius;
@@ -317,14 +316,33 @@ void StrategyTracking::execute() {
         break;
       }
 
-      // std::cout << "Hight accur: " << distToBall * 0.001f << std::endl;
-      info << " DIST: " << distToBall;
+      info << "CENTER: " << center << " RADIUS: " << radius;
+      cv::Point2f textPos = {center.x + radius + 15.0f, center.y - 15.0f};
 
-      // std::cout << "Raw" << _depth.at<uint16_t>(center) * 0.001f <<
-      // std::endl;
+      info << " DIST: " << distToBall * 0.001f;
 
       cv::Point3d newBallPos = _cameraModel.projectPixelTo3dRay(center);
       newBallPos.z = distToBall * 0.001f;
+
+      tf2::Transform trPoint(tf2::Quaternion::getIdentity(), tf2::Vector3(newBallPos.x, newBallPos.y, newBallPos.z));
+      tf2::Stamped<tf2::Transform> newPointTs(trPoint, ros::Time::now(), "map");
+      geometry_msgs::TransformStamped ts = tf2::toMsg(newPointTs);
+      ts.child_frame_id = "camera_link";
+
+      TransformStamped transform;
+
+      try {
+        transform = _tfBuffer.lookupTransform("map", "camera_link", ros::Time(0));
+      } catch (const tf2::TransformException &e) {
+        ROS_ERROR("[BallTrackingRos] %s", e.what());
+        ros::Duration(1.0).sleep();
+      }
+
+      geometry_msgs::TransformStamped newTs;
+      tf2::doTransform(ts, newTs, transform);
+      newBallPos.x = newTs.transform.translation.x;
+      newBallPos.y = newTs.transform.translation.y;
+      newBallPos.z = newTs.transform.translation.z;
 
       if (_ballTragectory.size() > 10)
         _ballTragectory.pop_front();
@@ -355,7 +373,8 @@ void StrategyTracking::execute() {
           ballDirV = tt - ptt;
           tf2::Vector3 normVBall(ballDirV.normalize());
           normVBall.setX(normVBall.x() * (vX * ros::Duration(0.1).toSec()));
-          normVBall.setY(normVBall.y() * ((vY * ros::Duration(0.1).toSec()) - gt));
+          normVBall.setY(normVBall.y() *
+                         ((vY * ros::Duration(0.1).toSec()) - gt));
           normVBall.setZ(normVBall.z() * (vZ * ros::Duration(0.1).toSec()));
           ptt = tt;
           tt += normVBall;
@@ -375,7 +394,8 @@ void StrategyTracking::execute() {
       }
       // ROS_INFO("Ball move %f", dist);
 
-      tf2::Quaternion q = tf2::shortestArcQuatNormalize2(ballPoseV, newBallPoseV);
+      tf2::Quaternion q =
+          tf2::shortestArcQuatNormalize2(ballPoseV, newBallPoseV);
 
       // tf2::Quaternion q;
       // q.setEulerZYX(ballDirV.z(), ballDirV.y(), ballDirV.x());
@@ -415,39 +435,29 @@ void StrategyTracking::execute() {
       framesCount = 0;
     } */
 
-    _fps = static_cast<int>(std::ceil(1.0 / ros::Duration(ros::Time::now() - _timer).toSec()));
+    cv::circle(tmpFrame, center, radius + 7.0, cv::Scalar::all(128), 1,
+               cv::LINE_4);
+    cv::circle(tmpFrame, center, 3, cv::Scalar(0, 255, 0), cv::FILLED,
+               cv::LINE_8);
 
-    cv::Size textSize = cv::getTextSize(std::to_string(_fps), cv::FONT_HERSHEY_SIMPLEX, 0.4, 2, nullptr);
-    cv::putText(_frame, std::to_string(_fps), cv::Point(5, textSize.height * 2), cv::FONT_HERSHEY_SIMPLEX, 0.4,
-                cv::Scalar::all(0));
-    cv::putText(_frame, info.str(), textPos, cv::FONT_HERSHEY_SIMPLEX, .4, cv::Scalar::all(0), 2);
-    /* TransformStamped transform;
+    _fps = static_cast<int>(
+        std::ceil(1.0 / ros::Duration(ros::Time::now() - _timer).toSec()));
 
-    try {
-      ros::Time acquisition_time = ros::Time(_vh.getLastTime());
-      ROS_INFO("Img last time %f", acquisition_time.toSec());
-      ros::Duration timeout(1.0 / 30);
-      // _tfListener.waitForTransform(_cameraModel.tfFrame(), frame_id,
-    acquisition_time, timeout); transform =
-    _tfBuffer.lookupTransform(_cameraModel.tfFrame(), "camera_link",
-    acquisition_time, timeout); } catch (tf2::TransformException &ex) {
-      ROS_WARN("[draw_frames] TF exception:\n%s", ex.what());
-      // return;
-    } */
-
-    /* geometry_msgs::Vector pt = transform.transform.translation;
-    cv::Point3d pt_cv(pt.x, pt.y, pt.z);
-    cv::Point2d uv = _cameraModel.project3dToPixel(pt_cv); */
-    // ROS_INFO("dt: %f ms", ros::Duration(ros::Time::now() - tt).toSec() * 1000.0f);
+    cv::Size textSize = cv::getTextSize(
+        std::to_string(_fps), cv::FONT_HERSHEY_SIMPLEX, 0.4, 2, nullptr);
+    cv::putText(tmpFrame, std::to_string(_fps), cv::Point(5, textSize.height * 2),
+                cv::FONT_HERSHEY_SIMPLEX, 0.4, cv::Scalar::all(0));
+    cv::putText(tmpFrame, info.str(),
+                cv::Point(5, (textSize.height * 4) + textSize.height),
+                cv::FONT_HERSHEY_SIMPLEX, .4, cv::Scalar::all(0));
   }
 
   try {
-    cv::imshow(_winName, _frame);
+    cv::imshow("test", mask);
+    cv::imshow(_winName, tmpFrame);
     cv::waitKey(1);
   } catch (const cv::Exception &e) {
     ROS_ERROR("The video in current environment not available.\n%s", e.what());
   }
-  // << end rate
-  // _rate.sleep();
   _timer = ros::Time::now();
 }
