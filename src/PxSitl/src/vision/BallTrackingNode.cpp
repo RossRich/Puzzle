@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
   ballTracking.setStrategy(new StrategyWait(&ballTracking));
   ballTracking.wait();
 
-  ros::Rate loop_rate(61);
+  ros::Rate loop_rate(250);
   
   while (ros::ok()) {
     ballTracking.loop();

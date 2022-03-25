@@ -14,6 +14,7 @@
 #include <queue>
 #include <sensor_msgs/CameraInfo.h>
 #include <tf2_ros/transform_listener.h>
+#include "../Utils/GyverFilters/src/filters/median3.h"
 
 using geometry_msgs::TransformStamped;
 using image_geometry::PinholeCameraModel;
@@ -39,6 +40,12 @@ private:
   tf2_ros::TransformListener _tfListener;
   std::list<cv::Point3d> _ballTragectory;
   std::list<geometry_msgs::Point> _ballPredictedTraj;
+  std::list<std::list<geometry_msgs::Point>> _ballPredictedTrajs;
+  cv::Point3d startPoint;
+  ros::Time startTime;
+  ros::Time resetTimer;
+    
+  bool _isFirstDetection = true;
 
 public:
   StrategyTracking(VideoHandler &vh, BallTrackingRos *context) : _vh(vh), _context(context), _tfListener(_tfBuffer) {
@@ -46,6 +53,7 @@ public:
     cv::namedWindow("test", cv::WINDOW_AUTOSIZE);
     _timer = ros::Time::now();
     _lastDetection = ros::Time::now();
+    resetTimer = ros::Time::now();
   }
 
   ~StrategyTracking() {
@@ -53,9 +61,10 @@ public:
     cv::destroyWindow(_winName);
     cv::destroyWindow("test");
   }
-
+  GMedian3<double> _medianFilter;
   bool init();
   void execute() override;
+  // void fixTragectory(std::list<std::list<geometry_msgs::Point>> &trgs);
 
   inline void setFilterGain(float gain) { (gain < 0 ? _filterGain = abs(gain) : _filterGain = gain); };
 };

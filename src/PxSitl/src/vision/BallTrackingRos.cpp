@@ -87,7 +87,8 @@ void BallTrackingRos::drawPredicted(std::list<geometry_msgs::Point> list) {
   m.header.frame_id = "map";
   m.header.stamp = ros::Time::now();
   m.ns = "ball_pred";
-  m.id = 2;
+  m.id = 1;
+  m.action = Marker::MODIFY;
 
   for (auto &&p : list) {
     m.points.push_back(p);
@@ -96,19 +97,19 @@ void BallTrackingRos::drawPredicted(std::list<geometry_msgs::Point> list) {
   m.pose.orientation.w = 1;
 
   geometry_msgs::Vector3 scale;
-  scale.x = .03;
-  scale.y = .03;
-  scale.z = .03;
+  scale.x = .07;
+  scale.y = .07;
+  scale.z = .07;
   m.scale = scale;
 
   std_msgs::ColorRGBA c;
   c.a = 1;
-  c.b = .321;
-  c.g = .34;
-  c.r = .0338;
+  c.b = 1;
+  c.g = 1;
+  c.r = 1;
   m.color = c;
 
-  m.type = Marker::LINE_STRIP;
+  m.type = Marker::SPHERE_LIST;
 
   pubMarker(m);
 }
@@ -119,7 +120,7 @@ void BallTrackingRos::drawBallDiract(geometry_msgs::Pose pose) {
   m.header.frame_id = "map";
   m.header.stamp = ros::Time::now();
   m.ns = "ball_diract";
-  m.id = 1;
+  m.id = 2;
 
   m.pose = pose;
 
@@ -147,7 +148,7 @@ void BallTrackingRos::draBallTrajectory(std::list<cv::Point3d> &bt) {
   line.header.frame_id = "map";
   line.header.stamp = ros::Time::now();
 
-  line.id = 0;
+  line.id = 3;
   line.ns = "trajectory";
   line.type = Marker::LINE_STRIP;
 
@@ -160,8 +161,8 @@ void BallTrackingRos::draBallTrajectory(std::list<cv::Point3d> &bt) {
   line.color = c;
 
   geometry_msgs::Vector3 scale;
-  scale.x = .05f;
-  scale.y = .05f;
+  scale.x = .02f;
+  scale.y = .02f;
 
   line.scale = scale;
 
@@ -264,6 +265,10 @@ bool StrategyTracking::init() {
   return true;
 }
 
+/* void StrategyTracking::fixTragectory(std::list<std::list<geometry_msgs::Point>> &trgs) {
+  
+} */
+
 void StrategyTracking::execute() {
   _vh >> _frame;
   _vh.readDepth(_depth);
@@ -327,12 +332,12 @@ void StrategyTracking::execute() {
       tf2::Transform trPoint(tf2::Quaternion::getIdentity(), tf2::Vector3(newBallPos.x, newBallPos.y, newBallPos.z));
       tf2::Stamped<tf2::Transform> newPointTs(trPoint, ros::Time::now(), "map");
       geometry_msgs::TransformStamped ts = tf2::toMsg(newPointTs);
-      ts.child_frame_id = "camera_link";
+      ts.child_frame_id = _cameraModel.tfFrame();
 
       TransformStamped transform;
 
       try {
-        transform = _tfBuffer.lookupTransform("map", "camera_link", ros::Time(0));
+        transform = _tfBuffer.lookupTransform("map", _cameraModel.tfFrame(), ros::Time(0));
       } catch (const tf2::TransformException &e) {
         ROS_ERROR("[BallTrackingRos] %s", e.what());
         ros::Duration(1.0).sleep();
@@ -349,63 +354,108 @@ void StrategyTracking::execute() {
 
       _ballTragectory.push_back(newBallPos);
 
+      if(_ballPos == cv::Point3d(0,0,0)){
+        _ballPos = cv::Point3d(newBallPos.x, newBallPos.y, newBallPos.z);
+        startPoint = _ballPos;
+        startTime = ros::Time::now();
+        return;
+      }
+
       tf2::Vector3 ballPoseV(_ballPos.x, _ballPos.y, _ballPos.z);
       tf2::Vector3 newBallPoseV(newBallPos.x, newBallPos.y, newBallPos.z);
 
-      float dist = tf2::tf2Distance2(newBallPoseV, ballPoseV);
+      double dt = 0.01; // 12.5hz
 
-      if (ros::Time::now() - _lastDetection >= ros::Duration(0.1)) {
+      if (ros::Time::now() - _lastDetection >= ros::Duration(dt)) {
+        // ROS_INFO("New timer cycle");
         // double velocity = dist / ros::Duration(0.1).toSec();
+        // float dist = tf2::tf2Distance2(newBallPoseV, ballPoseV);
+        if(abs(newBallPoseV.x()) <= 1.0)
+          return;
 
-        tf2::Vector3 ballDirV = newBallPoseV - ballPoseV;
-
-        double vX = ballDirV.x() / ros::Duration(0.1).toSec();
-        double vY = ballDirV.y() / ros::Duration(0.1).toSec();
-        double vZ = ballDirV.z() / ros::Duration(0.1).toSec();
+        // double vX = ballDirV.x() / ros::Duration(dt).toSec();
+        // double vY = ballDirV.y() / ros::Duration(dt).toSec();
+        // double vZ = ballDirV.z() / ros::Duration(dt).toSec();
 
         // ROS_INFO("vX: %lf, xY: %lf vZ: %lf", vX, vY, vZ);
+        
+        // ROS_INFO("ballDirV.len = %f", ballDirV.length());
+        // ROS_INFO("ballDirV.len2 = %f", ballDirV.length2());
+        tf2::Vector3 ballDirV = ballPoseV - newBallPoseV;
+        // ROS_INFO("ballDirV x %f; y %f; z %f;", ballDirV.x(), ballDirV.y(), ballDirV.z());
+        if (ballDirV.length2() != 0) {
+          tf2::Vector3 totalLength = newBallPoseV - tf2::Vector3(startPoint.x, startPoint.y, startPoint.z);
+          ros::Duration totalTime = ros::Time::now() - startTime;
 
-        double gt = (9.8 * ros::Duration(0.1).toSec() * ros::Duration(0.1).toSec()) / 2.0;
-        tf2::Vector3 tt(newBallPoseV);
-        tf2::Vector3 ptt(ballPoseV);
+          double v =  totalLength.length() / totalTime.toSec(); // speed m/s
+          double vX = totalLength.x() / totalTime.toSec();
+          double vY = totalLength.y() / totalTime.toSec();
+          double vZ = totalLength.z() / totalTime.toSec();
 
-        for (size_t i = 0; i < 10; i++) {
-          ballDirV = tt - ptt;
-          tf2::Vector3 normVBall(ballDirV.normalize());
-          normVBall.setX(normVBall.x() * (vX * ros::Duration(0.1).toSec()));
-          normVBall.setY(normVBall.y() *
-                         ((vY * ros::Duration(0.1).toSec()) - gt));
-          normVBall.setZ(normVBall.z() * (vZ * ros::Duration(0.1).toSec()));
-          ptt = tt;
-          tt += normVBall;
+          // ROS_INFO("Speed: %f", v);
+          // ROS_INFO("Len for speed: %f", totalLength.length());
+          // ROS_INFO("newBallPoseV x %f; y %f; z %f;", newBallPoseV.x(), newBallPoseV.y(), newBallPoseV.z());
+          // ROS_INFO("ballPoseV x %f; y %f; z %f;", ballPoseV.x(), ballPoseV.y(), ballPoseV.z());
+          // double angle = 0.05; ///< angle in radian
+          double angle = asin(totalLength.z() / ballDirV.length()); ///< angle in radian
+          // double angle = _medianFilter.filtered(tf2Degrees(asin(ballDirV.z() / ballDirV.length())));
+          // ROS_INFO("Angle: %f", angle);
+          
+          tf2::Vector3 tt(newBallPoseV);
+          tf2::Vector3 ptt(ballPoseV);
+          
 
-          geometry_msgs::Point p;
-          p.x = tt.x();
-          p.y = tt.y();
-          p.z = tt.z();
+          std::list<geometry_msgs::Point> trajectory;
+          for (size_t i = 0; i < 5; i++) {
+            tf2::Vector3 pDir = ptt - tt;
+            // ROS_INFO("pDir x %f; y %f; z %f;", pDir.x(), pDir.y(), pDir.z());
+            // ROS_INFO("pDir.len: %f", pDir.length());
+            // angle = _medianFilter.filtered(tf2Degrees(asin(pDir.z() / pDir.length())));
+            // angle = asin(pDir.z() / pDir.length()); ///< in radian
+            // ROS_INFO("angle2: %f", angle);
+            
+            double timePred = .1;
+            
+            double dx = vX * ros::Duration(timePred).toSec();
+            double gt = (9.8 * powl(ros::Duration(timePred).toSec(), 2)) / 2;
+            double dy = (vZ * ros::Duration(timePred).toSec()) - gt;
 
-          _ballPredictedTraj.push_back(p);
-          if (_ballPredictedTraj.size() > 20)
-            _ballPredictedTraj.pop_front();
+            // ROS_INFO("dx %f, dy %f", dx, dy);
+
+            ptt = tt;
+            tt.setX(tt.getX() + dx);
+            tt.setZ(tt.getZ() + dy);
+
+            geometry_msgs::Point p;
+            p.x = tt.x();
+            p.y = tt.y();
+            p.z = tt.z();
+
+            // trajectory.push_back(p);
+            _ballPredictedTraj.push_back(p);
+            // if (_ballPredictedTraj.size() > 50)
+            //   _ballPredictedTraj.pop_front();
+          }
+          // fixTragectory(_ballPredictedTrajs);
+
+          _context->drawPredicted(_ballPredictedTraj);
+          _isFirstDetection = false;
         }
-        _context->drawPredicted(_ballPredictedTraj);
-
         _lastDetection = ros::Time::now();
       }
       // ROS_INFO("Ball move %f", dist);
 
-      tf2::Quaternion q =
-          tf2::shortestArcQuatNormalize2(ballPoseV, newBallPoseV);
+      tf2::Quaternion q = tf2::shortestArcQuatNormalize2(ballPoseV, newBallPoseV);
 
       // tf2::Quaternion q;
       // q.setEulerZYX(ballDirV.z(), ballDirV.y(), ballDirV.x());
 
-      Utils::fastFilterCvPoint3d(_ballPos, newBallPos, _filterGain);
+      // Utils::fastFilterCvPoint3d(_ballPos, newBallPos, _filterGain);
 
       geometry_msgs::Pose pose;
-      pose.position.x = _ballPos.x;
-      pose.position.y = _ballPos.y;
-      pose.position.z = _ballPos.z;
+      pose.position.x = newBallPos.x;
+      pose.position.y = newBallPos.y;
+      pose.position.z = newBallPos.z;
       pose.orientation.w = 1;
 
       _context->drawBallPos(pose);
@@ -415,9 +465,10 @@ void StrategyTracking::execute() {
       pose.orientation.y = q.y();
       pose.orientation.z = q.z();
 
-      _context->drawBallDiract(pose);
+      // _context->drawBallDiract(pose);
 
       _context->draBallTrajectory(_ballTragectory);
+      _ballPos = cv::Point3d(newBallPos.x, newBallPos.y, newBallPos.z);
 
       // std::stringstream info2;
       // info2 << _ballPos;
@@ -450,6 +501,14 @@ void StrategyTracking::execute() {
     cv::putText(tmpFrame, info.str(),
                 cv::Point(5, (textSize.height * 4) + textSize.height),
                 cv::FONT_HERSHEY_SIMPLEX, .4, cv::Scalar::all(0));
+  } else {
+
+    if(ros::Time::now() - resetTimer >= ros::Duration(1.0)) {
+      _ballPos = cv::Point3d(0,0,0);
+      resetTimer = ros::Time::now();
+       _ballPredictedTraj.clear();
+    }
+
   }
 
   try {

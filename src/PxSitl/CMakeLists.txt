@@ -117,8 +117,8 @@ find_package(OpenCV 4.2.0 REQUIRED)
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
- INCLUDE_DIRS include include/PxSitl/Vision
- LIBRARIES ${PROJECT_NAME} video_handler
+ INCLUDE_DIRS include
+ LIBRARIES ${PROJECT_NAME} video_handler GayverFilter
  CATKIN_DEPENDS roscpp std_msgs sensor_msgs cv_bridge image_transport tf2 tf2_ros tf2_geometry_msgs image_geometry
 #  DEPENDS system_lib
 )
@@ -141,7 +141,6 @@ add_library(${PROJECT_NAME}
   src/vision/setup/TrackingParam.cpp
   src/vision/BallTrackingRos.cpp
   src/vision/setup/BallTrackingSetupRos.cpp
-##include/PxSitl/GyverFilters/src/filters/RingAverage.h
 )
 
 add_library(VideoHandlerLib
