@@ -1,12 +1,13 @@
 #if !defined(_STRATEGY_TRACKING_H_)
 #define _STRATEGY_TRACKING_H_
 
+#include "../utils/GyverFilters/src/filters/median3.h"
 #include "BallTracking.hpp"
 #include "Strategy.hpp"
-#include "Utils/Utils.hpp"
-#include "Utils/thresholdtype.hpp"
 #include "VideoHandler.hpp"
 #include "ros/ros.h"
+#include "utils/Utils.hpp"
+#include "utils/thresholdtype.hpp"
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <image_geometry/pinhole_camera_model.h>
@@ -14,25 +15,24 @@
 #include <queue>
 #include <sensor_msgs/CameraInfo.h>
 #include <tf2_ros/transform_listener.h>
-#include "../Utils/GyverFilters/src/filters/median3.h"
 
 using geometry_msgs::TransformStamped;
 using image_geometry::PinholeCameraModel;
 
-class BallTrackingRos;
+// class BallTrackingRos;
 
 class StrategyTracking : public Strategy {
 private:
   const char *_winName = "Tracking";
   float _filterGain = 0.65f;
   int _fps = 0;
-  
+
   BallTracking _bt;
   VideoHandler &_vh;
   cv::Mat _frame;
   cv::Mat _depth;
   cv::Point3d _ballPos;
-  BallTrackingRos *_context;
+  // BallTrackingRos *_context;
   ros::Time _timer;
   ros::Time _lastDetection;
   PinholeCameraModel _cameraModel;
@@ -44,7 +44,7 @@ private:
   cv::Point3d startPoint;
   ros::Time startTime;
   ros::Time resetTimer;
-    
+
   bool _isFirstDetection = true;
 
 public:

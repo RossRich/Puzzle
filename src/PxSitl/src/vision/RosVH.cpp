@@ -1,4 +1,4 @@
-#include "../../include/PxSitl/Vision/RosVH.hpp"
+#include "../../include/PxSitl/vision/RosVH.hpp"
 
 RosVH::RosVH(ros::NodeHandle &nh, image_transport::ImageTransport &it, uint16_t width, uint16_t height)
     : VideoHandler(width, height), _nh(nh), _it(it) {

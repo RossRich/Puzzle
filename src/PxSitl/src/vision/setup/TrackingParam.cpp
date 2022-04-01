@@ -1,4 +1,4 @@
-#include "../../../include/PxSitl/Vision/Setup/TrackingParam.hpp"
+#include "../../../include/PxSitl/vision/setup/TrackingParam.hpp"
 
 TrackingParam::TrackingParam(const char *confFile) : _confFile(confFile) {}
 

@@ -1,4 +1,4 @@
-#include "../../../include/PxSitl/Vision/Setup/BallTrackingSetupRos.hpp"
+#include "../../../include/PxSitl/vision/setup/BallTrackingSetupRos.hpp"
 
 BallTrackingSetupRos::BallTrackingSetupRos(ros::NodeHandle nh, VideoHandler &vh) : _nh(nh), _vh(vh) {
 

@@ -118,7 +118,7 @@ find_package(OpenCV 4.2.0 REQUIRED)
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
  INCLUDE_DIRS include
- LIBRARIES ${PROJECT_NAME} video_handler GayverFilter
+ LIBRARIES ${PROJECT_NAME} video_handler vision_state
  CATKIN_DEPENDS roscpp std_msgs sensor_msgs cv_bridge image_transport tf2 tf2_ros tf2_geometry_msgs image_geometry
 #  DEPENDS system_lib
 )
@@ -139,13 +139,13 @@ include_directories(
 add_library(${PROJECT_NAME}
   src/vision/BallTracking.cpp
   src/vision/setup/TrackingParam.cpp
+  # src/vision/StateWait.cpp
+  # src/vision/StateInit.cpp
   src/vision/BallTrackingRos.cpp
   src/vision/setup/BallTrackingSetupRos.cpp
 )
 
-add_library(VideoHandlerLib
-  # include/PxSitl/Vision/VideoHandler.hpp
-  # include/PxSitl/Vision/RosVH.hpp
+add_library(video_handler
   src/vision/VideoHandler.cpp
   src/vision/RosVH.cpp
 )
@@ -192,7 +192,7 @@ target_link_libraries(BallTrackingNode
   ${PROJECT_NAME}
   ${OpenCV_LIBS}
   realsense2
-  VideoHandlerLib
+  video_handler
 )
 
 target_link_libraries(BallTrackingSetupNode
@@ -200,16 +200,8 @@ target_link_libraries(BallTrackingSetupNode
   ${PROJECT_NAME}
   ${OpenCV_LIBS}
   realsense2
-  VideoHandlerLib
+  video_handler
 )
-
-# target_link_libraries(BallTrackingTest
-#   # ${catkin_LIBRARIES}
-#   ${OpenCV_LIBS}
-#   ${PROJECT_NAME}
-#   realsense2
-#   video_handler
-# )
 
 #############
 ## Install ##
@@ -221,7 +213,7 @@ target_link_libraries(BallTrackingSetupNode
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
 catkin_install_python(PROGRAMS
-  scripts/feature_matching_stream.py
+  # scripts/feature_matching_stream.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
@@ -250,11 +242,6 @@ catkin_install_python(PROGRAMS
 install(FILES
 #   # myfile1
 #   # myfile2
-  launch/iris_puzzle.launch
-  launch/single_uav_spawn.launch
-  launch/multiple_uav_spawn.launch
-  launch/takeoff.launch
-  launch/ball_tracking.launch
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 

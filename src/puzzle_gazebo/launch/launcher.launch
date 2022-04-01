@@ -8,7 +8,7 @@
   <remap from="/iris_puzzle0/camera/rgb/camera_info" to="/camera/color/camera_info"/>
   
   <arg name="world_name" default="$(find puzzle_gazebo)/worlds/puzzle.world"/>
-  <arg name="verbose" default="false"/>
+  <arg name="verbose" default="true"/>
   <arg name="gui" default="true"/>
   <arg name="model" default="iris_puzzle"/>
   

@@ -1,4 +1,4 @@
-#include "../../include/PxSitl/Vision/BallTracking.hpp"
+#include "../../include/PxSitl/vision/BallTracking.hpp"
 
 BallTracking::BallTracking(uint16_t width, uint16_t height, cv::Vec<cv::Scalar_<uint8_t>, 2> threshold) {
   _imSize = cv::Size2i(width, height);

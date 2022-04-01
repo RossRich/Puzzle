@@ -11,7 +11,7 @@ public:
   RealsenseVH(uint16_t width, uint16_t height, rs2::pipeline &rsPipe);
   ~RealsenseVH();
 
-  void read(cv::Mat &frame) override; 
+  void read(cv::Mat &frame); 
 
   // friend RealsenseVH& operator>>( RealsenseVH&, cv::Mat&);
 };

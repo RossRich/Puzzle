@@ -1,7 +1,7 @@
 #if !defined(_BALL_TRACKING_H_)
 #define _BALL_TRACKING_H_
 
-#include "Utils/thresholdtype.hpp"
+#include "utils/thresholdtype.hpp"
 #include <deque>
 #include <iostream>
 #include <opencv2/core/core.hpp>

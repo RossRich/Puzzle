@@ -11,11 +11,14 @@
 	"dockerFile": "Dockerfile",
 	// Set *default* container specific settings.json values on container create.
 	"settings": {
-		"ros.distro": "noetic"
+		"ros.distro": "noetic",
+		"cmake.configureOnEdit": false
 	},
 	// Add the IDs of extensions you want installed when the container is created.
 	"extensions": [
-		"ms-iot.vscode-ros"
+		"ms-iot.vscode-ros",
+		"twxs.cmake",
+		"ms-vscode.cmake-tools"
 	],
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
