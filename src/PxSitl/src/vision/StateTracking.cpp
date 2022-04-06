@@ -1,52 +1,81 @@
 #include "../../include/PxSitl/vision/StateTracking.hpp"
-#include "../../include/PxSitl/vision/StateWait.hpp"
-#include "../../include/PxSitl/vision/StrategyWait.hpp"
-#include <ros/ros.h>
 
-void StateTracking::tracking(StateContext *context) { ROS_INFO("In tracking state"); }
-
-void StateTracking::wait(StateContext *context) {
-  /* ROS_INFO("Go to wait strategy");
-  _context->setStrategy(new StrategyWait(_context));
-  _context->setState(new StateWait(_context)); */
-  context->setState(new StateWait());
+StateTracking::~StateTracking() {
+  std::cout << "Delete state tracking\n";
+  cv::destroyAllWindows();
+  delete _tfListener;
+  delete _bt;
+  delete _vh;
+  delete _it;
 }
 
 bool StateTracking::loadParam() {
 
-  if (!_nh.getParam("conf_file_path", _confFile)) {
-    ROS_WARN("No conf_file_path param");
-    ROS_WARN("Use a default configuration file path '%s'", _confFile.c_str());
+  if (!_nh.getParam("data_config", _confFile)) {
+    ROS_ERROR("No data_config param");
+    return false;
   }
 
-  ROS_INFO("Reads camera info...");
+  ROS_INFO("Reads camera info from topic \'%s\'  ...", _cameraInfoTopic.c_str());
   try {
-    _cameraInfo = ros::topic::waitForMessage<sensor_msgs::CameraInfo>("/camera/color/camera_info", _nh);
+    _cameraInfo = ros::topic::waitForMessage<sensor_msgs::CameraInfo>(_cameraInfoTopic, _nh);
   } catch (const ros::Exception &e) {
     ROS_ERROR("%s", e.what());
     ROS_ERROR("Failed to get camera info. Exit.");
     return false;
   }
 
-  if (!_cameraInfo) {
+  if (!_cameraInfo || _cameraInfo->width <= 0 || _cameraInfo->height <= 0) {
     ROS_ERROR("Failed to get camera info. Exit.");
     return false;
   }
-  ROS_INFO("Camera info ready");
 
   if (!_nh.getParam("filter_gain", _filterGain)) {
-    _filterGain = 0.45f;
-    ROS_INFO("No filter_gain param. Use default value %f", _filterGain);
+    ROS_WARN("No filter_gain param. Use default value %f", _filterGain);
   }
 
   return true;
 }
 
-void StateTracking::execute() {
+bool StateTracking::setup() {
+  threshold_t threshold;
+  if (!Utils::readThresholds(_confFile.c_str(), threshold)) {
+    ROS_ERROR("Failed to read color treshold. Exit.");
+    return false;
+  }
 
+  if (!_cameraModel.initialized()) {
+    if (!_cameraModel.fromCameraInfo(_cameraInfo)) {
+      ROS_ERROR("Failed to build model of camera. Exit.");
+      return false;
+    }
+  }
+
+  if (_it == nullptr)
+    _it = new image_transport::ImageTransport(_nh);
+
+  if (_vh == nullptr)
+    _vh = new RosVH(_nh, *_it, _cameraInfo->width, _cameraInfo->height);
+
+  if (_bt == nullptr)
+    _bt = new BallTracking(_vh->getWidth(), _vh->getHeight(), threshold);
+
+  if (_tfListener == nullptr)
+    _tfListener = new tf2_ros::TransformListener(_tfBuffer, _nh);
+
+  if(_ballPub.getTopic().empty()) {
+    _ballPub = _nh.advertise<Marker>("ball", 5, false);
+  }
+
+  cv::namedWindow(_winName, cv::WINDOW_AUTOSIZE);
+  cv::namedWindow("test", cv::WINDOW_AUTOSIZE);
+
+  _timer = ros::Time::now();
+  _lastDetection = ros::Time::now();
+  resetTimer = ros::Time::now();
+
+  return true;
 }
-
-void StateTracking::init() {}
 
 void StateTracking::drawBallPos(geometry_msgs::Pose p) {
   Marker m;
@@ -176,9 +205,15 @@ void StateTracking::draBallTrajectory(std::list<cv::Point3d> &bt) {
 
 void StateTracking::pubMarker(Marker m) { _ballPub.publish(m); }
 
-void StrategyTracking::execute() {
-  _vh >> _frame;
-  _vh.readDepth(_depth);
+void StateTracking::wait() {
+  ROS_INFO("Transition from %s state to Wait state", toString().c_str());
+  cv::destroyAllWindows();
+  _context.setState(static_cast<State *>(_context.getStateWait()));
+}
+
+void StateTracking::execute() {
+  _vh->readColor(_frame);
+  _vh->readDepth(_depth);
 
   if (_frame.empty() || _depth.empty()) {
     ROS_WARN("Frame is empty");
@@ -190,7 +225,7 @@ void StrategyTracking::execute() {
   cv::Point2i center = {0, 0};
   uint16_t radius = 0;
 
-  _bt.process(_frame, mask, &center, &radius);
+  _bt->process(_frame, mask, &center, &radius);
 
   // ROS_DEBUG("RADIUS: %d", radius);
 
@@ -248,6 +283,7 @@ void StrategyTracking::execute() {
       } catch (const tf2::TransformException &e) {
         ROS_ERROR("[BallTrackingRos] %s", e.what());
         ros::Duration(1.0).sleep();
+        wait();
       }
 
       geometry_msgs::TransformStamped newTs;
@@ -342,8 +378,7 @@ void StrategyTracking::execute() {
           }
           // fixTragectory(_ballPredictedTrajs);
 
-          _context->drawPredicted(_ballPredictedTraj);
-          _isFirstDetection = false;
+          drawPredicted(_ballPredictedTraj);
         }
         _lastDetection = ros::Time::now();
       }
@@ -362,7 +397,7 @@ void StrategyTracking::execute() {
       pose.position.z = newBallPos.z;
       pose.orientation.w = 1;
 
-      _context->drawBallPos(pose);
+      drawBallPos(pose);
 
       pose.orientation.w = q.w();
       pose.orientation.x = q.x();
@@ -371,7 +406,7 @@ void StrategyTracking::execute() {
 
       // _context->drawBallDiract(pose);
 
-      _context->draBallTrajectory(_ballTragectory);
+      draBallTrajectory(_ballTragectory);
       _ballPos = cv::Point3d(newBallPos.x, newBallPos.y, newBallPos.z);
 
       // std::stringstream info2;
@@ -379,7 +414,7 @@ void StrategyTracking::execute() {
       // ROS_INFO("Pixel in 3d: %s", info2.str().c_str());
     } catch (const cv::Exception &e) {
       std::cerr << e.what() << '\n';
-      _context->shutdown();
+      wait();
     }
 
     /* if (ros::Duration(ros::Time::now() - _timer) <= ros::Duration(1.0)) {
@@ -419,7 +454,9 @@ void StrategyTracking::execute() {
     cv::imshow(_winName, tmpFrame);
     cv::waitKey(1);
   } catch (const cv::Exception &e) {
-    ROS_ERROR("The video in current environment not available.\n%s", e.what());
+    ROS_ERROR("[BallTrackingRos] The video in current environment not available.\n%s", e.what());
+    wait();
   }
+
   _timer = ros::Time::now();
 }

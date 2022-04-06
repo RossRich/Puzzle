@@ -2,14 +2,16 @@
 #define _STATE_VISION_H_
 
 #include <iostream>
-#include "BallTrackingRos.hpp"
+
+class BallTrackingRos;
 
 class State {
 protected:
+  BallTrackingRos &_context;
   std::string _name = "";
 
 public:
-  State(std::string name) : _name(name) {
+  State(BallTrackingRos &context, std::string name) : _context(context), _name(name) {
     std::cout << "New state " << name << std::endl;
   }
 
@@ -19,9 +21,8 @@ public:
 
   virtual std::string toString() { return _name; }
 
-  // virtual void tracking(BallTrackingRos *context) = 0;
-  virtual void wait(BallTrackingRos *context) = 0;
-  virtual void init(BallTrackingRos *context) = 0;
+  virtual void tracking() = 0;
+  virtual void wait() = 0;
   virtual void execute() = 0;
 };
 

@@ -1,6 +1,4 @@
 // #include "../../include/PxSitl/vision/StateInit.hpp"
-#include "BallTrackingRos.hpp"
-#include "State.hpp"
 #include "StateInit.hpp"
 
 /* void StateInit::tracking(BallTrackingRos *context) {
@@ -8,13 +6,17 @@
   // context->setState(context->getStateTracking());
 } */
 
-void StateInit::wait(BallTrackingRos *context) {
+void StateInit::wait() {
   std::cout << "Transition to wait form " << toString() << std::endl;
-  context->setState(static_cast<State *>(context->getStateWait()));
+  _context.setState(static_cast<State *>(_context.getStateWait()));
 }
 
-void StateInit::init(BallTrackingRos *context) {
+void StateInit::init() {
   std::cerr << "Can't transition from init to init\n";
 }
 
-void StateInit::execute() {}
+void StateInit::execute() {
+
+  
+
+}

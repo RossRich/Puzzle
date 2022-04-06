@@ -9,8 +9,6 @@ int main(int argc, char *argv[]) {
   if(ballTrackingRos == nullptr)
     EXIT_FAILURE;
 
-  ballTrackingRos->init();
-
   ros::Rate loop_rate(250);
 
   while (nh.ok()) {

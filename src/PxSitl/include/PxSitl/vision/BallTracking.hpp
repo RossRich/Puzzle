@@ -6,7 +6,6 @@
 #include <iostream>
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-#include <time.h>
 
 class BallTracking {
 
@@ -22,7 +21,6 @@ private:
   // static const char *_confFile;
 
 public:
-  BallTracking() {}
   BallTracking(uint16_t width, uint16_t height, cv::Vec<cv::Scalar_<uint8_t>, 2> threshold);
   ~BallTracking();
 

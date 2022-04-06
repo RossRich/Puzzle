@@ -6,14 +6,14 @@
 class StateInit : public State {
 private:
 public:
-  StateInit() : State("Init") {}
+  StateInit(BallTrackingRos &context) : State(context, "Init") {}
   ~StateInit() {
     std::cout << "Delete state init\n";
   }
 
-  // void tracking(BallTrackingRos *context) override;
-  void wait(BallTrackingRos *context) override;
-  void init(BallTrackingRos *context) override;
+  void tracking() override {}
+  void wait() override;
+  void init() override;
   void execute() override;
 };
 

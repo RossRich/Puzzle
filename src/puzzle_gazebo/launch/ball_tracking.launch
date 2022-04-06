@@ -5,6 +5,7 @@
   <node name="ball_tracking" pkg="PxSitl" type="BallTrackingNode" output="screen" required="true">
     <param name="color_topic" value="/camera/color/image_raw"/>
     <param name="depth_topic" value="/camera/aligned_depth_to_color/image_raw"/>
+    <param name="data_config" value="$(find PxSitl)/data/config.yaml"/>
     <param name="filter_gain" value="0.0"/>
   </node>
 

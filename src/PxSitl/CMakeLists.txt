@@ -139,8 +139,6 @@ include_directories(
 add_library(${PROJECT_NAME}
   src/vision/BallTracking.cpp
   src/vision/setup/TrackingParam.cpp
-  # src/vision/StateWait.cpp
-  # src/vision/StateInit.cpp
   src/vision/BallTrackingRos.cpp
   src/vision/setup/BallTrackingSetupRos.cpp
 )

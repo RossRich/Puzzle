@@ -1,0 +1,47 @@
+<?xml version="1.0" ?>
+<sdf version="1.5">
+  <world name="puzzle_world">
+
+    <scene>
+      <sky>
+        <clouds>
+          <speed>12</speed>
+        </clouds>
+      </sky>
+    </scene>
+
+    <!-- A global light source -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+    <!-- A ground plane -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+    <include>
+      <uri>model://asphalt_plane</uri>
+    </include>
+
+    <include>
+      <uri>model://olive</uri>
+      <name>olive1</name>
+      <pose>1 0 0.12 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://olive</uri>
+      <name>olive2</name>
+      <pose>2 0 0.12 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://olive</uri>
+      <name>olive3</name>
+      <pose>2.5 0 0.12 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+  </world>
+</sdf>
