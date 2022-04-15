@@ -57,6 +57,8 @@ void drawDronePose(geometry_msgs::TransformStamped &ts) {
 
 int main(int argc, char *argv[]) {
   std::string vehicleName = "";
+  float xPosition = 2.0;
+  float zPosition = 0.8;
 
   ros::init(argc, argv, "offboard");
   ros::NodeHandle nh;
@@ -71,6 +73,9 @@ int main(int argc, char *argv[]) {
 
   nh.getParam(nodeName + "/vehicle_name", vehicleName);
   ROS_INFO("New vehicle %s", vehicleName.c_str());
+
+  xPosition = ros::param::param<float>(nodeName + "/vehicle_x", 2.0);
+  zPosition = ros::param::param<float>(nodeName + "/vehicle_z", 0.8);
 
   ros::Subscriber stateSub =
       nh.subscribe<State>(vehicleName + "/mavros/state", 10, stateCb);
@@ -92,9 +97,9 @@ int main(int argc, char *argv[]) {
   }
 
   geometry_msgs::PoseStamped pose;
-  pose.pose.position.x = 2;
-  pose.pose.position.y = 0;
-  pose.pose.position.z = .8;
+  pose.pose.position.x = xPosition;
+  pose.pose.position.y = 1;
+  pose.pose.position.z = zPosition;
 
   tf2::Quaternion q;
   q.setRPY(0, 0, 3.14);

@@ -35,6 +35,8 @@ using visualization_msgs::MarkerConstPtr;
 class StateTracking : public State {
 private:
   int _fps = 0;
+  bool _isObjDetected = false;
+  bool _isTrekLinePredicted = false;
   float _filterGain = 0.65f;
   const char *_winName = "Tracking";
 
@@ -51,6 +53,7 @@ private:
   ros::Time _startTrackingTimer;
   ros::Time _resetTimer;
   ros::Time _detectionTimer;
+  ros::Time _buildRealTrekLineTimer;
   ros::Publisher _ballPub;
   tf2_ros::Buffer _tfBuffer;
   tf2_ros::TransformListener *_tfListener;
@@ -64,6 +67,9 @@ private:
   cv::Mat _depth;
 
   void drawObjPose(Pose &p);
+  void drawObjPose(Pose &p, std_msgs::ColorRGBA &c);
+  void drawObjPose(geometry_msgs::Point &p, std_msgs::ColorRGBA &c);
+  void drawLine(geometry_msgs::Point &p1, geometry_msgs::Point &p2, std_msgs::ColorRGBA &c);
   void drawObjPredictedLine(std::list<geometry_msgs::Point> &list);
   void drawObjRealLine(std::list<geometry_msgs::Point> &list);
   void pubMarker(Marker m);
@@ -91,6 +97,78 @@ public:
   void tracking() override {}
   void wait() override;
   void execute() override;
+
+  float getVelocity(float x, float y, float angle) {
+    float g = 9.8f;
+    float v2 = g * pow(x, 2) / (2.0f * (y - tan(angle) * x) * pow(cos(angle), 2));
+    return sqrt(abs(v2));
+  }
+
+  std_msgs::ColorRGBA getColorMsg(float r, float g, float b) {
+    std_msgs::ColorRGBA color;
+    color.a = 1.0f;
+    color.r = r;
+    color.g = g;
+    color.b = b;
+    return color;
+  }
+
+  float getContactProbobility(tf2::Vector3 &currentPosition) {
+    if (_objPredictedLine.size() == 0)
+      return -1;
+
+    std::vector<std_msgs::ColorRGBA> colors;
+    colors.push_back(getColorMsg(1, 0, 0));
+    colors.push_back(getColorMsg(0, 1, 0));
+    colors.push_back(getColorMsg(0, 0, 1));
+    colors.push_back(getColorMsg(0, 0.5, 0.5));
+
+    uint16_t realTrekLen = _objRealLine.size();
+    uint16_t predictedTrekLen = _objPredictedLine.size();
+    uint16_t realTrekMiddle = realTrekLen / 2;
+    uint16_t predictedTrekMiddle = predictedTrekLen / 2;
+
+    // ROS_DEBUG("RealTrekLine size: %i\nMiddle: %i", _objRealLine.size(), middle);
+    // geometry_msgs::Point curRealPoint;
+    uint16_t realTrekPosCounter = 0;
+    static uint8_t colorCounter = 0;
+    // for (auto realPoint : _objRealLine) {
+    // tf2::Vector3 vecRealPoint;
+    // tf2::fromMsg(realPoint, vecRealPoint);
+
+    tf2::Vector3 vecPredPoint;
+    tf2::fromMsg(_objPredictedLine.back(), vecPredPoint);
+
+    float minDist1 = tf2::tf2Distance2(currentPosition, vecPredPoint);
+    float minDist2 = minDist1;
+    // curRealPoint = realPoint;
+    geometry_msgs::Point nearPoint1;
+    geometry_msgs::Point nearPoint2;
+    for (auto predPoint : _objPredictedLine) {
+      // tf2::Vector3 vecPredPoint;
+      tf2::fromMsg(predPoint, vecPredPoint);
+      float dist = tf2::tf2Distance2(currentPosition, vecPredPoint);
+      if (dist < minDist1) {
+        minDist2 = minDist1;
+        nearPoint2 = nearPoint1;
+        minDist1 = dist;
+        nearPoint1 = predPoint;
+      }
+    }
+
+    if (nearPoint1 != geometry_msgs::Point() && nearPoint2 != geometry_msgs::Point()) {
+      if (colorCounter == colors.size() - 1)
+        colorCounter = 0;
+      geometry_msgs::Point tmpPoint;
+      tf2::toMsg(currentPosition, tmpPoint);
+      drawLine(nearPoint1, nearPoint2, colors[colorCounter]);
+      drawObjPose(tmpPoint, colors[colorCounter]);
+      ++colorCounter;
+    }
+    // }
+
+    return 1;
+  }
 };
 
 #endif // _VISION_STATE_TRACKING_H_
