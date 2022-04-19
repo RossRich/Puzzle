@@ -145,21 +145,28 @@ void StateTracking::drawLine(geometry_msgs::Point &p1, geometry_msgs::Point &p2,
   m.header.stamp = ros::Time::now();
   m.ns = "line";
   m.id = ++id;
+  m.type = Marker::LINE_LIST;
+  m.action = Marker::ADD;
 
   m.points.push_back(p1);
   m.points.push_back(p2);
   m.pose.orientation.w = 1;
 
-  geometry_msgs::Vector3 scale;
-  scale.x = .02f;
-  scale.y = .02f;
-  m.scale = scale;
-
+  m.scale.x = 0.02;
+  
   m.color = c;
 
-  m.type = Marker::LINE_LIST;
-
   pubMarker(m);
+}
+
+void StateTracking::drawLine(tf2::Vector3 &p1, tf2::Vector3 &p2, std_msgs::ColorRGBA &c) {
+  geometry_msgs::Point p1Msg;
+  geometry_msgs::Point p2Msg;
+
+  tf2::toMsg(p1, p1Msg);
+  tf2::toMsg(p2, p2Msg);
+
+  drawLine(p1Msg, p2Msg, c);
 }
 
 void StateTracking::drawObjPredictedLine(std::list<geometry_msgs::Point> &list) {
@@ -422,7 +429,7 @@ void StateTracking::conceptTwo(cv::Mat &mask, cv::Point2i &center, uint16_t &rad
       _objRealLine.push_back(newObjPose.position);
       drawObjRealLine(_objRealLine);
       _buildRealTrekLineTimer = ros::Time::now();
-      ROS_DEBUG("_objRealLine.size = %i", _objRealLine.size());
+      // ROS_DEBUG("_objRealLine.size = %li", _objRealLine.size());
     }
   }
 
@@ -514,6 +521,7 @@ void StateTracking::conceptTwo(cv::Mat &mask, cv::Point2i &center, uint16_t &rad
 
     tf2::Vector3 tmpPosition = cameraPosition; ///< a start treck line from camera position
     geometry_msgs::Point tmpMsgPoint;
+    tf2::Vector3 prevPosition(0,0,0);
 
     for (uint8_t i = 0; i < 20; i++) {
       tf2::Vector3 fromTo = vecNewObjPosition - tmpPosition;
@@ -535,6 +543,13 @@ void StateTracking::conceptTwo(cv::Mat &mask, cv::Point2i &center, uint16_t &rad
       cVector = vecNewObjPosition - tmpPosition;
       angle = acos(tf2::tf2Dot(cVector.normalized(), aVector.normalized()));
       ROS_INFO("Angle %i: %f", i, tf2Degrees(angle));
+
+      if(prevPosition != tf2::Vector3(0,0,0) && prevPosition != tmpPosition) {
+        Line line(prevPosition, tmpPosition);
+        _predictedSigments.push_back(line);
+      }
+
+      prevPosition = tmpPosition;
 
       tf2::toMsg(tmpPosition, tmpMsgPoint);
       _objPredictedLine.push_back(tmpMsgPoint);
@@ -603,6 +618,7 @@ void StateTracking::execute() {
       _resetTimer = ros::Time::now();
       _objPredictedLine.clear();
       _objRealLine.clear();
+      _predictedSigments.clear();
       _isObjDetected = false;
       _isTrekLinePredicted = false;
       ROS_DEBUG("Clean lines");

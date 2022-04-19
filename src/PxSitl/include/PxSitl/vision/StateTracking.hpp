@@ -32,6 +32,63 @@ using sensor_msgs::CameraInfoConstPtr;
 using visualization_msgs::Marker;
 using visualization_msgs::MarkerConstPtr;
 
+class Line {
+private:
+  tf2::Vector3 _point1;
+  tf2::Vector3 _point2;
+
+public:
+  Line(tf2::Vector3 &point3d1, tf2::Vector3 &point3d2) : _point1(point3d1), _point2(point3d2) {}
+  ~Line() {}
+
+  bool operator==(Line &line) {
+    return _point1 == line._point1 && _point2 == line._point2;
+  }
+
+  inline tf2::Vector3 &getP1() {
+    return _point1;
+  }
+
+  inline tf2::Vector3 &getP2() {
+    return _point2;
+  }
+
+  inline float length2() {
+    return tf2::tf2Distance2(_point2, _point1);
+  }
+
+  inline float length() {
+    return tf2::tf2Distance(_point2, _point1);
+  }
+
+  void debug() {
+    ROS_DEBUG("\nP1 %f %f %f\nP2 %f %f %f",
+      _point1.x(), _point1.y(), _point1.z(),
+      _point2.x(), _point2.y(), _point2.z());
+  }
+
+  float distToPoint(tf2::Vector3 &point) {
+    float dist2ToP1 = tf2::tf2Distance2(point, _point1);
+    float dist2ToP2 = tf2::tf2Distance2(point, _point2);
+
+    tf2::Vector3 &nearPoint = _point1;
+    if(dist2ToP2 < dist2ToP1)
+      nearPoint = _point2;
+
+    debug();
+    ROS_DEBUG("\nDistToP1 %f\nDistToP2 %f", dist2ToP1, dist2ToP2);
+    
+    tf2::Vector3 lineDir = _point2 - _point1;
+    tf2::Vector3 numerator = tf2::tf2Cross(point - nearPoint, lineDir);
+
+    ROS_DEBUG("\nNum %f\nDiv %f", numerator.length2(), lineDir.length2());
+    
+     float distToPoint = numerator.length2() / lineDir.length2();
+
+     return sqrt(distToPoint);
+  }
+};
+
 class StateTracking : public State {
 private:
   int _fps = 0;
@@ -47,6 +104,7 @@ private:
   std::string _cameraInfoTopic = "/camera/color/camera_info";
   std::list<geometry_msgs::Point> _objRealLine;
   std::list<geometry_msgs::Point> _objPredictedLine;
+  std::vector<Line> _predictedSigments;
 
   ros::NodeHandle &_nh;
   ros::Time _loopTimer;
@@ -70,6 +128,7 @@ private:
   void drawObjPose(Pose &p, std_msgs::ColorRGBA &c);
   void drawObjPose(geometry_msgs::Point &p, std_msgs::ColorRGBA &c);
   void drawLine(geometry_msgs::Point &p1, geometry_msgs::Point &p2, std_msgs::ColorRGBA &c);
+  void drawLine(tf2::Vector3 &p1, tf2::Vector3 &p2, std_msgs::ColorRGBA &c);
   void drawObjPredictedLine(std::list<geometry_msgs::Point> &list);
   void drawObjRealLine(std::list<geometry_msgs::Point> &list);
   void pubMarker(Marker m);
@@ -118,10 +177,12 @@ public:
       return -1;
 
     std::vector<std_msgs::ColorRGBA> colors;
+    colors.push_back(getColorMsg(0, 0, 0));
     colors.push_back(getColorMsg(1, 0, 0));
     colors.push_back(getColorMsg(0, 1, 0));
     colors.push_back(getColorMsg(0, 0, 1));
-    colors.push_back(getColorMsg(0, 0.5, 0.5));
+    colors.push_back(getColorMsg(0, 0.2, 0.5));
+    colors.push_back(getColorMsg(1, 1, 1));
 
     uint16_t realTrekLen = _objRealLine.size();
     uint16_t predictedTrekLen = _objPredictedLine.size();
@@ -132,40 +193,24 @@ public:
     // geometry_msgs::Point curRealPoint;
     uint16_t realTrekPosCounter = 0;
     static uint8_t colorCounter = 0;
-    // for (auto realPoint : _objRealLine) {
-    // tf2::Vector3 vecRealPoint;
-    // tf2::fromMsg(realPoint, vecRealPoint);
 
-    tf2::Vector3 vecPredPoint;
-    tf2::fromMsg(_objPredictedLine.back(), vecPredPoint);
+    // float minDist = tf2::tf2Distance2(_predictedSigments.back().getP2(), currentPosition);
+    float minDist = 100.0f;
+    Line &nearLine = _predictedSigments[0];
+    tf2::Vector3 middle;
+    for (auto line : _predictedSigments) {
+      tf2::Vector3 tmpMiddle = tf2::lerp(line.getP1(), line.getP2(), .5);
+      float tmpDist = tf2::tf2Distance2(tmpMiddle, currentPosition);
 
-    float minDist1 = tf2::tf2Distance2(currentPosition, vecPredPoint);
-    float minDist2 = minDist1;
-    // curRealPoint = realPoint;
-    geometry_msgs::Point nearPoint1;
-    geometry_msgs::Point nearPoint2;
-    for (auto predPoint : _objPredictedLine) {
-      // tf2::Vector3 vecPredPoint;
-      tf2::fromMsg(predPoint, vecPredPoint);
-      float dist = tf2::tf2Distance2(currentPosition, vecPredPoint);
-      if (dist < minDist1) {
-        minDist2 = minDist1;
-        nearPoint2 = nearPoint1;
-        minDist1 = dist;
-        nearPoint1 = predPoint;
+      if (tmpDist < minDist) {
+        middle = tmpMiddle;
+        minDist = tmpDist;
+        nearLine = line;
       }
     }
 
-    if (nearPoint1 != geometry_msgs::Point() && nearPoint2 != geometry_msgs::Point()) {
-      if (colorCounter == colors.size() - 1)
-        colorCounter = 0;
-      geometry_msgs::Point tmpPoint;
-      tf2::toMsg(currentPosition, tmpPoint);
-      drawLine(nearPoint1, nearPoint2, colors[colorCounter]);
-      drawObjPose(tmpPoint, colors[colorCounter]);
-      ++colorCounter;
-    }
-    // }
+    drawLine(currentPosition, middle, colors[0]);
+    ROS_DEBUG("DistToLine: %f", nearLine.distToPoint(currentPosition));
 
     return 1;
   }
