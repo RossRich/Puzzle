@@ -30,5 +30,13 @@
       <uri>model://yp_gun</uri>
       <pose> -0.7 0.7 0 0 0 0</pose>
     </include>
+
+    <include>
+      <uri>model://big_box</uri>
+      <pose>7 1 5 0 0 0</pose>
+      <static>true</static>
+    </include>
+    
+
   </world>
 </sdf>

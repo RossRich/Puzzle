@@ -63,29 +63,84 @@ public:
 
   void debug() {
     ROS_DEBUG("\nP1 %f %f %f\nP2 %f %f %f",
-      _point1.x(), _point1.y(), _point1.z(),
-      _point2.x(), _point2.y(), _point2.z());
+              _point1.x(), _point1.y(), _point1.z(),
+              _point2.x(), _point2.y(), _point2.z());
   }
 
-  float distToPoint(tf2::Vector3 &point) {
+  // S = ah
+  float distToPoint2(tf2::Vector3 &point) {
     float dist2ToP1 = tf2::tf2Distance2(point, _point1);
     float dist2ToP2 = tf2::tf2Distance2(point, _point2);
 
     tf2::Vector3 &nearPoint = _point1;
-    if(dist2ToP2 < dist2ToP1)
+    if (dist2ToP2 < dist2ToP1)
       nearPoint = _point2;
 
     debug();
     ROS_DEBUG("\nDistToP1 %f\nDistToP2 %f", dist2ToP1, dist2ToP2);
-    
+
     tf2::Vector3 lineDir = _point2 - _point1;
-    tf2::Vector3 numerator = tf2::tf2Cross(point - nearPoint, lineDir);
+
+    if (lineDir.length2() == 0)
+      return -1.f;
+
+    tf2::Vector3 numerator = tf2::tf2Cross(point - nearPoint, lineDir); // vector length equals area of parallelogram
 
     ROS_DEBUG("\nNum %f\nDiv %f", numerator.length2(), lineDir.length2());
-    
-     float distToPoint = numerator.length2() / lineDir.length2();
 
-     return sqrt(distToPoint);
+    return numerator.length2() / lineDir.length2();
+  }
+
+  float distToPoint(tf2::Vector3 &point) {
+    float res = distToPoint2(point);
+    return res == -1 ? -1 : sqrt(res);
+  }
+
+  float normDistToPoint2(tf2::Vector3 &point) {
+    float dist2ToP1 = tf2::tf2Distance2(point, _point1);
+    float dist2ToP2 = tf2::tf2Distance2(point, _point2);
+
+    tf2::Vector3 &nearPoint = _point1;
+    if (dist2ToP2 < dist2ToP1)
+      nearPoint = _point2;
+
+    debug();
+    ROS_DEBUG("\nDistToP1 %f\nDistToP2 %f", dist2ToP1, dist2ToP2);
+
+    tf2::Vector3 lineDir = _point2 - _point1;
+
+    if (lineDir.length2() == 0)
+      return -1.f;
+
+    tf2::Vector3 numerator = tf2::tf2Cross(point - nearPoint, lineDir).normalize(); // vector length equals area of parallelogram
+
+    lineDir.normalize();
+
+    ROS_DEBUG("\nNum %f\nDiv %f", numerator.length2(), lineDir.length2());
+
+    return numerator.length2() / lineDir.length2();
+  }
+
+  /**
+   * https://gamedev.stackexchange.com/questions/72528/how-can-i-project-a-3d-point-onto-a-3d-line
+   *
+   * A + dot(AP,AB) / dot(AB,AB) * AB
+   * A = line point1
+   * B = line point2
+   * P = incoming point
+   */
+  tf2::Vector3 porjectPoint(tf2::Vector3 &point) {
+    tf2::Vector3 AB = _point2 - _point1;
+    tf2::Vector3 AP = point - _point1;
+
+    tf2::Vector3 res = _point1;
+
+    float numerator = tf2::tf2Dot(AP, AB);
+    float denominator = tf2::tf2Dot(AB, AB);
+
+    res = res + numerator / denominator * AB;
+
+    return res;
   }
 };
 
@@ -96,6 +151,8 @@ private:
   bool _isTrekLinePredicted = false;
   float _filterGain = 0.65f;
   const char *_winName = "Tracking";
+  float _metric = 0.f;
+  float _lTwoMetric = 0.f;
 
   BallTracking *_bt = nullptr;
   RosVH *_vh = nullptr;
@@ -104,6 +161,7 @@ private:
   std::string _cameraInfoTopic = "/camera/color/camera_info";
   std::list<geometry_msgs::Point> _objRealLine;
   std::list<geometry_msgs::Point> _objPredictedLine;
+  std::vector<std_msgs::ColorRGBA> _rosColors;
   std::vector<Line> _predictedSigments;
 
   ros::NodeHandle &_nh;
@@ -127,6 +185,8 @@ private:
   void drawObjPose(Pose &p);
   void drawObjPose(Pose &p, std_msgs::ColorRGBA &c);
   void drawObjPose(geometry_msgs::Point &p, std_msgs::ColorRGBA &c);
+  void drawObjPose(tf2::Vector3 &position, std_msgs::ColorRGBA &c);
+  void drawObjRealLine(tf2::Vector3 &position, std_msgs::ColorRGBA &c);
   void drawLine(geometry_msgs::Point &p1, geometry_msgs::Point &p2, std_msgs::ColorRGBA &c);
   void drawLine(tf2::Vector3 &p1, tf2::Vector3 &p2, std_msgs::ColorRGBA &c);
   void drawObjPredictedLine(std::list<geometry_msgs::Point> &list);
@@ -147,7 +207,14 @@ private:
   void getObjPoseFromCameraModel(cv::Point2i &point2d, float distToObj, Pose &objPose);
 
 public:
-  StateTracking(BallTrackingRos &context, ros::NodeHandle &nh) : State(context, "Tracking"), _nh(nh) {}
+  StateTracking(BallTrackingRos &context, ros::NodeHandle &nh) : State(context, "Tracking"), _nh(nh) {
+    _rosColors.push_back(Utils::getColorMsg(0, 0, 0));
+    _rosColors.push_back(Utils::getColorMsg(1, 0, 0));
+    _rosColors.push_back(Utils::getColorMsg(0, 1, 0));
+    _rosColors.push_back(Utils::getColorMsg(0, 0, 1));
+    _rosColors.push_back(Utils::getColorMsg(0, 0.2, 0.5));
+    _rosColors.push_back(Utils::getColorMsg(1, 1, 1));
+  }
   ~StateTracking();
 
   bool loadParam();
@@ -163,26 +230,9 @@ public:
     return sqrt(abs(v2));
   }
 
-  std_msgs::ColorRGBA getColorMsg(float r, float g, float b) {
-    std_msgs::ColorRGBA color;
-    color.a = 1.0f;
-    color.r = r;
-    color.g = g;
-    color.b = b;
-    return color;
-  }
-
   float getContactProbobility(tf2::Vector3 &currentPosition) {
     if (_objPredictedLine.size() == 0)
       return -1;
-
-    std::vector<std_msgs::ColorRGBA> colors;
-    colors.push_back(getColorMsg(0, 0, 0));
-    colors.push_back(getColorMsg(1, 0, 0));
-    colors.push_back(getColorMsg(0, 1, 0));
-    colors.push_back(getColorMsg(0, 0, 1));
-    colors.push_back(getColorMsg(0, 0.2, 0.5));
-    colors.push_back(getColorMsg(1, 1, 1));
 
     uint16_t realTrekLen = _objRealLine.size();
     uint16_t predictedTrekLen = _objPredictedLine.size();
@@ -209,11 +259,34 @@ public:
       }
     }
 
-    drawLine(currentPosition, middle, colors[0]);
-    ROS_DEBUG("DistToLine: %f", nearLine.distToPoint(currentPosition));
+    drawLine(currentPosition, middle, _rosColors[0]);
+
+    float distToPoint = nearLine.distToPoint2(currentPosition);
+
+    if (distToPoint == -1)
+      return -1;
+
+    tf2::Vector3 pointOnLine = nearLine.porjectPoint(currentPosition);
+
+    drawObjPose(pointOnLine, _rosColors[4]);
+
+    tf2::Vector3 fromPointToLine = pointOnLine - currentPosition;
+
+    float euclidian = fromPointToLine.length();
+    float chebyshev = std::max(std::max(fromPointToLine.x(), fromPointToLine.y()), fromPointToLine.z());
+
+    ROS_DEBUG("DistToLine: %f", sqrt(distToPoint));
+    ROS_DEBUG("Euclidian %f", euclidian);
+    ROS_DEBUG("Chebyshev %f", chebyshev);
 
     return 1;
   }
+
+  /* inline float getLOneMetric() {
+  }
+
+  inline float getLTwoMetric() {
+  } */
 };
 
 #endif // _VISION_STATE_TRACKING_H_

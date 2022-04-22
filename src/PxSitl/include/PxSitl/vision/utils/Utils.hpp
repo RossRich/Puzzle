@@ -4,6 +4,7 @@
 #include "thresholdtype.hpp"
 #include <iostream>
 #include <opencv2/core/core.hpp>
+#include <visualization_msgs/Marker.h>
 
 class Utils {
 private:
@@ -79,6 +80,15 @@ public:
     point.x = fastFilter(point.x, newPoint.x, gain);
     point.y = fastFilter(point.y, newPoint.y, gain);
     point.z = fastFilter(point.z, newPoint.z, gain);
+  }
+
+   static std_msgs::ColorRGBA getColorMsg(float r, float g, float b) {
+    std_msgs::ColorRGBA color;
+    color.a = 1.0f;
+    color.r = r;
+    color.g = g;
+    color.b = b;
+    return color;
   }
 };
 

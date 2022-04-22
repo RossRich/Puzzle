@@ -137,6 +137,12 @@ void StateTracking::drawObjPose(geometry_msgs::Point &p, std_msgs::ColorRGBA &c)
   drawObjPose(tmpPose, c);
 }
 
+void StateTracking::drawObjPose(tf2::Vector3 &position, std_msgs::ColorRGBA &c) {
+  geometry_msgs::Point tmpPointMsg;
+  tf2::toMsg(position, tmpPointMsg);
+  drawObjPose(tmpPointMsg, c);
+}
+
 void StateTracking::drawLine(geometry_msgs::Point &p1, geometry_msgs::Point &p2, std_msgs::ColorRGBA &c) {
   static uint16_t id = 400;
   Marker m;
@@ -516,7 +522,7 @@ void StateTracking::conceptTwo(cv::Mat &mask, cv::Point2i &center, uint16_t &rad
   if (_isObjDetected && !_isTrekLinePredicted) {
     float angle = acos(tf2::tf2Dot(cVector.normalized(), aVector.normalized()));
     ROS_INFO("Angle %f", tf2Degrees(angle));
-    float dt = 0.03;
+    float dt = 0.01;
     float gt = (9.8 * pow(dt, 2)) / 2.0f;
 
     tf2::Vector3 tmpPosition = cameraPosition; ///< a start treck line from camera position
@@ -621,6 +627,8 @@ void StateTracking::execute() {
       _predictedSigments.clear();
       _isObjDetected = false;
       _isTrekLinePredicted = false;
+      _metric = 0.f;
+      _lTwoMetric = 0.f;
       ROS_DEBUG("Clean lines");
     }
   }
