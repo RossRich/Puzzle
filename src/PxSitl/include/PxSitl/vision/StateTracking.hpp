@@ -36,21 +36,28 @@ class Line {
 private:
   tf2::Vector3 _point1;
   tf2::Vector3 _point2;
+  tf2::Vector3 _midpoint;
 
 public:
-  Line(tf2::Vector3 &point3d1, tf2::Vector3 &point3d2) : _point1(point3d1), _point2(point3d2) {}
+  Line(const tf2::Vector3 &point3d1, const tf2::Vector3 &point3d2) : _point1(point3d1), _point2(point3d2) {
+    _midpoint = tf2::lerp(_point1, _point2, .5);
+  }
   ~Line() {}
 
   bool operator==(Line &line) {
     return _point1 == line._point1 && _point2 == line._point2;
   }
 
-  inline tf2::Vector3 &getP1() {
+  inline const tf2::Vector3 &getP1() {
     return _point1;
   }
 
-  inline tf2::Vector3 &getP2() {
+  inline const tf2::Vector3 &getP2() {
     return _point2;
+  }
+
+  inline const tf2::Vector3 &getMidpoint() {
+    return _midpoint;
   }
 
   inline float length2() {
@@ -61,64 +68,31 @@ public:
     return tf2::tf2Distance(_point2, _point1);
   }
 
-  void debug() {
-    ROS_DEBUG("\nP1 %f %f %f\nP2 %f %f %f",
-              _point1.x(), _point1.y(), _point1.z(),
-              _point2.x(), _point2.y(), _point2.z());
-  }
-
   // S = ah
-  float distToPoint2(tf2::Vector3 &point) {
+  float distToPoint2(const tf2::Vector3 &point) {
     float dist2ToP1 = tf2::tf2Distance2(point, _point1);
     float dist2ToP2 = tf2::tf2Distance2(point, _point2);
 
-    tf2::Vector3 &nearPoint = _point1;
+    auto nearPoint = std::ref(_point1);
     if (dist2ToP2 < dist2ToP1)
-      nearPoint = _point2;
+      nearPoint = std::ref(_point2);
 
     debug();
-    ROS_DEBUG("\nDistToP1 %f\nDistToP2 %f", dist2ToP1, dist2ToP2);
-
+    // ROS_DEBUG("\nDistToP1 %f\nDistToP2 %f", dist2ToP1, dist2ToP2);
     tf2::Vector3 lineDir = _point2 - _point1;
-
-    if (lineDir.length2() == 0)
+    ROS_DEBUG("Line length2 %f", lineDir.length2());
+    if (lineDir.length2() == 0.f)
       return -1.f;
 
     tf2::Vector3 numerator = tf2::tf2Cross(point - nearPoint, lineDir); // vector length equals area of parallelogram
-
-    ROS_DEBUG("\nNum %f\nDiv %f", numerator.length2(), lineDir.length2());
+    // ROS_DEBUG("\nNum %f\nDiv %f", numerator.length2(), lineDir.length2());
 
     return numerator.length2() / lineDir.length2();
   }
 
   float distToPoint(tf2::Vector3 &point) {
     float res = distToPoint2(point);
-    return res == -1 ? -1 : sqrt(res);
-  }
-
-  float normDistToPoint2(tf2::Vector3 &point) {
-    float dist2ToP1 = tf2::tf2Distance2(point, _point1);
-    float dist2ToP2 = tf2::tf2Distance2(point, _point2);
-
-    tf2::Vector3 &nearPoint = _point1;
-    if (dist2ToP2 < dist2ToP1)
-      nearPoint = _point2;
-
-    debug();
-    ROS_DEBUG("\nDistToP1 %f\nDistToP2 %f", dist2ToP1, dist2ToP2);
-
-    tf2::Vector3 lineDir = _point2 - _point1;
-
-    if (lineDir.length2() == 0)
-      return -1.f;
-
-    tf2::Vector3 numerator = tf2::tf2Cross(point - nearPoint, lineDir).normalize(); // vector length equals area of parallelogram
-
-    lineDir.normalize();
-
-    ROS_DEBUG("\nNum %f\nDiv %f", numerator.length2(), lineDir.length2());
-
-    return numerator.length2() / lineDir.length2();
+    return res == -1.f ? -1.f : sqrt(res);
   }
 
   /**
@@ -129,7 +103,7 @@ public:
    * B = line point2
    * P = incoming point
    */
-  tf2::Vector3 porjectPoint(tf2::Vector3 &point) {
+  tf2::Vector3 porjectPoint(const tf2::Vector3 &point) {
     tf2::Vector3 AB = _point2 - _point1;
     tf2::Vector3 AP = point - _point1;
 
@@ -142,6 +116,11 @@ public:
 
     return res;
   }
+
+  void debug() {
+    ROS_DEBUG("P1 %f %f %f", _point1.x(), _point1.y(), _point1.z());
+    ROS_DEBUG("P2 %f %f %f", _point2.x(), _point2.y(), _point2.z());
+  }
 };
 
 class StateTracking : public State {
@@ -151,8 +130,9 @@ private:
   bool _isTrekLinePredicted = false;
   float _filterGain = 0.65f;
   const char *_winName = "Tracking";
-  float _metric = 0.f;
-  float _lTwoMetric = 0.f;
+  float _prevDist = 0.f;
+
+  int tmpMarkerIndex = 1;
 
   BallTracking *_bt = nullptr;
   RosVH *_vh = nullptr;
@@ -170,6 +150,7 @@ private:
   ros::Time _resetTimer;
   ros::Time _detectionTimer;
   ros::Time _buildRealTrekLineTimer;
+  ros::Time _aTimer;
   ros::Publisher _ballPub;
   tf2_ros::Buffer _tfBuffer;
   tf2_ros::TransformListener *_tfListener;
@@ -182,15 +163,15 @@ private:
   cv::Mat _frame;
   cv::Mat _depth;
 
+  void drawLine(const tf2::Vector3 &p1, const tf2::Vector3 &p2, std_msgs::ColorRGBA &c);
+  void drawLine(geometry_msgs::Point &p1, geometry_msgs::Point &p2, std_msgs::ColorRGBA &c);
   void drawObjPose(Pose &p);
   void drawObjPose(Pose &p, std_msgs::ColorRGBA &c);
   void drawObjPose(geometry_msgs::Point &p, std_msgs::ColorRGBA &c);
-  void drawObjPose(tf2::Vector3 &position, std_msgs::ColorRGBA &c);
-  void drawObjRealLine(tf2::Vector3 &position, std_msgs::ColorRGBA &c);
-  void drawLine(geometry_msgs::Point &p1, geometry_msgs::Point &p2, std_msgs::ColorRGBA &c);
-  void drawLine(tf2::Vector3 &p1, tf2::Vector3 &p2, std_msgs::ColorRGBA &c);
-  void drawObjPredictedLine(std::list<geometry_msgs::Point> &list);
+  void drawObjPose(const tf2::Vector3 &position, std_msgs::ColorRGBA &c);
   void drawObjRealLine(std::list<geometry_msgs::Point> &list);
+  void drawObjRealLine(const tf2::Vector3 &position, std_msgs::ColorRGBA &c);
+  void drawObjPredictedLine(std::list<geometry_msgs::Point> &list);
   void pubMarker(Marker m);
   void transformPose(Pose &pose);
   void conceptOne(cv::Mat &mask, cv::Point2i &center, uint16_t &radius);
@@ -230,8 +211,8 @@ public:
     return sqrt(abs(v2));
   }
 
-  float getContactProbobility(tf2::Vector3 &currentPosition) {
-    if (_objPredictedLine.size() == 0)
+  float getContactProbobility(tf2::Vector3 &currentPosition, tf2::Vector3 &cameraPosition) {
+    if (_predictedSigments.size() == 0)
       return -1;
 
     uint16_t realTrekLen = _objRealLine.size();
@@ -244,29 +225,28 @@ public:
     uint16_t realTrekPosCounter = 0;
     static uint8_t colorCounter = 0;
 
-    // float minDist = tf2::tf2Distance2(_predictedSigments.back().getP2(), currentPosition);
     float minDist = 100.0f;
-    Line &nearLine = _predictedSigments[0];
-    tf2::Vector3 middle;
-    for (auto line : _predictedSigments) {
-      tf2::Vector3 tmpMiddle = tf2::lerp(line.getP1(), line.getP2(), .5);
+    auto nearLine = std::ref(_predictedSigments[0]);
+    auto middle = std::cref(nearLine.get().getMidpoint());
+
+    for (auto &&line : _predictedSigments) {
+      const tf2::Vector3 &tmpMiddle = line.getMidpoint();
       float tmpDist = tf2::tf2Distance2(tmpMiddle, currentPosition);
 
       if (tmpDist < minDist) {
-        middle = tmpMiddle;
+        nearLine = std::ref(line);
+        middle = std::cref(tmpMiddle);
         minDist = tmpDist;
-        nearLine = line;
       }
     }
 
+    float distToPoint = nearLine.get().distToPoint2(currentPosition);
+
+    if (distToPoint == -1.f)
+      return -1.f;
+
     drawLine(currentPosition, middle, _rosColors[0]);
-
-    float distToPoint = nearLine.distToPoint2(currentPosition);
-
-    if (distToPoint == -1)
-      return -1;
-
-    tf2::Vector3 pointOnLine = nearLine.porjectPoint(currentPosition);
+    tf2::Vector3 pointOnLine = nearLine.get().porjectPoint(currentPosition);
 
     drawObjPose(pointOnLine, _rosColors[4]);
 
@@ -275,18 +255,37 @@ public:
     float euclidian = fromPointToLine.length();
     float chebyshev = std::max(std::max(fromPointToLine.x(), fromPointToLine.y()), fromPointToLine.z());
 
-    ROS_DEBUG("DistToLine: %f", sqrt(distToPoint));
-    ROS_DEBUG("Euclidian %f", euclidian);
-    ROS_DEBUG("Chebyshev %f", chebyshev);
+    float c = (currentPosition - cameraPosition).length2();
+    float aCath = distToPoint;
+    float sinMetric = aCath / c;
+    float bCath = (cameraPosition - pointOnLine).length2();
+    float cosMetric = bCath / c;
+
+    float totalDistToObject = (cameraPosition - _firstObjPose).length2();
+    float passDist = (_firstObjPose - pointOnLine).length2();
+    float passDistMetric = passDist / totalDistToObject;
+
+    /* if (_prevDist != 0) {
+      float deltaDist = euclidian - _prevDist;
+      double deltaTime = (ros::Time::now() - _aTimer).toSec();
+      ROS_INFO("a %lf", deltaDist / deltaTime);
+    }
+
+    _prevDist = euclidian;
+    _aTimer = ros::Time::now(); */
+
+    float avrMetric = (cosMetric + passDistMetric) / 2.f;
+
+    ROS_DEBUG_NAMED("dist_to_line", "DistToLine: %f", sqrt(distToPoint));
+    ROS_DEBUG_NAMED("euclidian", "Euclidian %f", euclidian);
+    ROS_DEBUG_NAMED("chebyshev", "Chebyshev %f", chebyshev);
+    ROS_DEBUG_NAMED("sin", "Sin %f", 1.f - sinMetric);
+    ROS_DEBUG_NAMED("cos", "Cos %f", cosMetric);
+    ROS_DEBUG_NAMED("pass_dist", "PossDist %f", passDistMetric);
+    ROS_DEBUG_NAMED("avr", "Avr %f", avrMetric);
 
     return 1;
   }
-
-  /* inline float getLOneMetric() {
-  }
-
-  inline float getLTwoMetric() {
-  } */
 };
 
 #endif // _VISION_STATE_TRACKING_H_

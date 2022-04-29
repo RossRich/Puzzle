@@ -15,7 +15,8 @@ using mavros_msgs::State;
 using visualization_msgs::Marker;
 
 State currentState;
-geometry_msgs::PoseStamped currentPos;
+geometry_msgs::PoseStamped currentPose;
+geometry_msgs::PoseStamped droneGoalPose;
 ros::Publisher droneMarkerPublisher;
 
 void stateCb(const State::ConstPtr &msg) {
@@ -25,7 +26,11 @@ void stateCb(const State::ConstPtr &msg) {
 }
 
 void poseCb(const geometry_msgs::PoseStampedConstPtr &msg) {
-  currentPos = *msg;
+  currentPose = *msg;
+}
+
+void goalPoseCallback(const geometry_msgs::PoseStampedConstPtr &goalPoseMsg) {
+  droneGoalPose = *goalPoseMsg;
 }
 
 void drawDronePose(geometry_msgs::TransformStamped &ts) {
@@ -49,8 +54,8 @@ void drawDronePose(geometry_msgs::TransformStamped &ts) {
 
   drone.color.a = 1.0;
   drone.color.r = 0;
-  drone.color.g = 0;
-  drone.color.b = 0;
+  drone.color.g = .8;
+  drone.color.b = .2;
 
   droneMarkerPublisher.publish(drone);
 }
@@ -77,16 +82,14 @@ int main(int argc, char *argv[]) {
   xPosition = ros::param::param<float>(nodeName + "/vehicle_x", 2.0);
   zPosition = ros::param::param<float>(nodeName + "/vehicle_z", 0.8);
 
-  ros::Subscriber stateSub =
-      nh.subscribe<State>(vehicleName + "/mavros/state", 10, stateCb);
-  ros::Publisher localPosPub = nh.advertise<geometry_msgs::PoseStamped>(
-      vehicleName + "/mavros/setpoint_position/local", 10);
-  ros::ServiceClient armingCli =
-      nh.serviceClient<CommandBool>(vehicleName + "/mavros/cmd/arming");
-  ros::ServiceClient setModeCli =
-      nh.serviceClient<SetMode>(vehicleName + "/mavros/set_mode");
-  ros::Subscriber pos = nh.subscribe<geometry_msgs::PoseStamped>(
-      vehicleName + "/mavros/local_position/pose", 10, poseCb);
+  ros::Publisher localPosPub = nh.advertise<geometry_msgs::PoseStamped>(vehicleName + "/mavros/setpoint_position/local", 10);
+
+  ros::Subscriber stateSub = nh.subscribe<State>(vehicleName + "/mavros/state", 10, stateCb);
+  ros::ServiceClient armingCli = nh.serviceClient<CommandBool>(vehicleName + "/mavros/cmd/arming");
+  ros::ServiceClient setModeCli = nh.serviceClient<SetMode>(vehicleName + "/mavros/set_mode");
+  ros::Subscriber pos = nh.subscribe<geometry_msgs::PoseStamped>(vehicleName + "/mavros/local_position/pose", 10, poseCb);
+  ros::Subscriber goalPose = nh.subscribe("/move_base_simple/goal", 1, goalPoseCallback);
+
   droneMarkerPublisher = nh.advertise<Marker>("/drone_marker", 5);
 
   ros::Rate rate(20.0);
@@ -96,18 +99,18 @@ int main(int argc, char *argv[]) {
     rate.sleep();
   }
 
-  geometry_msgs::PoseStamped pose;
-  pose.pose.position.x = xPosition;
-  pose.pose.position.y = 1;
-  pose.pose.position.z = zPosition;
+  droneGoalPose.header.frame_id="map";
+  droneGoalPose.header.stamp = ros::Time::now();
+  droneGoalPose.pose.position.x = xPosition;
+  droneGoalPose.pose.position.y = 1;
+  droneGoalPose.pose.position.z = zPosition;
 
   tf2::Quaternion q;
   q.setRPY(0, 0, 3.14);
-
-  tf2::convert(q, pose.pose.orientation);
+  tf2::convert(q, droneGoalPose.pose.orientation);
 
   for (int i = 100; ros::ok() && i > 0; --i)
-    localPosPub.publish(pose);
+    localPosPub.publish(droneGoalPose);
 
   CommandBool armCmd;
   armCmd.request.value = true;
@@ -122,17 +125,14 @@ int main(int argc, char *argv[]) {
   geometry_msgs::TransformStamped tfTransformStamped;
 
   while (ros::ok()) {
-    if (currentState.mode != "OFFBOARD" &&
-        (ros::Time::now() - lastRequest > ros::Duration(5.0))) {
-      if (setModeCli.call(offboardModeCmd) &&
-          offboardModeCmd.response.mode_sent) {
+    if (currentState.mode != "OFFBOARD" && (ros::Time::now() - lastRequest > ros::Duration(5.0))) {
+      if (setModeCli.call(offboardModeCmd) && offboardModeCmd.response.mode_sent) {
         ROS_INFO("Offboard enable");
       }
       lastRequest = ros::Time::now();
     } else {
 
-      if (!currentState.armed &&
-          (ros::Time::now() - lastRequest > ros::Duration(5.0))) {
+      if (!currentState.armed && (ros::Time::now() - lastRequest > ros::Duration(5.0))) {
         bool armCliRes = armingCli.call(armCmd);
         bool armCliResponse = armCmd.response.success;
 
@@ -149,19 +149,18 @@ int main(int argc, char *argv[]) {
 
     if (currentState.mode == "OFFBOARD" && currentState.armed == 1) {
       tf2::Quaternion q;
-      tf2::fromMsg(currentPos.pose.orientation, q);
+      tf2::fromMsg(currentPose.pose.orientation, q);
       tf2::Vector3 v;
-      tf2::fromMsg(currentPos.pose.position, v);
+      tf2::fromMsg(currentPose.pose.position, v);
       tf2::Stamped<tf2::Transform> ts(tf2::Transform(tf2::Quaternion(q), tf2::Vector3(v)), ros::Time::now(), "map");
-
       tfTransformStamped = tf2::toMsg(ts);
       tfTransformStamped.child_frame_id = "base_link";
-
       tfBroadcaster.sendTransform(tfTransformStamped);
-      //   drawDronePose(tfTransformStamped);
+      drawDronePose(tfTransformStamped);
     }
 
-    localPosPub.publish(pose);
+    droneGoalPose.pose.position.z = zPosition;
+    localPosPub.publish(droneGoalPose);
 
     ros::spinOnce();
     rate.sleep();

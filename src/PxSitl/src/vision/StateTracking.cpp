@@ -68,7 +68,7 @@ bool StateTracking::setup() {
   }
 
   cv::namedWindow(_winName, cv::WINDOW_AUTOSIZE);
-  cv::namedWindow("test", cv::WINDOW_AUTOSIZE);
+  // cv::namedWindow("test", cv::WINDOW_AUTOSIZE);
 
   _loopTimer = ros::Time::now();
   _detectionTimer = ros::Time::now();
@@ -137,7 +137,7 @@ void StateTracking::drawObjPose(geometry_msgs::Point &p, std_msgs::ColorRGBA &c)
   drawObjPose(tmpPose, c);
 }
 
-void StateTracking::drawObjPose(tf2::Vector3 &position, std_msgs::ColorRGBA &c) {
+void StateTracking::drawObjPose(const tf2::Vector3 &position, std_msgs::ColorRGBA &c) {
   geometry_msgs::Point tmpPointMsg;
   tf2::toMsg(position, tmpPointMsg);
   drawObjPose(tmpPointMsg, c);
@@ -159,13 +159,13 @@ void StateTracking::drawLine(geometry_msgs::Point &p1, geometry_msgs::Point &p2,
   m.pose.orientation.w = 1;
 
   m.scale.x = 0.02;
-  
+
   m.color = c;
 
   pubMarker(m);
 }
 
-void StateTracking::drawLine(tf2::Vector3 &p1, tf2::Vector3 &p2, std_msgs::ColorRGBA &c) {
+void StateTracking::drawLine(const tf2::Vector3 &p1, const tf2::Vector3 &p2, std_msgs::ColorRGBA &c) {
   geometry_msgs::Point p1Msg;
   geometry_msgs::Point p2Msg;
 
@@ -444,52 +444,31 @@ void StateTracking::conceptTwo(cv::Mat &mask, cv::Point2i &center, uint16_t &rad
 
   TransformStamped transform = _tfBuffer.lookupTransform("map", "base_link_frd", ros::Time(0));
   Pose cameraPose;
-  cameraPose.orientation = transform.transform.rotation;
   cameraPose.position.x = transform.transform.translation.x;
   cameraPose.position.y = transform.transform.translation.y;
   cameraPose.position.z = transform.transform.translation.z;
-
-  // Camera pose
-  Marker m;
-  m.header.frame_id = "map";
-  m.header.stamp = ros::Time::now();
-  m.ns = "camera_pose";
-  m.id = 100;
-  m.pose = cameraPose;
-  geometry_msgs::Vector3 scale;
-  scale.x = .5;
-  scale.y = .05;
-  scale.z = .05;
-  m.scale = scale;
-  std_msgs::ColorRGBA c;
-  c.a = 1;
-  c.b = 1;
-  c.g = 0;
-  c.r = 0;
-  m.color = c;
-  m.type = Marker::ARROW;
-  pubMarker(m);
-  // end camera pose
+  cameraPose.orientation = transform.transform.rotation;
 
   tf2::Quaternion q; ///< camera orientation
   tf2::fromMsg(cameraPose.orientation, q);
-  tf2::Vector3 aVector = tf2::quatRotate(q, tf2::Vector3(1, 0, 0)); ///< camera forward diraction axis
+  tf2::Vector3 aVector = tf2::quatRotate(q, tf2::Vector3(1,0,0)); ///< camera forward diraction axis
   tf2::Vector3 cameraPosition;                                      ///< camera position
   tf2::fromMsg(cameraPose.position, cameraPosition);
 
   // aVector pose
+  Marker m;
   m.header.frame_id = "map";
   m.header.stamp = ros::Time::now();
   m.ns = "a_vector_pose";
-  m.id = 101;
-  tf2::Quaternion aVectorOrientation;
-  aVectorOrientation.setRPY(aVector.getX(), aVector.getY(), aVector.getZ());
-  m.pose.orientation = tf2::toMsg(aVectorOrientation);
-  tf2::toMsg(cameraPosition, m.pose.position);
-  scale.x = 1;
-  scale.y = .05;
-  scale.z = .05;
+  m.id = 500 + tmpMarkerIndex;
+  m.pose = cameraPose;
+  geometry_msgs::Vector3 scale;
+  scale.x = .5;
+  scale.y = .02;
+  scale.z = .02;
   m.scale = scale;
+
+  std_msgs::ColorRGBA c;
   c.a = 1;
   c.b = 0.5;
   c.g = 0;
@@ -499,17 +478,24 @@ void StateTracking::conceptTwo(cv::Mat &mask, cv::Point2i &center, uint16_t &rad
   pubMarker(m);
   // end aVector pose
 
+  drawObjPose(_firstObjPose, _rosColors[2]);
+  tf2::Quaternion qq = tf2::shortestArcQuat(cameraPosition, _firstObjPose);
   tf2::Vector3 cVector = _firstObjPose - cameraPosition; ///< vector from camera to detected obj
+
+  tf2::Vector3 rotAxis = tf2::tf2Cross(tf2::Vector3(0, 0, -1), cVector.normalized());
+
+  // ROS_INFO("atan2 %f", tf2Degrees(vectorAngle(cVector.y(), cVector.z())));
+
   tf2::Quaternion cVectorRotation;
-  cVectorRotation.setEuler(cVector.getZ(), cVector.getY(), -cVector.getX()); ///< !bad minus
+  cVectorRotation.setRotation(rotAxis, acos(tf2::tf2Dot(cameraPosition.normalized(), cVector.normalized())));
 
   // cVector pose
   m.header.frame_id = "map";
   m.header.stamp = ros::Time::now();
   m.ns = "c_vector_pose";
-  m.id = 99;
-  m.pose.orientation = tf2::toMsg(cVectorRotation);
-  tf2::toMsg(vecNewObjPosition, m.pose.position);
+  m.id = 700 + tmpMarkerIndex;
+  m.pose.orientation = tf2::toMsg(qq);
+  tf2::toMsg(cameraPosition, m.pose.position);
   c.a = 1;
   c.b = 0;
   c.g = 0;
@@ -526,8 +512,8 @@ void StateTracking::conceptTwo(cv::Mat &mask, cv::Point2i &center, uint16_t &rad
     float gt = (9.8 * pow(dt, 2)) / 2.0f;
 
     tf2::Vector3 tmpPosition = cameraPosition; ///< a start treck line from camera position
+    tf2::Vector3 prevPosition = tmpPosition;
     geometry_msgs::Point tmpMsgPoint;
-    tf2::Vector3 prevPosition(0,0,0);
 
     for (uint8_t i = 0; i < 20; i++) {
       tf2::Vector3 fromTo = vecNewObjPosition - tmpPosition;
@@ -546,11 +532,14 @@ void StateTracking::conceptTwo(cv::Mat &mask, cv::Point2i &center, uint16_t &rad
       tmpPosition.setX(tmpPosition.x() - x);
       tmpPosition.setZ(tmpPosition.z() - z);
 
+      if(tmpPosition.getZ() < 0)
+        break;
+
       cVector = vecNewObjPosition - tmpPosition;
       angle = acos(tf2::tf2Dot(cVector.normalized(), aVector.normalized()));
-      ROS_INFO("Angle %i: %f", i, tf2Degrees(angle));
+      // ROS_INFO("Angle %i: %f", i, tf2Degrees(angle));
 
-      if(prevPosition != tf2::Vector3(0,0,0) && prevPosition != tmpPosition) {
+      if (prevPosition != tf2::Vector3(0, 0, 0) && prevPosition != tmpPosition) {
         Line line(prevPosition, tmpPosition);
         _predictedSigments.push_back(line);
       }
@@ -562,11 +551,11 @@ void StateTracking::conceptTwo(cv::Mat &mask, cv::Point2i &center, uint16_t &rad
     }
 
     drawObjPredictedLine(_objPredictedLine);
-    // _objPredictedLine.clear();
     _isTrekLinePredicted = true;
   }
-
-  getContactProbobility(vecNewObjPosition);
+  ROS_DEBUG("-new calc-");
+  getContactProbobility(vecNewObjPosition, cameraPosition);
+  tmpMarkerIndex++;
 }
 
 void StateTracking::execute() {
@@ -627,14 +616,12 @@ void StateTracking::execute() {
       _predictedSigments.clear();
       _isObjDetected = false;
       _isTrekLinePredicted = false;
-      _metric = 0.f;
-      _lTwoMetric = 0.f;
       ROS_DEBUG("Clean lines");
     }
   }
 
   try {
-    cv::imshow("test", mask);
+    // cv::imshow("test", mask);
     cv::imshow(_winName, tmpFrame);
     cv::waitKey(1);
   } catch (const cv::Exception &e) {
