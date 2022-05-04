@@ -77,6 +77,34 @@ bool StateTracking::setup() {
   return true;
 }
 
+void StateTracking::drawArrow(const tf2::Vector3 &position, const tf2::Quaternion &orientation, std_msgs::ColorRGBA &c, std::string &name) {
+  Pose p;
+  tf2::toMsg(position, p.position);
+  p.orientation = tf2::toMsg(orientation);
+
+  drawArrow(p, c, name);
+}
+
+void StateTracking::drawArrow(const Pose &pose, std_msgs::ColorRGBA &c, std::string &name) {
+  Marker m;
+  m.header.frame_id = "map";
+  m.header.stamp = ros::Time::now();
+  m.ns = name;
+  m.id = 500 + tmpMarkerIndex;
+  m.type = Marker::ARROW;
+  m.action = Marker::ADD;
+
+  m.pose = pose;
+
+  m.scale.x = .5;
+  m.scale.y = .02;
+  m.scale.z = .02;
+
+  m.color = c;
+
+  pubMarker(m);
+}
+
 void StateTracking::drawObjPose(Pose &p) {
   Marker m;
 
@@ -353,9 +381,9 @@ void StateTracking::conceptOne(cv::Mat &mask, cv::Point2i &center, uint16_t &rad
 
       // ROS_INFO("Speed: %f", v);
       // ROS_INFO("Len for speed: %f", totalLength.length());
-      // ROS_INFO("vecNewObjPosition x %f; y %f; z %f;", vecNewObjPosition.x(), vecNewObjPosition.y(), vecNewObjPosition.z());
-      // ROS_INFO("vecLastObjPosition x %f; y %f; z %f;", vecLastObjPosition.x(), vecLastObjPosition.y(), vecLastObjPosition.z());
-      // double angle = 0.05; ///< angle in radian
+      // ROS_INFO("vecNewObjPosition x %f; y %f; z %f;", vecNewObjPosition.x(), vecNewObjPosition.y(),
+      // vecNewObjPosition.z()); ROS_INFO("vecLastObjPosition x %f; y %f; z %f;", vecLastObjPosition.x(),
+      // vecLastObjPosition.y(), vecLastObjPosition.z()); double angle = 0.05; ///< angle in radian
       double angle = asin(totalLength.z() / objDirection.length()); ///< angle in radian
       // double angle = _medianFilter.filtered(tf2Degrees(asin(objDirection.z() / objDirection.length())));
       // ROS_INFO("Angle: %f", angle);
@@ -449,61 +477,39 @@ void StateTracking::conceptTwo(cv::Mat &mask, cv::Point2i &center, uint16_t &rad
   cameraPose.position.z = transform.transform.translation.z;
   cameraPose.orientation = transform.transform.rotation;
 
-  tf2::Quaternion q; ///< camera orientation
-  tf2::fromMsg(cameraPose.orientation, q);
-  tf2::Vector3 aVector = tf2::quatRotate(q, tf2::Vector3(1,0,0)); ///< camera forward diraction axis
-  tf2::Vector3 cameraPosition;                                      ///< camera position
+  std::string cameraArrowName("camera_pose");
+  drawArrow(cameraPose, _rosColors[1], cameraArrowName);
+
+  tf2::Quaternion cameraOrientation; ///< camera orientation
+  tf2::fromMsg(cameraPose.orientation, cameraOrientation);
+
+  tf2::Vector3 cameraPosition; ///< camera position
   tf2::fromMsg(cameraPose.position, cameraPosition);
 
-  // aVector pose
-  Marker m;
-  m.header.frame_id = "map";
-  m.header.stamp = ros::Time::now();
-  m.ns = "a_vector_pose";
-  m.id = 500 + tmpMarkerIndex;
-  m.pose = cameraPose;
-  geometry_msgs::Vector3 scale;
-  scale.x = .5;
-  scale.y = .02;
-  scale.z = .02;
-  m.scale = scale;
+  tf2::Vector3 aVector = tf2::quatRotate(cameraOrientation, tf2::Vector3(1, 0, 0)); ///< camera forward diraction axis
 
-  std_msgs::ColorRGBA c;
-  c.a = 1;
-  c.b = 0.5;
-  c.g = 0;
-  c.r = 1.0;
-  m.color = c;
-  m.type = Marker::ARROW;
-  pubMarker(m);
-  // end aVector pose
+  // ROS_DEBUG_STREAM("CameraPose " << cameraPose);
+  // ROS_DEBUG("FirstObjPose \n x: %f\n y: %f\n z: %f", _firstObjPose.x(), _firstObjPose.y(), _firstObjPose.z());
 
   drawObjPose(_firstObjPose, _rosColors[2]);
-  tf2::Quaternion qq = tf2::shortestArcQuat(cameraPosition, _firstObjPose);
-  tf2::Vector3 cVector = _firstObjPose - cameraPosition; ///< vector from camera to detected obj
 
-  tf2::Vector3 rotAxis = tf2::tf2Cross(tf2::Vector3(0, 0, -1), cVector.normalized());
+  tf2::Vector3 cVector = _firstObjPose - cameraPosition; ///< vector from camera to detected obj
+  tf2::Vector3 rotAxis = tf2::tf2Cross(cVector.normalized(), tf2::Vector3(0, 0, 1));
+  tf2::Vector3 forward = rotAxis.cross(tf2::Vector3(0,0,1));
+
+
+  float a = tf2::tf2Dot(forward, cVector.normalized());
+  ROS_INFO_STREAM("new a " << a);
+  tf2::Quaternion qq;
+  qq.setRotation(tf2::Vector3(0,1,0), acos(a));
+
+  std::string rotationArrowName("rot_pose");
+  drawArrow(cameraPosition, qq, _rosColors[0], rotationArrowName);
 
   // ROS_INFO("atan2 %f", tf2Degrees(vectorAngle(cVector.y(), cVector.z())));
 
   tf2::Quaternion cVectorRotation;
   cVectorRotation.setRotation(rotAxis, acos(tf2::tf2Dot(cameraPosition.normalized(), cVector.normalized())));
-
-  // cVector pose
-  m.header.frame_id = "map";
-  m.header.stamp = ros::Time::now();
-  m.ns = "c_vector_pose";
-  m.id = 700 + tmpMarkerIndex;
-  m.pose.orientation = tf2::toMsg(qq);
-  tf2::toMsg(cameraPosition, m.pose.position);
-  c.a = 1;
-  c.b = 0;
-  c.g = 0;
-  c.r = 1;
-  m.color = c;
-  m.type = Marker::ARROW;
-  pubMarker(m);
-  // end cVector pose
 
   if (_isObjDetected && !_isTrekLinePredicted) {
     float angle = acos(tf2::tf2Dot(cVector.normalized(), aVector.normalized()));
@@ -532,7 +538,7 @@ void StateTracking::conceptTwo(cv::Mat &mask, cv::Point2i &center, uint16_t &rad
       tmpPosition.setX(tmpPosition.x() - x);
       tmpPosition.setZ(tmpPosition.z() - z);
 
-      if(tmpPosition.getZ() < 0)
+      if (tmpPosition.getZ() < 0)
         break;
 
       cVector = vecNewObjPosition - tmpPosition;
@@ -597,13 +603,11 @@ void StateTracking::execute() {
     cv::circle(tmpFrame, center, radius + 7.0, cv::Scalar::all(128), 1, cv::LINE_4);
     cv::circle(tmpFrame, center, 3, cv::Scalar(0, 255, 0), cv::FILLED, cv::LINE_8);
 
-    _fps = static_cast<int>(
-        std::ceil(1.0 / ros::Duration(ros::Time::now() - _loopTimer).toSec()));
+    _fps = static_cast<int>(std::ceil(1.0 / ros::Duration(ros::Time::now() - _loopTimer).toSec()));
 
-    cv::Size textSize = cv::getTextSize(
-        std::to_string(_fps), cv::FONT_HERSHEY_SIMPLEX, 0.4, 2, nullptr);
-    cv::putText(tmpFrame, std::to_string(_fps), cv::Point(5, textSize.height * 2),
-                cv::FONT_HERSHEY_SIMPLEX, 0.4, cv::Scalar::all(0));
+    cv::Size textSize = cv::getTextSize(std::to_string(_fps), cv::FONT_HERSHEY_SIMPLEX, 0.4, 2, nullptr);
+    cv::putText(tmpFrame, std::to_string(_fps), cv::Point(5, textSize.height * 2), cv::FONT_HERSHEY_SIMPLEX, 0.4,
+                cv::Scalar::all(0));
     /* cv::putText(tmpFrame, info.str(),
                 cv::Point(5, (textSize.height * 4) + textSize.height),
                 cv::FONT_HERSHEY_SIMPLEX, .4, cv::Scalar::all(0)); */

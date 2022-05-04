@@ -165,6 +165,8 @@ private:
 
   void drawLine(const tf2::Vector3 &p1, const tf2::Vector3 &p2, std_msgs::ColorRGBA &c);
   void drawLine(geometry_msgs::Point &p1, geometry_msgs::Point &p2, std_msgs::ColorRGBA &c);
+  void drawArrow(const Pose &pose, std_msgs::ColorRGBA &c, std::string &name);
+  void drawArrow(const tf2::Vector3 &position, const tf2::Quaternion &orientation, std_msgs::ColorRGBA &c, std::string &name);
   void drawObjPose(Pose &p);
   void drawObjPose(Pose &p, std_msgs::ColorRGBA &c);
   void drawObjPose(geometry_msgs::Point &p, std_msgs::ColorRGBA &c);

@@ -1,15 +1,12 @@
 [submodule "src/PX4-Autopilot"]
 	path = src/PX4-Autopilot
 	url = https://github.com/PX4/PX4-Autopilot.git
-	branch = master
 [submodule "src/realsense-ros"]
 	path = src/realsense-ros
 	url = https://github.com/IntelRealSense/realsense-ros.git
-	branch = development
 [submodule "src/ddynamic_reconfigure"]
 	path = src/ddynamic_reconfigure
 	url = https://github.com/pal-robotics/ddynamic_reconfigure.git
 [submodule "src/drone_stats"]
 	path = src/drone_stats
 	url = https://github.com/era-team/DroneStats.git
-	branch = master

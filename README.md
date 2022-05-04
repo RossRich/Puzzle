@@ -31,6 +31,21 @@ git clone --recurse-submodules https://github.com/RossRich/Puzzle.git
 git submodule update --init --recursive
 ```
 *Если все прошло успешно, то VSCode предложит открыть проект в docker контейнере.*
+`
+## Сборка Px4
+Более подробно о сборке автопилота можно прочитать на [:link: оффициальном сайте](https://docs.px4.io/master/en/dev_setup/building_px4.html#px4-make-build-targets). В [:link:другом разделе](https://docs.px4.io/master/en/simulation/gazebo.html#gazebo-simulation) можно найти информацию о сборке автопилота для симулятора.
+Перед сборкой пакета ROS необходимо сорбать автопилот:
+```
+(cd src/PX4-Autopilot && make px4_sitl_default gazebo)
+```
+Если все собралось успешно, то запуститься симуляция
+
+## Сборка плагинов для Gazebo
+В симуляторе используются функции требующие плагины. Их необходимо собрать:
+```
+(cd src/puzzle_gazebo/plugins && mkdir build)
+(cd src/puzzle_gazebo/plugins/build && cmake ../ && make -j8)
+```
 
 ## Сборка и запуск Puzzle
 
@@ -77,10 +92,27 @@ No protocol specified
 xhost +local:root
 ```
 ----
+>Gazebo долго открывается и выдает предупреждение: [Wrn] [ModelDatabase.cc:340] Getting models from[http://models.gazebosim.org/]. This may take a few seconds.
+
+Отсутствуют необходимые модели и Gazebo пытается загрузить их. Все мадели добавлены в репозиторий. Необходимо прописать: 
+```
+source /workspaces/Puzzle/src/PX4-Autopilot/Tools/setup_gazebo.bash /workspaces/Puzzle/src/PX4-Autopilot /workspaces/Puzzle/src/PX4-Autopilot/build/px4_sitl_default
+```
+----
 >gzclient: /usr/include/boost/smart_ptr/shared_ptr.hpp:734: typename boost::detail::sp_member_access<T>::type boost::shared_ptr<T>::operator->() const [with T = gazebo::rendering::Camera; typename boost::detail::sp_member_access<T>::type = gazebo::rendering::Camera*]: Assertion `px != 0' failed.
 
 Вводим в когда загрузится контейнер
 ```
 source /usr/share/gazebo/setup.sh
+```
+---
+>[Err] [Plugin.hh:178] Failed to load plugin libYPGunPlugin.so: libYPGunPlugin.so: cannot open shared object file: No such file or directory
+[Err] [Plugin.hh:178] Failed to load plugin libGUIShootPlugin.so: libGUIShootPlugin.so: cannot open shared object file: No such file or directory
+[Err] [MainWindow.cc:2092] Unable to create gui overlay plugin with filename[libGUIShootPlugin.so]
+
+Необходимо собрать плагины для Gazebo
+```
+(cd src/puzzle_gazebo/plugins && mkdir build)
+(cd src/puzzle_gazebo/plugins/build && cmake ../ && make -j8)
 ```
 ---

@@ -8,14 +8,12 @@ Panels:
         - /Marker1/Namespaces1
         - /TF1/Frames1
       Splitter Ratio: 0.5
-    Tree Height: 365
+    Tree Height: 489
   - Class: rviz/Selection
     Name: Selection
   - Class: rviz/Tool Properties
     Expanded:
-      - /2D Pose Estimate1
       - /2D Nav Goal1
-      - /Publish Point1
     Name: Tool Properties
     Splitter Ratio: 0.5886790156364441
   - Class: rviz/Views
@@ -28,7 +26,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: ""
+    SyncSource: PointCloud2
 Preferences:
   PromptSaveOnExit: true
 Toolbars:
@@ -51,7 +49,7 @@ Visualization Manager:
         Y: 0
         Z: 0
       Plane: XY
-      Plane Cell Count: 20
+      Plane Cell Count: 30
       Reference Frame: map
       Value: true
     - Class: rviz/Marker
@@ -167,21 +165,13 @@ Visualization Manager:
     - Class: rviz/Select
     - Class: rviz/FocusCamera
     - Class: rviz/Measure
-    - Class: rviz/SetInitialPose
-      Theta std deviation: 0.2617993950843811
-      Topic: /initialpose
-      X std deviation: 0.5
-      Y std deviation: 0.5
     - Class: rviz/SetGoal
       Topic: /move_base_simple/goal
-    - Class: rviz/PublishPoint
-      Single click: true
-      Topic: /clicked_point
   Value: true
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 3.0538558959960938
+      Distance: 9.487184524536133
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -189,17 +179,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: -2.3525919914245605
-        Y: -0.7436760067939758
-        Z: 0.7256765961647034
+        X: -3.7477869987487793
+        Y: -0.6237262487411499
+        Z: 1.0586508512496948
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.024797551333904266
+      Pitch: 0.42479732632637024
       Target Frame: <Fixed Frame>
-      Yaw: 4.643575191497803
+      Yaw: 4.708576679229736
     Saved: ~
 Window Geometry:
   Displays:
@@ -219,5 +209,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1440
-  X: 2400
-  Y: 248
+  X: 331
+  Y: 170
