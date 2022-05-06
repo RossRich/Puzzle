@@ -31,7 +31,11 @@ bool StateTracking::loadParam() {
   }
 
   if (!_nh.getParam("filter_gain", _filterGain)) {
-    ROS_WARN("No filter_gain param. Use default value %f", _filterGain);
+    ROS_INFO("No filter_gain param. Use default value %f", _filterGain);
+  }
+
+  if(!_nh.getParam("dt_for_prediction", _dt4prediction)) {
+    ROS_INFO("No dt_for_prediction param. Use default value %f", _dt4prediction);
   }
 
   return true;
@@ -218,18 +222,11 @@ void StateTracking::drawObjPredictedLine(std::list<geometry_msgs::Point> &list) 
 
   m.pose.orientation.w = 1;
 
-  geometry_msgs::Vector3 scale;
-  scale.x = .07;
-  scale.y = .07;
-  scale.z = .07;
-  m.scale = scale;
+  m.scale.x = .04;
+  m.scale.y = .04;
+  m.scale.z = .04;
 
-  std_msgs::ColorRGBA c;
-  c.a = 1;
-  c.b = 1;
-  c.g = 1;
-  c.r = 1;
-  m.color = c;
+  m.color = _rosColors[5];
 
   m.type = Marker::SPHERE_LIST;
 
@@ -333,6 +330,24 @@ void StateTracking::transformPose(Pose &pose) {
   pose.position.x = newTransform.transform.translation.x;
   pose.position.y = newTransform.transform.translation.y;
   pose.position.z = newTransform.transform.translation.z;
+}
+
+Pose StateTracking::transformPose2(tf2::Vector3 &position, const tf2::Quaternion &orientation) {
+  tf2::Transform transformFromPose(orientation, position);
+  tf2::Stamped<tf2::Transform> ts4Transform(transformFromPose, ros::Time::now(), "map");
+  TransformStamped ts(tf2::toMsg(ts4Transform));
+  ts.child_frame_id = _cameraModel.tfFrame();
+  TransformStamped transform = _tfBuffer.lookupTransform("map", "base_link_frd", ros::Time(0));
+  TransformStamped newTransform;
+  tf2::doTransform(ts, newTransform, transform);
+
+  Pose pose;
+  pose.orientation = newTransform.transform.rotation;
+  pose.position.x = newTransform.transform.translation.x;
+  pose.position.y = newTransform.transform.translation.y;
+  pose.position.z = newTransform.transform.translation.z;
+
+  return pose;
 }
 
 void StateTracking::conceptOne(cv::Mat &mask, cv::Point2i &center, uint16_t &radius) {
@@ -486,73 +501,74 @@ void StateTracking::conceptTwo(cv::Mat &mask, cv::Point2i &center, uint16_t &rad
   tf2::Vector3 cameraPosition; ///< camera position
   tf2::fromMsg(cameraPose.position, cameraPosition);
 
-  tf2::Vector3 aVector = tf2::quatRotate(cameraOrientation, tf2::Vector3(1, 0, 0)); ///< camera forward diraction axis
-
-  // ROS_DEBUG_STREAM("CameraPose " << cameraPose);
-  // ROS_DEBUG("FirstObjPose \n x: %f\n y: %f\n z: %f", _firstObjPose.x(), _firstObjPose.y(), _firstObjPose.z());
-
   drawObjPose(_firstObjPose, _rosColors[2]);
 
-  tf2::Vector3 cVector = _firstObjPose - cameraPosition; ///< vector from camera to detected obj
-  tf2::Vector3 rotAxis = tf2::tf2Cross(cVector.normalized(), tf2::Vector3(0, 0, 1));
-  tf2::Vector3 forward = rotAxis.cross(tf2::Vector3(0,0,1));
+  tf2::Vector3 camToObjDirection = _firstObjPose - cameraPosition; ///< vector from camera to detected obj
+  tf2::Vector3 forwardFrameMap(1, 0, 0);
+  Pose pose4transform = transformPose2(forwardFrameMap *= camToObjDirection.length(), tf2::Quaternion::getIdentity());
+  pose4transform.orientation = tf2::toMsg(cameraOrientation);
+  std::string rotationArrowOrigName("camera_farward_pose");
+  drawArrow(pose4transform, _rosColors[3], rotationArrowOrigName);
 
-
-  float a = tf2::tf2Dot(forward, cVector.normalized());
-  ROS_INFO_STREAM("new a " << a);
-  tf2::Quaternion qq;
-  qq.setRotation(tf2::Vector3(0,1,0), acos(a));
-
-  std::string rotationArrowName("rot_pose");
-  drawArrow(cameraPosition, qq, _rosColors[0], rotationArrowName);
-
-  // ROS_INFO("atan2 %f", tf2Degrees(vectorAngle(cVector.y(), cVector.z())));
-
-  tf2::Quaternion cVectorRotation;
-  cVectorRotation.setRotation(rotAxis, acos(tf2::tf2Dot(cameraPosition.normalized(), cVector.normalized())));
+  tf2::Vector3 camFwdDirection;
+  tf2::convert(pose4transform.position, camFwdDirection);
+  camFwdDirection = camFwdDirection - cameraPosition;
 
   if (_isObjDetected && !_isTrekLinePredicted) {
-    float angle = acos(tf2::tf2Dot(cVector.normalized(), aVector.normalized()));
+    float angle = acos(tf2::tf2Dot(camToObjDirection.normalized(), camFwdDirection.normalized()));
     ROS_INFO("Angle %f", tf2Degrees(angle));
-    float dt = 0.01;
+    float dt = _dt4prediction;
     float gt = (9.8 * pow(dt, 2)) / 2.0f;
 
-    tf2::Vector3 tmpPosition = cameraPosition; ///< a start treck line from camera position
+    tf2::Vector3 tmpPosition = cameraPosition; ///< trek line start from camera position
     tf2::Vector3 prevPosition = tmpPosition;
     geometry_msgs::Point tmpMsgPoint;
 
-    for (uint8_t i = 0; i < 20; i++) {
+    for (uint8_t i = 0; i < 50; i++) {
       tf2::Vector3 fromTo = vecNewObjPosition - tmpPosition;
 
-      if (fromTo.length2() <= 0.09)
+      ROS_INFO_STREAM("fromTo " << fromTo.length2());
+
+      if (fromTo.length2() <= 0.05)
         break;
 
       tf2::Vector3 fromToXY(fromTo.x(), fromTo.y(), 0);
 
-      angle = abs(angle);
+      angle = fabs(angle);
+      // angle = 0.75;
+      ROS_INFO("Angle %f", tf2Degrees(angle));
 
       float v0 = getVelocity(fromToXY.length(), fromTo.getZ(), angle);
       float x = v0 * cos(angle) * dt;
       float z = (v0 * sin(angle) * dt) - gt;
 
-      tmpPosition.setX(tmpPosition.x() - x);
-      tmpPosition.setZ(tmpPosition.z() - z);
+      // ROS_INFO_STREAM("x " << x << " z " << z);
 
-      if (tmpPosition.getZ() < 0)
-        break;
+      tf2::Vector3 d = fromTo.normalized() * x;
+      d.setZ(fromTo.normalized().z() - z);
+      d = d + tmpPosition;
 
-      cVector = vecNewObjPosition - tmpPosition;
-      angle = acos(tf2::tf2Dot(cVector.normalized(), aVector.normalized()));
+     /*  if (tmpPosition.getZ() < 0)
+        break; */
+
+      /* pose4transform = transformPose2(tmpPosition, tf2::Quaternion::getIdentity());
+      tf2::convert(pose4transform.position, tmpPosition); */
+
+      /* camToObjDirection = vecNewObjPosition - tmpPosition;
+      angle = acos(tf2::tf2Dot(camToObjDirection.normalized(), camFwdDirection.normalized())); */
       // ROS_INFO("Angle %i: %f", i, tf2Degrees(angle));
-
       if (prevPosition != tf2::Vector3(0, 0, 0) && prevPosition != tmpPosition) {
-        Line line(prevPosition, tmpPosition);
+        Line line(prevPosition, d);
         _predictedSigments.push_back(line);
+        // tf2::Vector3 frwd4Angle = fromToXY;
+        // angle = acos(tf2::tf2Dot(camToObjDirection.normalized(), frwd4Angle.normalized()));
       }
 
       prevPosition = tmpPosition;
+      tmpPosition = d;
 
-      tf2::toMsg(tmpPosition, tmpMsgPoint);
+      tf2::toMsg(d, tmpMsgPoint);
+      // ROS_INFO_STREAM("d msg\n" << tmpMsgPoint);
       _objPredictedLine.push_back(tmpMsgPoint);
     }
 
@@ -560,8 +576,7 @@ void StateTracking::conceptTwo(cv::Mat &mask, cv::Point2i &center, uint16_t &rad
     _isTrekLinePredicted = true;
   }
   ROS_DEBUG("-new calc-");
-  getContactProbobility(vecNewObjPosition, cameraPosition);
-  tmpMarkerIndex++;
+  // getContactProbobility(vecNewObjPosition, cameraPosition);
 }
 
 void StateTracking::execute() {
@@ -620,6 +635,7 @@ void StateTracking::execute() {
       _predictedSigments.clear();
       _isObjDetected = false;
       _isTrekLinePredicted = false;
+      tmpMarkerIndex++;
       ROS_DEBUG("Clean lines");
     }
   }

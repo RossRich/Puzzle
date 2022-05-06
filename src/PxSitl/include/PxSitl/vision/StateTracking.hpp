@@ -131,6 +131,7 @@ private:
   float _filterGain = 0.65f;
   const char *_winName = "Tracking";
   float _prevDist = 0.f;
+  float _dt4prediction = 0.01;
 
   int tmpMarkerIndex = 1;
 
@@ -176,6 +177,7 @@ private:
   void drawObjPredictedLine(std::list<geometry_msgs::Point> &list);
   void pubMarker(Marker m);
   void transformPose(Pose &pose);
+  Pose transformPose2(tf2::Vector3 &position, const tf2::Quaternion &orientation);
   void conceptOne(cv::Mat &mask, cv::Point2i &center, uint16_t &radius);
   void conceptTwo(cv::Mat &mask, cv::Point2i &center, uint16_t &radius);
   float getDistToObj(cv::Mat &mask, uint16_t &radius);

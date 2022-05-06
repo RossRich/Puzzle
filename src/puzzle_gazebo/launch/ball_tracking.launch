@@ -7,6 +7,7 @@
     <param name="depth_topic" value="/camera/aligned_depth_to_color/image_raw"/>
     <param name="data_config" value="$(find PxSitl)/data/config.yaml"/>
     <param name="filter_gain" value="0.0"/>
+    <param name="dt_for_prediction" value="0.01"/>
   </node>
 
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rviz_cong)" output="screen"/>
