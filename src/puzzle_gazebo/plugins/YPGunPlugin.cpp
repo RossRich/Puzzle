@@ -295,7 +295,7 @@ public:
   }
 
   void onWorldUpdate(const common::UpdateInfo &worldInfo) {
-    common::Time dT = _thisWorld->SimTime() - lastFrame;
+    // common::Time dT = _thisWorld->SimTime() - lastFrame;
     
     if (worldInfo.realTime >= loopTimer) {
 
@@ -343,9 +343,9 @@ public:
 
         _targetPub->Publish(targetPoseMsg);
       }
-      loopTimer += common::Time(0, common::Time::SecToNano(0.5));
+      loopTimer += common::Time(0, common::Time::SecToNano(0.033));
     }
-    lastFrame = _thisWorld->SimTime();
+    // lastFrame = _thisWorld->SimTime();
   }
 
   void onSelectObjectCallback(ConstSelectionPtr &object) {

@@ -1,5 +1,6 @@
 #if !defined(_VISION_STATE_TRACKING_H_)
 #define _VISION_STATE_TRACKING_H_
+#define PZ_GRAVITY 9.8f
 
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/TransformStamped.h>
@@ -23,6 +24,7 @@
 #include "utils/Utils.hpp"
 #include "utils/thresholdtype.hpp"
 
+
 using geometry_msgs::Pose;
 using geometry_msgs::PosePtr;
 using geometry_msgs::TransformStamped;
@@ -31,6 +33,8 @@ using sensor_msgs::CameraInfo;
 using sensor_msgs::CameraInfoConstPtr;
 using visualization_msgs::Marker;
 using visualization_msgs::MarkerConstPtr;
+
+std::vector<std_msgs::ColorRGBA> &Utils::Colors = Utils::createColors();
 
 class Line {
 private:
@@ -92,7 +96,7 @@ public:
 
   float distToPoint(tf2::Vector3 &point) {
     float res = distToPoint2(point);
-    return res == -1.f ? -1.f : sqrt(res);
+    return res == -1.f ? -1.f : sqrtf(res);
   }
 
   /**
@@ -131,7 +135,7 @@ private:
   float _filterGain = 0.65f;
   const char *_winName = "Tracking";
   float _prevDist = 0.f;
-  float _dt4prediction = 0.01;
+  float _dt4prediction = 0.01f;
 
   int tmpMarkerIndex = 1;
 
@@ -142,7 +146,6 @@ private:
   std::string _cameraInfoTopic = "/camera/color/camera_info";
   std::list<geometry_msgs::Point> _objRealLine;
   std::list<geometry_msgs::Point> _objPredictedLine;
-  std::vector<std_msgs::ColorRGBA> _rosColors;
   std::vector<Line> _predictedSigments;
 
   ros::NodeHandle &_nh;
@@ -155,8 +158,8 @@ private:
   ros::Publisher _ballPub;
   tf2_ros::Buffer _tfBuffer;
   tf2_ros::TransformListener *_tfListener;
-  tf2::Vector3 _firstObjPose;
-  Pose _lastObjPose;
+  tf2::Vector3 _firstObjPosition;
+  tf2::Vector3 _lastObjPosition;
   image_transport::ImageTransport *_it;
   CameraInfoConstPtr _cameraInfo;
   PinholeCameraModel _cameraModel;
@@ -164,42 +167,35 @@ private:
   cv::Mat _frame;
   cv::Mat _depth;
 
-  void drawLine(const tf2::Vector3 &p1, const tf2::Vector3 &p2, std_msgs::ColorRGBA &c);
-  void drawLine(geometry_msgs::Point &p1, geometry_msgs::Point &p2, std_msgs::ColorRGBA &c);
-  void drawArrow(const Pose &pose, std_msgs::ColorRGBA &c, const char *name);
-  void drawArrow(const tf2::Vector3 &position, const tf2::Quaternion &orientation, std_msgs::ColorRGBA &c, const char *name);
+  void drawLine(const tf2::Vector3 &p1, const tf2::Vector3 &p2, const std_msgs::ColorRGBA &c);
+  void drawLine(geometry_msgs::Point &p1, geometry_msgs::Point &p2, const std_msgs::ColorRGBA &c);
+  void drawArrow(const Pose &pose, const std_msgs::ColorRGBA &c, const char *name);
+  void drawArrow(const tf2::Vector3 &position, const tf2::Quaternion &orientation, const std_msgs::ColorRGBA &c, const char *name);
   void drawObjPose(Pose &p);
-  void drawObjPose(Pose &p, std_msgs::ColorRGBA &c);
-  void drawObjPose(geometry_msgs::Point &p, std_msgs::ColorRGBA &c);
-  void drawObjPose(const tf2::Vector3 &position, std_msgs::ColorRGBA &c);
+  void drawObjPose(Pose &p, const std_msgs::ColorRGBA &c);
+  void drawObjPose(geometry_msgs::Point &p, const std_msgs::ColorRGBA &c);
+  void drawObjPose(const tf2::Vector3 &position, const std_msgs::ColorRGBA &c);
   void drawObjRealLine(std::list<geometry_msgs::Point> &list);
-  void drawObjRealLine(const tf2::Vector3 &position, std_msgs::ColorRGBA &c);
+  void drawObjRealLine(const tf2::Vector3 &position, const std_msgs::ColorRGBA &c);
   void drawObjPredictedLine(std::list<geometry_msgs::Point> &list);
   void pubMarker(Marker m);
-  void transformPose(Pose &pose);
+  void transformPose(tf2::Vector3 &position);
   Pose transformPose2(tf2::Vector3 &position, const tf2::Quaternion &orientation);
   void conceptOne(cv::Mat &mask, cv::Point2i &center, uint16_t &radius);
-  void conceptTwo(cv::Mat &mask, cv::Point2i &center, uint16_t &radius);
+  void conceptTwo(cv::Mat &mask, cv::Point2i &point2d, uint16_t &radius);
   float getDistToObj(cv::Mat &mask, uint16_t &radius);
 
   /**
-   * Builds a 3D point of object from 2D Image via camera model
+   * Builds a 3D object position from 2D Image via camera model
    *
    * @param[in] point2d cv::Point2i - 2d point
    * @param[in] distToObj distance to interest object
-   * @param[out] point3d geometry_msgs::Pose - 3d point
+   * @param[out] objPos tf2::Vector3 - 3d point
    **/
-  void getObjPoseFromCameraModel(cv::Point2i &point2d, float distToObj, Pose &objPose);
+  void getObjPosFromImg(cv::Point2i &point2d, float distToObj, tf2::Vector3 &objPos);
 
 public:
-  StateTracking(BallTrackingRos &context, ros::NodeHandle &nh) : State(context, "Tracking"), _nh(nh) {
-    _rosColors.push_back(Utils::getColorMsg(0, 0, 0));
-    _rosColors.push_back(Utils::getColorMsg(1, 0, 0));
-    _rosColors.push_back(Utils::getColorMsg(0, 1, 0));
-    _rosColors.push_back(Utils::getColorMsg(0, 0, 1));
-    _rosColors.push_back(Utils::getColorMsg(0, 0.2, 0.5));
-    _rosColors.push_back(Utils::getColorMsg(1, 1, 1));
-  }
+  StateTracking(BallTrackingRos &context, ros::NodeHandle &nh) : State(context, "Tracking"), _nh(nh) {}
   ~StateTracking();
 
   bool loadParam();
@@ -210,9 +206,8 @@ public:
   void execute() override;
 
   float getVelocity(float x, float y, float angle) {
-    float g = 9.8f;
-    float v2 = (g * pow(x, 2)) / (2.0f * (y - tan(angle) * x) * pow(cos(angle), 2));
-    return sqrt(abs(v2));
+    float v2 = (PZ_GRAVITY * pow(x, 2)) / (2.0f * (y - tan(angle) * x) * pow(cos(angle), 2));
+    return sqrtf(abs(v2));
   }
 
   float getContactProbobility(tf2::Vector3 &currentPosition, tf2::Vector3 &cameraPosition) {
@@ -249,10 +244,10 @@ public:
     if (distToPoint == -1.f)
       return -1.f;
 
-    drawLine(currentPosition, middle, _rosColors[0]);
+    drawLine(currentPosition, middle, Utils::Colors.at(Utils::Color::Black));
     tf2::Vector3 pointOnLine = nearLine.get().porjectPoint(currentPosition);
 
-    drawObjPose(pointOnLine, _rosColors[4]);
+    drawObjPose(pointOnLine, Utils::Colors.at(Utils::Color::AlfaBlue));
 
     tf2::Vector3 fromPointToLine = pointOnLine - currentPosition;
 
@@ -265,8 +260,8 @@ public:
     float bCath = (cameraPosition - pointOnLine).length2();
     float cosMetric = bCath / c;
 
-    float totalDistToObject = (cameraPosition - _firstObjPose).length2();
-    float passDist = (_firstObjPose - pointOnLine).length2();
+    float totalDistToObject = (cameraPosition - _firstObjPosition).length2();
+    float passDist = (_firstObjPosition - pointOnLine).length2();
     float passDistMetric = passDist / totalDistToObject;
 
     /* if (_prevDist != 0) {
@@ -280,7 +275,7 @@ public:
 
     float avrMetric = (cosMetric + passDistMetric) / 2.f;
 
-    ROS_DEBUG_NAMED("dist_to_line", "DistToLine: %f", sqrt(distToPoint));
+    ROS_DEBUG_NAMED("dist_to_line", "DistToLine: %f", sqrtf(distToPoint));
     ROS_DEBUG_NAMED("euclidian", "Euclidian %f", euclidian);
     ROS_DEBUG_NAMED("chebyshev", "Chebyshev %f", chebyshev);
     ROS_DEBUG_NAMED("sin", "Sin %f", 1.f - sinMetric);
