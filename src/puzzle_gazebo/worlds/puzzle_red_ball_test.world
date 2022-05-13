@@ -30,7 +30,6 @@
       <uri>model://yp_gun</uri>
     </include>
 
-
      <include>
       <uri>model://red_ball</uri>
       <name>ball_0</name>
@@ -44,7 +43,6 @@
       <pose>4 0 0.5 0 0 0</pose>
       <static>true</static>
     </include> -->
-
 
      <include>
       <uri>model://red_ball</uri>
@@ -88,8 +86,7 @@
       <static>true</static>
     </include>
 
-    
-    <!--vtoroy rad-->
+    <!---->
 
    <include>
       <uri>model://red_ball</uri>
@@ -118,24 +115,28 @@
       <pose>-7 0 5 0 0 0</pose>
       <static>true</static>
     </include>
+
      <include>
       <uri>model://red_ball</uri>
       <name>ball_10</name>
       <pose>3.14 3.14 5 0 0 0</pose>
       <static>true</static>
     </include> 
+
      <include>
       <uri>model://red_ball</uri>
       <name>ball_70</name>
       <pose>-3.14 -3.14 5 0 0 0</pose>
       <static>true</static>
     </include> 
+
      <include>
       <uri>model://red_ball</uri>
       <name>ball_30</name>
       <pose>3.14 -3.14 5 0 0 0</pose>
       <static>true</static>
     </include> 
+
     <include>
       <uri>model://red_ball</uri>
       <name>ball_60</name>
