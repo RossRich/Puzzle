@@ -33,7 +33,7 @@
 
     <include>
       <uri>model://big_box</uri>
-      <pose>7 1 5 0 0 0</pose>
+      <pose>10 1 5 0 0 0</pose>
       <static>true</static>
     </include>
     

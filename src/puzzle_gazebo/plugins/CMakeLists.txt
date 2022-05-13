@@ -38,6 +38,7 @@ target_link_libraries(PoseTestPlugin
   ${GAZEBO_LIBRARIES}
 )
 
+# add_definitions(-DCALC_VELOCITY_ORIGINAL)
 add_library(BulletPlugin SHARED BulletPlugin.cpp Utils.hpp)
 target_link_libraries(BulletPlugin 
   ${GAZEBO_LIBRARIES}
