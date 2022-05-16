@@ -23,6 +23,7 @@
 #include "VideoHandler.hpp"
 #include "utils/Utils.hpp"
 #include "utils/thresholdtype.hpp"
+#include "utils/RvizVisually.hpp"
 
 
 using geometry_msgs::Pose;
@@ -34,7 +35,7 @@ using sensor_msgs::CameraInfoConstPtr;
 using visualization_msgs::Marker;
 using visualization_msgs::MarkerConstPtr;
 
-std::vector<std_msgs::ColorRGBA> &Utils::Colors = Utils::createColors();
+std::vector<std_msgs::ColorRGBA> &RvizVisually::Colors = RvizVisually::createColors();
 
 class Line {
 private:
@@ -155,7 +156,7 @@ private:
   ros::Time _detectionTimer;
   ros::Time _buildRealTrekLineTimer;
   ros::Time _aTimer;
-  ros::Publisher _ballPub;
+  // ros::Publisher _ballPub;
   tf2_ros::Buffer _tfBuffer;
   tf2_ros::TransformListener *_tfListener;
   tf2::Vector3 _firstObjPosition;
@@ -167,7 +168,7 @@ private:
   cv::Mat _frame;
   cv::Mat _depth;
 
-  void drawLine(const tf2::Vector3 &p1, const tf2::Vector3 &p2, const std_msgs::ColorRGBA &c);
+  /* void drawLine(const tf2::Vector3 &p1, const tf2::Vector3 &p2, const std_msgs::ColorRGBA &c);
   void drawLine(geometry_msgs::Point &p1, geometry_msgs::Point &p2, const std_msgs::ColorRGBA &c);
   void drawArrow(const Pose &pose, const std_msgs::ColorRGBA &c, const char *name);
   void drawArrow(const tf2::Vector3 &position, const tf2::Quaternion &orientation, const std_msgs::ColorRGBA &c, const char *name);
@@ -177,8 +178,8 @@ private:
   void drawObjPose(const tf2::Vector3 &position, const std_msgs::ColorRGBA &c);
   void drawObjRealLine(std::list<geometry_msgs::Point> &list);
   void drawObjRealLine(const tf2::Vector3 &position, const std_msgs::ColorRGBA &c);
-  void drawObjPredictedLine(std::list<geometry_msgs::Point> &list);
-  void pubMarker(Marker m);
+  void drawObjPredictedLine(std::list<geometry_msgs::Point> &list); */
+  // void pubMarker(Marker m);
   void transformPose(tf2::Vector3 &position);
   Pose transformPose2(tf2::Vector3 &position, const tf2::Quaternion &orientation);
   void conceptOne(cv::Mat &mask, cv::Point2i &center, uint16_t &radius);
@@ -206,7 +207,9 @@ public:
   void execute() override;
 
   float getVelocity(float x, float y, float angle) {
-    float v2 = (PZ_GRAVITY * pow(x, 2)) / (2.0f * (y - tan(angle) * x) * pow(cos(angle), 2));
+    float num = PZ_GRAVITY * powf(x, 2);
+    float den = 2.0f * (y - tanf(angle) * x) * powf(cosf(angle), 2);
+    float v2 = num / den;
     return sqrtf(abs(v2));
   }
 
@@ -244,10 +247,10 @@ public:
     if (distToPoint == -1.f)
       return -1.f;
 
-    drawLine(currentPosition, middle, Utils::Colors.at(Utils::Color::Black));
+    // drawLine(currentPosition, middle, Utils::Colors.at(Utils::Color::Black));
     tf2::Vector3 pointOnLine = nearLine.get().porjectPoint(currentPosition);
 
-    drawObjPose(pointOnLine, Utils::Colors.at(Utils::Color::AlfaBlue));
+    // drawObjPose(pointOnLine, Utils::Colors.at(Utils::Color::AlfaBlue));
 
     tf2::Vector3 fromPointToLine = pointOnLine - currentPosition;
 
