@@ -7,6 +7,7 @@ StateTracking::~StateTracking() {
   delete _bt;
   delete _vh;
   delete _it;
+  delete _rvizPainter;
 }
 
 bool StateTracking::loadParam() {
@@ -70,6 +71,10 @@ bool StateTracking::setup() {
   /* if (_ballPub.getTopic().empty()) {
     _ballPub = _nh.advertise<Marker>("ball", 5, false);
   } */
+
+  if(_rvizPainter == nullptr) {
+    _rvizPainter = new RvizPainter(_nh);
+  }
 
   cv::namedWindow(_winName, cv::WINDOW_AUTOSIZE);
   // cv::namedWindow("test", cv::WINDOW_AUTOSIZE);
@@ -317,6 +322,7 @@ void StateTracking::conceptTwo(cv::Mat &mask, cv::Point2i &point2d, uint16_t &ra
 
   // drawObjPose(_firstObjPosition, Utils::Colors.at(Utils::Color::SonicSilver));
   // drawArrow(cameraPose, Utils::Colors.at(Utils::Color::Red), "camera_pose");
+  _rvizPainter->draw(_rvizPainterObject.getRegArrow(), cameraPose);
   
   float cameraDirDot = tf2::tf2Dot(camToObjDirection.normalized(), camFrwdDirecton.normalized());
   ROS_DEBUG_STREAM("cameraDirDot: " << cameraDirDot);

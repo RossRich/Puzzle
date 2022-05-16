@@ -23,8 +23,8 @@
 #include "VideoHandler.hpp"
 #include "utils/Utils.hpp"
 #include "utils/thresholdtype.hpp"
-#include "utils/RvizVisually.hpp"
-
+#include "utils/RvizPainterObject.hpp"
+#include "utils/RvizPainter.hpp"
 
 using geometry_msgs::Pose;
 using geometry_msgs::PosePtr;
@@ -34,8 +34,6 @@ using sensor_msgs::CameraInfo;
 using sensor_msgs::CameraInfoConstPtr;
 using visualization_msgs::Marker;
 using visualization_msgs::MarkerConstPtr;
-
-std::vector<std_msgs::ColorRGBA> &RvizVisually::Colors = RvizVisually::createColors();
 
 class Line {
 private:
@@ -164,6 +162,9 @@ private:
   image_transport::ImageTransport *_it;
   CameraInfoConstPtr _cameraInfo;
   PinholeCameraModel _cameraModel;
+
+  RvizPainter *_rvizPainter;
+  RvizPainterObject _rvizPainterObject;
 
   cv::Mat _frame;
   cv::Mat _depth;
