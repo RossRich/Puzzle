@@ -30,7 +30,7 @@
       <uri>model://yp_gun</uri>
     </include>
 
-     <include>
+    <include>
       <uri>model://red_ball</uri>
       <name>ball_0</name>
       <pose>0 4 0.5 0 0 0</pose>
@@ -85,8 +85,6 @@
       <pose>-5.5 5.5 0.5 0 0 0</pose>
       <static>true</static>
     </include>
-
-    <!---->
 
    <include>
       <uri>model://red_ball</uri>
