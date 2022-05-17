@@ -14,20 +14,36 @@ using visualization_msgs::Marker;
 
 class PainterObjectBase {
 protected:
-  uint16_t _id = 0;
+  uint16_t _id = 1;
   Marker _marker;
 
 public:
   PainterObjectBase(const char *name, const char *frameId) {
     _marker.ns = name;
+    _marker.id = _id;
     _marker.header.frame_id = frameId;
+    setPosition(tf2::Vector3(0, 0, 0));
+    setOrientation(tf2::Quaternion::getIdentity());
   }
 
   ~PainterObjectBase() {}
 
   Marker &getMarker() {
     _marker.header.stamp = ros::Time::now();
+    return _marker;
+  }
+
+  Marker &drawMarker() {
+    _marker.header.stamp = ros::Time::now();
+    _marker.action = Marker::ADD;
     _marker.id = _id++;
+    return _marker;
+  }
+
+  Marker &updateMarker() {
+    _marker.header.stamp = ros::Time::now();
+    _marker.action = Marker::MODIFY;
+    _marker.id = _id - 1;
     return _marker;
   }
 
@@ -44,6 +60,22 @@ public:
     _marker.scale.y = y;
     _marker.scale.z = z;
   }
+
+  void setScale(float scale) {
+    setScale(scale, scale, scale);
+  }
+
+  void setPose(const Pose &pose) {
+    _marker.pose = pose;
+  }
+
+  void setPosition(const tf2::Vector3 &position) {
+    tf2::toMsg(position, _marker.pose.position);
+  }
+
+  void setOrientation(const tf2::Quaternion &orientation) {
+    _marker.pose.orientation = tf2::toMsg(orientation);
+  }
 };
 
 class RvizArrow : public PainterObjectBase {
@@ -56,24 +88,82 @@ public:
   ~RvizArrow() {}
 };
 
+class RvizLine : public PainterObjectBase {
+public:
+  RvizLine(const char *name, const char *frameId) : PainterObjectBase(name, frameId) {
+    _marker.type = Marker::LINE_LIST;
+    setScale(.04f);
+    setColor(RvizVisually::Colors().at(RvizVisually::Color::Green));
+  }
+  ~RvizLine() {}
+};
+
+class RvizLineStrip : public PainterObjectBase {
+public:
+  RvizLineStrip(const char *name, const char *frameId) : PainterObjectBase(name, frameId) {
+    _marker.type = Marker::LINE_STRIP;
+    setScale(.025f);
+    setColor(RvizVisually::Colors().at(RvizVisually::Color::Green));
+  }
+  ~RvizLineStrip() {}
+};
+
+class RvizPosition : public PainterObjectBase {
+public:
+  RvizPosition(const char *name, const char *frameId) : PainterObjectBase(name, frameId) {
+    _marker.type = Marker::SPHERE;
+    setScale(.08f);
+    setColor(RvizVisually::Colors().at(RvizVisually::Color::Green));
+  }
+  ~RvizPosition() {}
+};
+
+class RivzPoints : public PainterObjectBase {
+public:
+  RivzPoints(const char *name, const char *frameId) : PainterObjectBase(name, frameId) {
+    _marker.type = Marker::POINTS;
+    setScale(.05f);
+    setColor(RvizVisually::Colors().at(RvizVisually::Color::Green));
+  }
+  ~RivzPoints() {}
+};
+
 class RvizPainterObject {
 private:
-  RvizArrow redArrow = RvizArrow("red_arrow", "map");
-  RvizArrow yellowArrow = RvizArrow("yellow_arrow", "map");
+  RvizArrow _redArrow = {"red_arrow", "map"};
+  RvizArrow _yellowArrow = {"yellow_arrow", "map"};
+  RvizLineStrip _realTrajLine = {"real_traj", "map"};
+  RivzPoints _predTrajLine = {"pred_traj", "map"};
+  RvizPosition _objFirstPosition = {"obj_first_position", "map"};
 
 public:
   RvizPainterObject() {
-    redArrow.setColor(RvizVisually::Colors().at(RvizVisually::Color::Red));
-    yellowArrow.setColor(RvizVisually::Colors().at(RvizVisually::Color::Yellow));
+    _redArrow.setColor(RvizVisually::Colors().at(RvizVisually::Color::Red));
+    _yellowArrow.setColor(RvizVisually::Colors().at(RvizVisually::Color::Yellow));
+    _predTrajLine.setColor(RvizVisually::Colors().at(RvizVisually::Color::CyanProcess));
+    _objFirstPosition.setColor(RvizVisually::Colors().at(RvizVisually::Color::Marigold));
   }
+
   ~RvizPainterObject() {}
 
-  PainterObjectBase &getRegArrow() {
-    return redArrow;
+  RvizArrow &getRegArrow() {
+    return _redArrow;
   }
 
-  PainterObjectBase &getYellowArrow() {
-    return yellowArrow;
+  RvizArrow &getYellowArrow() {
+    return _yellowArrow;
+  }
+
+  RvizLineStrip &getRealTrajLine() {
+    return _realTrajLine;
+  }
+
+  RivzPoints &getPredTrajLine() {
+    return _predTrajLine;
+  }
+
+  RvizPosition &getObjFirstPosition() {
+    return _objFirstPosition;
   }
 };
 

@@ -175,6 +175,7 @@ void StateTracking::conceptOne(cv::Mat &mask, cv::Point2i &center, uint16_t &rad
     _lastObjPosition = newObjPosition;
     // tf2::fromMsg(newObjPosition.position, _firstObjPosition);
     _firstObjPosition = newObjPosition;
+    _rvizPainter->draw(_rvizPainterObject.getObjFirstPosition(), _firstObjPosition);
     _startTrackingTimer = ros::Time::now();
     return;
   }
@@ -241,22 +242,22 @@ void StateTracking::conceptOne(cv::Mat &mask, cv::Point2i &center, uint16_t &rad
         tmpVecObjPos.setX(tmpVecObjPos.getX() + dx);
         tmpVecObjPos.setZ(tmpVecObjPos.getZ() + dy);
 
-        geometry_msgs::Point p;
-        tf2::toMsg(tmpVecObjPos, p);
-        if (_objPredictedLine.size() > 50)
-          _objPredictedLine.pop_front();
-        _objPredictedLine.push_back(p);
+        // geometry_msgs::Point p;
+        // tf2::toMsg(tmpVecObjPos, p);
+        if (_predTrajectory.size() > 50)
+          _predTrajectory.pop_front();
+        _predTrajectory.push_back(tmpVecObjPos);
       }
       // fixTragectory(_ballPredictedTrajs);
 
-      // drawObjPredictedLine(_objPredictedLine);
+      // drawObjPredictedLine(_predTrajectory);
     }
-    geometry_msgs::Point pointPath;
-    tf2::toMsg(newObjPosition, pointPath);
-    _objRealLine.push_back(pointPath);
+    // geometry_msgs::Point pointPath;
+    // tf2::toMsg(newObjPosition, pointPath);
+    _realTraj.push_back(newObjPosition);
     _detectionTimer = ros::Time::now();
   }
-  // drawObjRealLine(_objRealLine);
+  // drawObjRealLine(_realTraj);
   // ROS_INFO("Ball move %f", dist);
 
   Pose pose;
@@ -276,27 +277,21 @@ void StateTracking::conceptTwo(cv::Mat &mask, cv::Point2i &point2d, uint16_t &ra
   if (_firstObjPosition.isZero()) {
     _firstObjPosition = newObjPosition;
     _isObjDetected = true;
+    _realTraj.push_back(newObjPosition);
+    _rvizPainter->draw(_rvizPainterObject.getObjFirstPosition(), _firstObjPosition);
     _startTrackingTimer = ros::Time::now();
     return;
   }
 
-  // drawObjPose(newObjPosition, Utils::Colors.at(Utils::Color::DarkGreen));
-
-  // tf2::Vector3 newObjPosition;
-  // tf2::fromMsg(newObjPosition.position, newObjPosition);
-
   // if (ros::Time::now() - _buildRealTrekLineTimer >= ros::Duration(0.01)) {
-    tf2::Vector3 lastPointInRealTrajectory;
-    tf2::fromMsg(_objRealLine.back(), lastPointInRealTrajectory);
+    tf2::Vector3 lastPointInRealTrajectory = _realTraj.back();
 
     if (tf2::tf2Distance2(lastPointInRealTrajectory, newObjPosition) >= 0.04) {
-      if (_objRealLine.size() > 50) ///< TODO: add to launch param
-        _objRealLine.pop_front();
+      if (_realTraj.size() > 50) ///< TODO: add to launch param
+        _realTraj.pop_front();
       
-      geometry_msgs::Point newObjPointMsg;
-      tf2::toMsg(newObjPosition, newObjPointMsg);
-      _objRealLine.push_back(newObjPointMsg);
-      // drawObjRealLine(_objRealLine);
+      _realTraj.push_back(newObjPosition);
+      _rvizPainter->draw(_rvizPainterObject.getRealTrajLine(), _realTraj);
       _buildRealTrekLineTimer = ros::Time::now();
     }
   // }
@@ -307,6 +302,7 @@ void StateTracking::conceptTwo(cv::Mat &mask, cv::Point2i &point2d, uint16_t &ra
   cameraPose.position.y = transform.transform.translation.y;
   cameraPose.position.z = transform.transform.translation.z;
   cameraPose.orientation = transform.transform.rotation;
+  _rvizPainter->draw(_rvizPainterObject.getRegArrow(), cameraPose);
 
   tf2::Quaternion cameraOrientation; ///< camera orientation
   tf2::fromMsg(cameraPose.orientation, cameraOrientation);
@@ -319,10 +315,6 @@ void StateTracking::conceptTwo(cv::Mat &mask, cv::Point2i &point2d, uint16_t &ra
 
   tf2::Vector3 v = camToObjDirection.normalized() - camFrwdDirecton.normalized();
   ROS_DEBUG_STREAM("z: " << v.z());
-
-  // drawObjPose(_firstObjPosition, Utils::Colors.at(Utils::Color::SonicSilver));
-  // drawArrow(cameraPose, Utils::Colors.at(Utils::Color::Red), "camera_pose");
-  _rvizPainter->draw(_rvizPainterObject.getRegArrow(), cameraPose);
   
   float cameraDirDot = tf2::tf2Dot(camToObjDirection.normalized(), camFrwdDirecton.normalized());
   ROS_DEBUG_STREAM("cameraDirDot: " << cameraDirDot);
@@ -334,7 +326,8 @@ void StateTracking::conceptTwo(cv::Mat &mask, cv::Point2i &point2d, uint16_t &ra
   dirOrientation.setRotation(tf2::tf2Cross(camFrwdDirecton.normalized(), camToObjDirection.normalized()), angle);
   tf2::Quaternion test = dirOrientation * cameraOrientation;
   test.normalize();
-  // drawArrow(cameraPosition, test, Utils::Colors.at(Utils::Color::Yellow), "camera_frwd_pose");
+  _rvizPainter->draw(_rvizPainterObject.getYellowArrow(), cameraPosition, test);
+
 
   if (_isObjDetected && !_isTrekLinePredicted) {
     float dt = _dt4prediction;                ///< TODO: move to launch param
@@ -344,7 +337,6 @@ void StateTracking::conceptTwo(cv::Mat &mask, cv::Point2i &point2d, uint16_t &ra
       tmpPosition = cameraPosition;
 
     tf2::Vector3 prevPosition = tmpPosition;
-    geometry_msgs::Point tmpMsgPoint;
     tf2::Vector3 fromTo = newObjPosition - cameraPosition;
     tf2::Vector3 fromToXY(fromTo.x(), fromTo.y(), 0);
     float v0 = getVelocity(fromToXY.length(), fromTo.getZ(), angle);
@@ -379,13 +371,12 @@ void StateTracking::conceptTwo(cv::Mat &mask, cv::Point2i &point2d, uint16_t &ra
       prevPosition = tmpPosition;
       tmpPosition = velDirection;
 
-      tf2::toMsg(velDirection, tmpMsgPoint);
-      _objPredictedLine.push_back(tmpMsgPoint);
+      _predTrajectory.push_back(velDirection);
     }
 
-    // drawObjPredictedLine(_objPredictedLine);
     _isTrekLinePredicted = true;
   }
+  _rvizPainter->draw(_rvizPainterObject.getPredTrajLine(), _predTrajectory);
   getContactProbobility(newObjPosition, cameraPosition);
 }
 
@@ -439,8 +430,8 @@ void StateTracking::execute() {
   } else {
     if (ros::Time::now() - _resetTimer >= ros::Duration(3.0)) {
       _resetTimer = ros::Time::now();
-      _objPredictedLine.clear();
-      _objRealLine.clear();
+      _predTrajectory.clear();
+      _realTraj.clear();
       _predictedSigments.clear();
       _isObjDetected = false;
       _isTrekLinePredicted = false;

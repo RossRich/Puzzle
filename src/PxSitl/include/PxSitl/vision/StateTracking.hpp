@@ -143,8 +143,8 @@ private:
 
   std::string _confFile = "";
   std::string _cameraInfoTopic = "/camera/color/camera_info";
-  std::list<geometry_msgs::Point> _objRealLine;
-  std::list<geometry_msgs::Point> _objPredictedLine;
+  std::list<tf2::Vector3> _realTraj;
+  std::list<tf2::Vector3> _predTrajectory;
   std::vector<Line> _predictedSigments;
 
   ros::NodeHandle &_nh;
@@ -218,12 +218,12 @@ public:
     if (_predictedSigments.size() == 0)
       return -1;
 
-    uint16_t realTrekLen = _objRealLine.size();
-    uint16_t predictedTrekLen = _objPredictedLine.size();
+    uint16_t realTrekLen = _realTraj.size();
+    uint16_t predictedTrekLen = _predTrajectory.size();
     uint16_t realTrekMiddle = realTrekLen / 2;
     uint16_t predictedTrekMiddle = predictedTrekLen / 2;
 
-    // ROS_DEBUG("RealTrekLine size: %i\nMiddle: %i", _objRealLine.size(), middle);
+    // ROS_DEBUG("RealTrekLine size: %i\nMiddle: %i", _realTraj.size(), middle);
     // geometry_msgs::Point curRealPoint;
     uint16_t realTrekPosCounter = 0;
     static uint8_t colorCounter = 0;
