@@ -25,12 +25,23 @@
 #include "utils/RvizPainterObject.hpp"
 #include "utils/Utils.hpp"
 #include "utils/thresholdtype.hpp"
+<<<<<<< HEAD
+=======
+#include "utils/RvizPainterObject.hpp"
+#include "utils/RvizPainter.hpp"
+#include "../utils/Line.hpp"
+>>>>>>> 60abd9f279dac851ef01738583f634af6544fd1e
 
 using geometry_msgs::Pose;
 using geometry_msgs::TransformStamped;
 using image_geometry::PinholeCameraModel;
 using sensor_msgs::CameraInfo;
 using sensor_msgs::CameraInfoConstPtr;
+<<<<<<< HEAD
+=======
+using visualization_msgs::Marker;
+using visualization_msgs::MarkerConstPtr;
+>>>>>>> 60abd9f279dac851ef01738583f634af6544fd1e
 
 class StateTracking : public State {
 private:
@@ -85,6 +96,10 @@ private:
    * @param[out] objPos tf2::Vector3 - 3d point
    **/
   void getObjPosFromImg(cv::Point2i &point2d, float distToObj, tf2::Vector3 &objPos);
+  
+  float getDistToObj(cv::Mat &mask, uint16_t &radius);
+  float getVelocity(float x, float y, float angle);
+  float getContactProbobility(tf2::Vector3 &currentPosition, tf2::Vector3 &cameraPosition);
 
   float getDistToObj(cv::Mat &mask, uint16_t &radius);
   float getVelocity(float x, float y, float angle);
