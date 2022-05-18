@@ -14,27 +14,23 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
-#include <visualization_msgs/Marker.h>
 
+#include "../utils/Line.hpp"
 #include "BallTracking.hpp"
 #include "BallTrackingRos.hpp"
 #include "RosVH.hpp"
 #include "State.hpp"
 #include "VideoHandler.hpp"
+#include "utils/RvizPainter.hpp"
+#include "utils/RvizPainterObject.hpp"
 #include "utils/Utils.hpp"
 #include "utils/thresholdtype.hpp"
-#include "utils/RvizPainterObject.hpp"
-#include "utils/RvizPainter.hpp"
-#include "../utils/Line.hpp"
 
 using geometry_msgs::Pose;
-using geometry_msgs::PosePtr;
 using geometry_msgs::TransformStamped;
 using image_geometry::PinholeCameraModel;
 using sensor_msgs::CameraInfo;
 using sensor_msgs::CameraInfoConstPtr;
-using visualization_msgs::Marker;
-using visualization_msgs::MarkerConstPtr;
 
 class StateTracking : public State {
 private:
