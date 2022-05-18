@@ -22,3 +22,4 @@ RUN apt update \
     && apt-get install librealsense2-dkms -y \
     && apt-get install librealsense2-utils -y \
     && apt-get install librealsense2-dev -y
+RUN pip3 install pyqtgraph
