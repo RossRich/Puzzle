@@ -57,6 +57,14 @@ public:
     _markersPublisher.publish(m);
   }
 
+  void draw(RvizLine &obj, const tf2::Vector3 &p1, const tf2::Vector3 &p2) {
+    Point p1Msg, p2Msg;
+    tf2::toMsg(p1, p1Msg);
+    tf2::toMsg(p2, p2Msg);
+
+    draw(obj, p1Msg, p2Msg);
+  }
+
   void draw(RvizLineStrip &obj, const std::list<tf2::Vector3> &points) {
     Marker &m = obj.drawMarker();
     Point pMsg;
