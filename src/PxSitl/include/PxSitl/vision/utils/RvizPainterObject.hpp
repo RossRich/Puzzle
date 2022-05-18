@@ -130,11 +130,13 @@ public:
 
 class RvizPainterObject {
 private:
+  RvizLine _shortAlfaBlueLine = {"short_ablue_line", "map"};
   RvizArrow _redArrow = {"red_arrow", "map"};
   RvizArrow _yellowArrow = {"yellow_arrow", "map"};
-  RvizLineStrip _realTrajLine = {"real_traj", "map"};
   RivzPoints _predTrajLine = {"pred_traj", "map"};
   RvizPosition _objFirstPosition = {"obj_first_position", "map"};
+  RvizPosition _pointOnTraj = {"point_on_traj", "map"};
+  RvizLineStrip _realTrajLine = {"real_traj", "map"};
 
 public:
   RvizPainterObject() {
@@ -142,6 +144,10 @@ public:
     _yellowArrow.setColor(RvizVisually::Colors().at(RvizVisually::Color::Yellow));
     _predTrajLine.setColor(RvizVisually::Colors().at(RvizVisually::Color::CyanProcess));
     _objFirstPosition.setColor(RvizVisually::Colors().at(RvizVisually::Color::Marigold));
+    _shortAlfaBlueLine.setColor(RvizVisually::Colors().at(RvizVisually::Color::AlfaBlue));
+    _shortAlfaBlueLine.setScale(0.02f);
+    _pointOnTraj.setColor(RvizVisually::Colors().at(RvizVisually::Color::SonicSilver));
+    _pointOnTraj.setScale(.05f);
   }
 
   ~RvizPainterObject() {}
@@ -164,6 +170,14 @@ public:
 
   RvizPosition &getObjFirstPosition() {
     return _objFirstPosition;
+  }
+
+  RvizLine &getShortABlueLine() {
+    return _shortAlfaBlueLine;
+  }
+
+  RvizPosition &getPointOnTraj() {
+    return _pointOnTraj;
   }
 };
 

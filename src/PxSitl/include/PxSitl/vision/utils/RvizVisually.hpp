@@ -9,7 +9,6 @@ private:
 
 public:
   ~RvizVisually() {}
-  // static std::vector<std_msgs::ColorRGBA> &Colors;
   enum Color { Black = 0, SonicSilver, White, CyanProcess, Blue, AlfaBlue, CaribbeanGreen, DarkGreen, Red, Marigold, Yellow, Green };
 
   /**
@@ -71,7 +70,4 @@ public:
     return colors;
   }
 };
-
-// std::vector<std_msgs::ColorRGBA> &RvizVisually::Colors = RvizVisually::createColors();
-
 #endif // _VISION_RVIZ_VISUALLY

@@ -57,11 +57,7 @@ Visualization Manager:
       Marker Topic: /ball_tracking/rviz_painter
       Name: Marker
       Namespaces:
-        obj_first_position: false
-        pred_traj: false
-        real_traj: false
-        red_arrow: false
-        yellow_arrow: false
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/TF
@@ -175,7 +171,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 7.16304349899292
+      Distance: 12.086201667785645
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -183,17 +179,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: -0.8051243424415588
-        Y: 1.921913981437683
-        Z: 1.0228242874145508
+        X: 2.60709547996521
+        Y: 3.6730880737304688
+        Z: 0.333922415971756
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.3547971248626709
+      Pitch: 0.13979709148406982
       Target Frame: <Fixed Frame>
-      Yaw: 3.6453802585601807
+      Yaw: 4.65538215637207
     Saved: ~
 Window Geometry:
   Displays:
@@ -213,5 +209,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1440
-  X: 2400
-  Y: 270
+  X: 1920
+  Y: 0
