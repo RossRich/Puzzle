@@ -32,6 +32,7 @@ using image_geometry::PinholeCameraModel;
 using sensor_msgs::CameraInfo;
 using sensor_msgs::CameraInfoConstPtr;
 
+
 class StateTracking : public State {
 private:
   int _fps = 0;
