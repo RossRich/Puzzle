@@ -51,6 +51,7 @@ public:
 
   void draw(RvizLine &obj, const Point &p1, const Point &p2) {
     Marker &m = obj.drawMarker();
+    m.points.clear();
     m.points.push_back(p1);
     m.points.push_back(p2);
     
@@ -77,7 +78,7 @@ public:
     _markersPublisher.publish(m);
   }
 
-  void draw(RivzPoints &obj, const std::list<tf2::Vector3> &points) {
+  void draw(RvizPoints &obj, const std::list<tf2::Vector3> &points) {
     Marker &m = obj.drawMarker();
     Point pMsg;
     m.points.clear();

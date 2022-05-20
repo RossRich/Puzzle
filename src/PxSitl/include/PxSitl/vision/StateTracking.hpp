@@ -2,6 +2,7 @@
 #define _VISION_STATE_TRACKING_H_
 #define PZ_GRAVITY 9.8f
 
+#include <puzzle_msgs/Metrics.h>
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <image_geometry/pinhole_camera_model.h>
@@ -31,6 +32,7 @@ using geometry_msgs::TransformStamped;
 using image_geometry::PinholeCameraModel;
 using sensor_msgs::CameraInfo;
 using sensor_msgs::CameraInfoConstPtr;
+using puzzle_msgs::Metrics;
 
 
 class StateTracking : public State {
@@ -48,11 +50,12 @@ private:
 
   std::string _confFile = "";
   std::string _cameraInfoTopic = "/camera/color/camera_info";
-  std::list<tf2::Vector3> _realTraj;
+  std::list<tf2::Vector3> _realTrajPoints;
   std::list<tf2::Vector3> _predTrajectory;
   std::vector<Line> _predictedSigments;
 
   ros::NodeHandle &_nh;
+  ros::Publisher _metricsPublisher;
   ros::Time _loopTimer;
   ros::Time _startTrackingTimer;
   ros::Time _resetTimer;
@@ -63,6 +66,7 @@ private:
   tf2_ros::TransformListener *_tfListener;
   tf2::Vector3 _firstObjPosition;
   tf2::Vector3 _lastObjPosition;
+  tf2::Vector3 _testPrev;
   image_transport::ImageTransport *_it;
   CameraInfoConstPtr _cameraInfo;
   PinholeCameraModel _cameraModel;

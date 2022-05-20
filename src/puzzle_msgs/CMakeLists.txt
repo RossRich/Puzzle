@@ -1,32 +1,18 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(PxSitl)
-
-set(OpenCV_DIR "/home/user/opencv/build/")
+project(puzzle_msgs)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++11)
+
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+  message_generation
   roscpp
   rospy
   std_msgs
-  mavros_msgs
-  geometry_msgs
-  sensor_msgs
-  realsense2_camera
-  tf2_ros
-  tf2
-  image_geometry
-  visualization_msgs
-  tf2_geometry_msgs
-  puzzle_msgs
 )
-
-find_package(cv_bridge REQUIRED)
-find_package(image_transport REQUIRED)
-find_package(OpenCV 4.2.0 REQUIRED) 
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -62,11 +48,10 @@ find_package(OpenCV 4.2.0 REQUIRED)
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Message1.msg
-#   Message2.msg
-# )
+add_message_files(
+  FILES
+  Metrics.msg
+)
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -83,10 +68,10 @@ find_package(OpenCV 4.2.0 REQUIRED)
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-  # DEPENDENCIES
-  # puzzle_msgs
-# )
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -118,9 +103,9 @@ find_package(OpenCV 4.2.0 REQUIRED)
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
- INCLUDE_DIRS include
- LIBRARIES ${PROJECT_NAME} video_handler vision_state
- CATKIN_DEPENDS roscpp std_msgs sensor_msgs cv_bridge image_transport tf2 tf2_ros tf2_geometry_msgs image_geometry puzzle_msgs
+#  INCLUDE_DIRS include
+#  LIBRARIES puzzle_msgs
+#  CATKIN_DEPENDS roscpp rospy
 #  DEPENDS system_lib
 )
 
@@ -131,38 +116,25 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-  include
+# include
   ${catkin_INCLUDE_DIRS}
-  ${OpenCV_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
-add_library(${PROJECT_NAME}
-  src/vision/BallTracking.cpp
-  src/vision/setup/TrackingParam.cpp
-  src/vision/BallTrackingRos.cpp
-  src/vision/setup/BallTrackingSetupRos.cpp
-)
-
-add_library(video_handler
-  src/vision/VideoHandler.cpp
-  src/vision/RosVH.cpp
-)
+# add_library(${PROJECT_NAME}
+#   src/${PROJECT_NAME}/puzzle_msgs.cpp
+# )
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
-# add_dependencies( ${PROJECT_NAME} 
-#   ${${PROJECT_NAME}_EXPORTED_TARGETS} 
-#   ${catkin_EXPORTED_TARGETS}
-# )
+# add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(${PROJECT_NAME}_node src/drone/OffboardNode.cpp)
-add_executable(BallTrackingNode src/vision/BallTrackingNode.cpp)
-add_executable(BallTrackingSetupNode src/vision/setup/BallTrackingSetupNode.cpp)
+# add_executable(${PROJECT_NAME}_node src/puzzle_msgs_node.cpp)
+
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -171,36 +143,12 @@ add_executable(BallTrackingSetupNode src/vision/setup/BallTrackingSetupNode.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-# add_dependencies(
-#   ${PROJECT_NAME}
-#   ${${PROJECT_NAME}_EXPORTED_TARGETS} 
-#   ${catkin_EXPORTED_TARGETS}
-# )
+# add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(${PROJECT_NAME}
-  ${catkin_LIBRARIES}
-)
-
-target_link_libraries(${PROJECT_NAME}_node
-  ${catkin_LIBRARIES}
-)
-
-target_link_libraries(BallTrackingNode
-  ${catkin_LIBRARIES}
-  ${PROJECT_NAME}
-  ${OpenCV_LIBS}
-  realsense2
-  video_handler
-)
-
-target_link_libraries(BallTrackingSetupNode
-  ${catkin_LIBRARIES}
-  ${PROJECT_NAME}
-  ${OpenCV_LIBS}
-  realsense2
-  video_handler
-)
+# target_link_libraries(${PROJECT_NAME}_node
+#   ${catkin_LIBRARIES}
+# )
 
 #############
 ## Install ##
@@ -211,10 +159,10 @@ target_link_libraries(BallTrackingSetupNode
 
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
-catkin_install_python(PROGRAMS
-  # scripts/feature_matching_stream.py
-  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+# catkin_install_python(PROGRAMS
+#   scripts/my_python_script
+#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+# )
 
 ## Mark executables for installation
 ## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_executables.html
@@ -238,18 +186,18 @@ catkin_install_python(PROGRAMS
 # )
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
-install(FILES
+# install(FILES
 #   # myfile1
 #   # myfile2
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
+#   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+# )
 
 #############
 ## Testing ##
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_PxSitl.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_puzzle_msgs.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

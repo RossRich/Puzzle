@@ -2,21 +2,30 @@
 #define _PUZZLE_LINE_H_
 
 #include <tf2/LinearMath/Vector3.h>
+#include <ros/ros.h>
+#include <iostream>
 
 class Line {
 private:
-  tf2::Vector3 _point1;
-  tf2::Vector3 _point2;
+  const tf2::Vector3 _point1;
+  const tf2::Vector3 _point2;
   tf2::Vector3 _midpoint;
 
 public:
   Line(const tf2::Vector3 &point3d1, const tf2::Vector3 &point3d2) : _point1(point3d1), _point2(point3d2) {
-    _midpoint = tf2::lerp(_point1, _point2, .5);
+    _midpoint = tf2::lerp(_point1, _point2, .5f);
   }
   ~Line() {}
 
   bool operator==(Line &line) {
     return _point1 == line._point1 && _point2 == line._point2;
+  }
+
+  friend std::ostream& operator<<(std::ostream &stream, const Line &line) {
+    stream << "\np1 x: " << line._point1.x() << " y: " << line._point1.y() << " z: " << line._point1.z();
+    stream << "\np2 x: " << line._point2.x() << " y: " << line._point2.y() << " z: " << line._point2.z();
+    stream << "\nmid x: " << line._midpoint.x() << " y: " << line._midpoint.y() << " z: " << line._midpoint.z(); 
+    return stream;
   }
 
   inline const tf2::Vector3 &getP1() {
