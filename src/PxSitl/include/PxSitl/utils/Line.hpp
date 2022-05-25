@@ -49,7 +49,7 @@ public:
   }
 
   // S = ah
-  float distToPoint2(const tf2::Vector3 &point) {
+  float dist2ToPoint(const tf2::Vector3 &point) {
     float dist2ToP1 = tf2::tf2Distance2(point, _point1);
     float dist2ToP2 = tf2::tf2Distance2(point, _point2);
 
@@ -67,7 +67,7 @@ public:
   }
 
   float distToPoint(tf2::Vector3 &point) {
-    float res = distToPoint2(point);
+    float res = dist2ToPoint(point);
     return res == -1.f ? -1.f : sqrtf(res);
   }
 

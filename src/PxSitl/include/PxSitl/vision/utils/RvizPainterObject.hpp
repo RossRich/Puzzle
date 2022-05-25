@@ -133,7 +133,8 @@ private:
   RvizLine _shortAlfaBlueLine = {"short_ablue_line", "map"};
   RvizArrow _redArrow = {"red_arrow", "map"};
   RvizArrow _yellowArrow = {"yellow_arrow", "map"};
-  RvizArrow _vectorArrow = {"vector_arrow", "map"};
+  RvizArrow _vecArrowOfReal = {"vec_of_real_arrow", "map"};
+  RvizArrow _vecArrowOfPred = {"vec_of_pred_arrow", "map"};
   RvizPoints _predTraj = {"pred_traj", "map"};
   RvizPosition _objFirstPosition = {"obj_first_position", "map"};
   RvizPosition _pointOnTraj = {"point_on_traj", "map"};
@@ -146,8 +147,9 @@ public:
   RvizPainterObject() {
     _redArrow.setColor(RvizVisually::Colors().at(RvizVisually::Color::Red));
     _yellowArrow.setColor(RvizVisually::Colors().at(RvizVisually::Color::Yellow));
-    _vectorArrow.setScale(.2f, .015f, .015f);
-    _vectorArrow.setColor(RvizVisually::Colors().at(RvizVisually::Color::DarkGreen));
+    _vecArrowOfReal.setScale(.15f, .01f, .01f);
+    _vecArrowOfPred.setColor(RvizVisually::Colors().at(RvizVisually::Color::CyanProcess));
+    _vecArrowOfPred.setScale(.15f, .01f, .01f);
     _predTraj.setColor(RvizVisually::Colors().at(RvizVisually::Color::CyanProcess));
     _objFirstPosition.setColor(RvizVisually::Colors().at(RvizVisually::Color::Marigold));
     _shortAlfaBlueLine.setColor(RvizVisually::Colors().at(RvizVisually::Color::AlfaBlue));
@@ -170,8 +172,12 @@ public:
     return _yellowArrow;
   }
 
-  RvizArrow &getVectorArrow() {
-    return _vectorArrow;
+  RvizArrow &getVecArrowOfReal() {
+    return _vecArrowOfReal;
+  }
+
+  RvizArrow &getVecArrowOfPred() {
+    return _vecArrowOfPred;
   }
 
   RvizPoints &getRealTrajLine() {

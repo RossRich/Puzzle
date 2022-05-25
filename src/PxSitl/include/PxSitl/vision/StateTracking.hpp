@@ -15,6 +15,7 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
+#include <tf2/utils.h>
 
 #include "../utils/Line.hpp"
 #include "BallTracking.hpp"
@@ -66,7 +67,6 @@ private:
   tf2_ros::TransformListener *_tfListener;
   tf2::Vector3 _firstObjPosition;
   tf2::Vector3 _lastObjPosition;
-  tf2::Vector3 _testPrev;
   image_transport::ImageTransport *_it;
   CameraInfoConstPtr _cameraInfo;
   PinholeCameraModel _cameraModel;
@@ -93,7 +93,7 @@ private:
   
   float getDistToObj(cv::Mat &mask, uint16_t &radius);
   float getVelocity(float x, float y, float angle);
-  float getContactProbobility(tf2::Vector3 &currentPosition, tf2::Vector3 &cameraPosition);
+  float getContactProbobility(const tf2::Vector3 &currentObjPosition, const tf2::Vector3 &lastObjPosition, const tf2::Vector3 &cameraPosition);
 
 public:
   StateTracking(BallTrackingRos &context, ros::NodeHandle &nh) : State(context, "Tracking"), _nh(nh) {}

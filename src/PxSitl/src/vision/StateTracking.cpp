@@ -71,7 +71,7 @@ bool StateTracking::setup() {
   if (_rvizPainter == nullptr)
     _rvizPainter = new RvizPainter(_nh);
 
-  if(_metricsPublisher.getTopic().empty()) {
+  if (_metricsPublisher.getTopic().empty()) {
     _metricsPublisher = _nh.advertise<puzzle_msgs::Metrics>("metrics", 1500);
   }
 
@@ -165,28 +165,25 @@ Pose StateTracking::transformPose2(tf2::Vector3 &position, const tf2::Quaternion
 float StateTracking::getVelocity(float x, float y, float angle) {
   float num = PZ_GRAVITY * powf(x, 2);
   float den = 2.0f * (y - tanf(angle) * x) * powf(cosf(angle), 2);
+  if (den < 1.0e-3f && den > -1.0e-3f)
+    den = 1.0f;
+
   ROS_DEBUG_STREAM_NAMED("[getVelocity] num", "num" << num);
   ROS_DEBUG_STREAM_NAMED("[getVelocity] den", "den" << den);
   float v2 = num / den;
   return sqrtf(abs(v2));
 }
 
-float StateTracking::getContactProbobility(tf2::Vector3 &currentPosition, tf2::Vector3 &cameraPosition) {
+float StateTracking::getContactProbobility(const tf2::Vector3 &currentObjPosition, const tf2::Vector3 &lastObjPosition, const tf2::Vector3 &cameraPosition) {
   if (_predictedSigments.size() == 0)
     return -1;
 
-  uint16_t realTrekLen = _realTrajPoints.size();
-  uint16_t predictedTrekLen = _predTrajectory.size();
-  uint16_t realTrekMiddle = realTrekLen / 2;
-  uint16_t predictedTrekMiddle = predictedTrekLen / 2;
-
-  // _predictedSigments.emplace(_predictedSigments.cbegin(), _predictedSigments[1]);
   float minDist = 100.0f;
   auto nearLine = std::ref(_predictedSigments[0]);
   auto middle = std::cref(nearLine.get().getMidpoint());
   for (auto &line : _predictedSigments) {
     const tf2::Vector3 &tmpMiddle = line.getMidpoint();
-    float tmpDist = tf2::tf2Distance2(tmpMiddle, currentPosition);
+    float tmpDist = tf2::tf2Distance2(tmpMiddle, currentObjPosition);
 
     if (tmpDist < minDist) {
       nearLine = std::ref(line);
@@ -195,26 +192,54 @@ float StateTracking::getContactProbobility(tf2::Vector3 &currentPosition, tf2::V
     }
   }
 
-  float distToPoint = nearLine.get().distToPoint2(currentPosition);
+  float dist2ToPoint = nearLine.get().dist2ToPoint(currentObjPosition);
 
-  if (distToPoint == -1.f)
+  if (dist2ToPoint == -1.f)
     return -1.f;
 
-  tf2::Vector3 pointOnLine = nearLine.get().porjectPoint(currentPosition);
+  tf2::Vector3 pointOnLine = nearLine.get().porjectPoint(currentObjPosition);
   _rvizPainter->draw(_rvizPainterObject.getPointOnTraj(), pointOnLine);
-  _rvizPainter->draw(_rvizPainterObject.getShortABlueLine(), currentPosition, middle);
+  _rvizPainter->draw(_rvizPainterObject.getShortABlueLine(), currentObjPosition, middle);
 
-  tf2::Vector3 lineDir = nearLine.get().getP2() - nearLine.get().getP1();
-  tf2::Vector3 objFromTo = currentPosition - _testPrev;
-  float vectroMetric = tf2::tf2Dot(lineDir.normalized(), objFromTo.normalized());
+  tf2::Vector3 cameraFrwd = (cameraPosition + tf2::Vector3(1, 0, 0)) - cameraPosition;
+  tf2::Vector3 lineDir;
 
-  tf2::Vector3 fromPointToLine = pointOnLine - currentPosition;
+  if ((cameraPosition - _firstObjPosition).z() < 0) {
+    lineDir = nearLine.get().getP1() - nearLine.get().getP2();
+  } else {
+    lineDir = nearLine.get().getP2() - nearLine.get().getP1();
+  }
 
-  float euclidian = fromPointToLine.length();
+  tf2::Vector3 lineDirXY = tf2::Vector3(lineDir.x(), lineDir.y(), 0.f);
+  tf2::Vector3 lineDirXZ = tf2::Vector3(lineDir.x(), 0.f, lineDir.z());
+  float rotAngYaw = atan2f(lineDirXY.normalized().y(), lineDirXY.normalized().x());
+  float rotAngPitch = asinf(lineDir.normalized().z());
+  tf2::Quaternion vectorOrientation;
+  vectorOrientation.setRPY(0.f, -rotAngPitch, rotAngYaw);
+
+  _rvizPainter->draw(_rvizPainterObject.getVecArrowOfPred(), lastObjPosition, vectorOrientation);
+  tf2::Vector3 fromNewPosToLast = currentObjPosition - lastObjPosition;
+  tf2::Vector3 fromNewPosToLastXY(fromNewPosToLast.x(), fromNewPosToLast.y(), 0);
+  tf2::Vector3 fromNewPosToLastXZ(fromNewPosToLast.x(), 0, fromNewPosToLast.z());
+  // float yawArwOfReal = acosf(tf2::tf2Dot(cameraFrwd.normalized(), fromNewPosToLastXY.normalized()));
+  float yawArwOfReal = atan2f(fromNewPosToLastXY.normalized().y(), fromNewPosToLastXY.normalized().x());
+  float pitchArwOfReal = asinf(fromNewPosToLast.normalized().z());
+  // float pitchArwOfReal = acosf(tf2::tf2Dot(cameraFrwd.normalized(), fromNewPosToLastXZ.normalized()));
+  /* if (relatedHeight > 0)
+    pitchArwOfReal *= -1.f; */
+
+  tf2::Quaternion orientArwOfReal;
+  orientArwOfReal.setRPY(0.f, -pitchArwOfReal, yawArwOfReal);
+  _rvizPainter->draw(_rvizPainterObject.getVecArrowOfReal(), lastObjPosition, orientArwOfReal);
+
+  // metrics
+  float vectroMetric = tf2::tf2Dot(lineDir.normalized(), fromNewPosToLast.normalized());
+
+  tf2::Vector3 fromPointToLine = pointOnLine - currentObjPosition;
   float chebyshev = std::max(std::max(fromPointToLine.x(), fromPointToLine.y()), fromPointToLine.z());
 
-  float c = (currentPosition - cameraPosition).length2();
-  float aCath = distToPoint;
+  float c = (currentObjPosition - cameraPosition).length2();
+  float aCath = dist2ToPoint;
   float sinMetric = aCath / c;
   float bCath = (cameraPosition - pointOnLine).length2();
   float cosMetric = bCath / c;
@@ -225,27 +250,17 @@ float StateTracking::getContactProbobility(tf2::Vector3 &currentPosition, tf2::V
   float avrMetric = (cosMetric + passDistMetric) / 2.f;
 
   Metrics metricsMsg;
-  metricsMsg.header.frame_id="map";
+  metricsMsg.header.frame_id = "map";
   metricsMsg.header.stamp = ros::Time::now();
 
   metricsMsg.avr = avrMetric;
   metricsMsg.chebyshev = chebyshev;
   metricsMsg.sin = 1.f - sinMetric;
   metricsMsg.cos = cosMetric;
-  metricsMsg.euclidian = euclidian;
-  metricsMsg.dist_to_line = sqrtf(distToPoint);
-  metricsMsg.vector = vectroMetric;
+  metricsMsg.dist_to_line = sqrtf(dist2ToPoint);
+  // metricsMsg.vector = vectroMetric;
 
   _metricsPublisher.publish(metricsMsg);
-
-  /* ROS_DEBUG_NAMED("dist_to_line", "DistToLine: %f", sqrtf(distToPoint));
-  ROS_DEBUG_NAMED("euclidian", "Euclidian %f", euclidian);
-  ROS_DEBUG_NAMED("chebyshev", "Chebyshev %f", chebyshev);
-  ROS_DEBUG_NAMED("sin", "Sin %f", 1.f - sinMetric);
-  ROS_DEBUG_NAMED("cos", "Cos %f", cosMetric);
-  ROS_DEBUG_NAMED("pass_dist", "PossDist %f", passDistMetric);
-  ROS_DEBUG_NAMED("avr", "Avr %f", avrMetric); */
-
   return 1;
 }
 
@@ -358,7 +373,7 @@ void StateTracking::conceptTwo(cv::Mat &mask, cv::Point2i &point2d, uint16_t &ra
   getObjPosFromImg(point2d, distToObj, newObjPosition);
   transformPose(newObjPosition);
 
-  if (_firstObjPosition.isZero()) {
+  if (!_isObjDetected) {
     _firstObjPosition = newObjPosition;
     _isObjDetected = true;
     _realTrajPoints.push_back(newObjPosition);
@@ -368,15 +383,14 @@ void StateTracking::conceptTwo(cv::Mat &mask, cv::Point2i &point2d, uint16_t &ra
   }
 
   tf2::Vector3 lastPointInRealTrajectory = _realTrajPoints.back();
-  _testPrev = lastPointInRealTrajectory;
+  if (tf2::tf2Distance2(lastPointInRealTrajectory, newObjPosition) < 0.01)
+    return;
 
-    // if (tf2::tf2Distance2(lastPointInRealTrajectory, newObjPosition) >= 0.04) {
-    if (_realTrajPoints.size() > 30) ///< TODO: add to launch param
-      _realTrajPoints.pop_front();
+  if (_realTrajPoints.size() > 30) ///< TODO: add to launch param
+    _realTrajPoints.pop_front();
 
-    _realTrajPoints.push_back(newObjPosition);
-    _rvizPainter->draw(_rvizPainterObject.getRealTrajLine(), _realTrajPoints);
-  // }
+  _realTrajPoints.push_back(newObjPosition);
+  _rvizPainter->draw(_rvizPainterObject.getRealTrajLine(), _realTrajPoints);
 
   TransformStamped transform = _tfBuffer.lookupTransform("map", "base_link_frd", ros::Time(0));
   tf2::Quaternion cameraOrientation; ///< camera orientation in map
@@ -385,27 +399,17 @@ void StateTracking::conceptTwo(cv::Mat &mask, cv::Point2i &point2d, uint16_t &ra
   tf2::fromMsg(transform.transform.translation, cameraPosition);
   _rvizPainter->draw(_rvizPainterObject.getRegArrow(), cameraPosition, cameraOrientation);
 
-  tf2::Vector3 test = newObjPosition - lastPointInRealTrajectory;
-  tf2::Vector3 testFrwd = (lastPointInRealTrajectory + tf2::Vector3(test.x(), test.y(), 0)) - lastPointInRealTrajectory;
-  float testAngle = acos(tf2::tf2Dot(test.normalized(), testFrwd.normalized()));
-  tf2::Quaternion testRot;
-  tf2::Quaternion cameraInv;
-  cameraInv.setRotation(tf2::Vector3(0,0,1), 3.14);
-  cameraInv = (cameraInv * cameraOrientation).normalized();
-  testRot.setRotation(tf2::tf2Cross(test, testFrwd), -testAngle);
-  _rvizPainter->draw(_rvizPainterObject.getVectorArrow(), lastPointInRealTrajectory, (testRot * cameraOrientation).normalized());
+  tf2::Vector3 camToObjDirection = _firstObjPosition - cameraPosition;                                                            ///< vector from camera to detected obj
+  tf2::Vector3 camToObjDirXY = (cameraPosition + tf2::Vector3(camToObjDirection.x(), camToObjDirection.y(), 0)) - cameraPosition; ///< projection camToObjDirection on plane XY
+  float relatedHeight = (camToObjDirection.normalized() - camToObjDirXY.normalized()).z();                                        ///< droneHeight - detectedObjHeight
+  // ROS_DEBUG_STREAM("relaitedHeight " << relatedHeight);
 
-  tf2::Vector3 camToObjDirection = _firstObjPosition - cameraPosition;                                                              ///< vector from camera to detected obj
-  tf2::Vector3 camFrwdDirecton = (cameraPosition + tf2::Vector3(camToObjDirection.x(), camToObjDirection.y(), 0)) - cameraPosition; ///< vector camera forward direction
-  float relatedHeight = (camToObjDirection.normalized() - camFrwdDirecton.normalized()).z();                                        ///< droneHeight - detectedObjHeight
-  ROS_DEBUG_STREAM("relaitedHeight " << relatedHeight);
-
-  float angle = acosf(tf2::tf2Dot(camToObjDirection.normalized(), camFrwdDirecton.normalized()));
-  ROS_DEBUG_STREAM_NAMED("angle_dot_prod", "InRad " << angle << " InDeg " << tf2Degrees(angle));
+  float camToObjAngle = acosf(tf2::tf2Dot(camToObjDirection.normalized(), camToObjDirXY.normalized()));
+  ROS_DEBUG_STREAM_NAMED("cam_to_obj_angle", "InRad " << camToObjAngle << " InDeg " << tf2Degrees(camToObjAngle));
 
   // just for rviz
   tf2::Quaternion dirOrientation;
-  dirOrientation.setRotation(tf2::tf2Cross(camFrwdDirecton.normalized(), camToObjDirection.normalized()), angle);
+  dirOrientation.setRotation(tf2::tf2Cross(camToObjDirXY.normalized(), camToObjDirection.normalized()), camToObjAngle);
   _rvizPainter->draw(_rvizPainterObject.getYellowArrow(), cameraPosition, (dirOrientation * cameraOrientation).normalized());
 
   if (_isObjDetected && !_isTrekLinePredicted) {
@@ -418,13 +422,13 @@ void StateTracking::conceptTwo(cv::Mat &mask, cv::Point2i &point2d, uint16_t &ra
     tf2::Vector3 prevPosition = startPosition;
     tf2::Vector3 fromTo = newObjPosition - cameraPosition;
     tf2::Vector3 fromToXY(fromTo.x(), fromTo.y(), 0);
-    float v0 = getVelocity(fromToXY.length(), fromTo.getZ(), angle);
+    float v0 = getVelocity(fromToXY.length(), fromTo.getZ(), camToObjAngle);
     dt = fromToXY.length() / 25.f / v0; ///< TODO: auto abjust dt for pretty rviz line
     gt = (PZ_GRAVITY * powf(dt, 2)) / 2.0f;
     ROS_DEBUG_STREAM_NAMED("vel", "Vel " << v0);
     ROS_DEBUG_STREAM_NAMED("total_time", "TotalTime " << fromToXY.length() / v0);
-    float x = v0 * cosf(angle) * dt;
-    float z = (v0 * sinf(angle) * dt) - gt;
+    float x = v0 * cosf(camToObjAngle) * dt;
+    float z = (v0 * sinf(camToObjAngle) * dt) - gt;
 
     for (uint8_t i = 0; i < 25; i++) { ///< TODO: move to launch param
       if (relatedHeight > 0)
@@ -445,17 +449,19 @@ void StateTracking::conceptTwo(cv::Mat &mask, cv::Point2i &point2d, uint16_t &ra
       }
 
       // if (!prevPosition.isZero() && prevPosition != startPosition) {
+      if (i != 0) { ///< ignore first line
         Line line(startPosition, velDirection);
         _predictedSigments.push_back(line);
+      }
 
-        /* ROS_DEBUG_STREAM(line);
+      /* ROS_DEBUG_STREAM(line);
 
-        if (_predictedSigments.size() & 1)
-          _rvizPainter->draw(_rvizPainterObject.getRedLine(), line.getP1(), line.getP2());
-        else
-          _rvizPainter->draw(_rvizPainterObject.getYellowLine(), line.getP1(), line.getP2());
+      if (_predictedSigments.size() & 1)
+        _rvizPainter->draw(_rvizPainterObject.getRedLine(), line.getP1(), line.getP2());
+      else
+        _rvizPainter->draw(_rvizPainterObject.getYellowLine(), line.getP1(), line.getP2());
 
-        _rvizPainter->draw(_rvizPainterObject.getMidPoint(), line.getMidpoint()); */
+      _rvizPainter->draw(_rvizPainterObject.getMidPoint(), line.getMidpoint()); */
       // }
 
       // prevPosition = startPosition;
@@ -464,10 +470,11 @@ void StateTracking::conceptTwo(cv::Mat &mask, cv::Point2i &point2d, uint16_t &ra
       _predTrajectory.push_back(velDirection);
     }
 
+    _rvizPainter->draw(_rvizPainterObject.getPredTrajLine(), _predTrajectory);
     _isTrekLinePredicted = true;
   }
-  _rvizPainter->draw(_rvizPainterObject.getPredTrajLine(), _predTrajectory);
-  getContactProbobility(newObjPosition, cameraPosition);
+
+  getContactProbobility(newObjPosition, lastPointInRealTrajectory, cameraPosition);
 }
 
 void StateTracking::execute() {
