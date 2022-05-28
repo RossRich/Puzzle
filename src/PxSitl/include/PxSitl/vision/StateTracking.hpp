@@ -16,6 +16,7 @@
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
 #include <tf2/utils.h>
+#include <nlopt.hpp>
 
 #include "../utils/Line.hpp"
 #include "BallTracking.hpp"
@@ -66,6 +67,7 @@ private:
   tf2_ros::Buffer _tfBuffer;
   tf2_ros::TransformListener *_tfListener;
   tf2::Vector3 _firstObjPosition;
+  tf2::Vector3 _test2222;
   tf2::Vector3 _lastObjPosition;
   image_transport::ImageTransport *_it;
   CameraInfoConstPtr _cameraInfo;
@@ -81,6 +83,7 @@ private:
   Pose transformPose2(tf2::Vector3 &position, const tf2::Quaternion &orientation);
   void conceptOne(cv::Mat &mask, cv::Point2i &center, uint16_t &radius);
   void conceptTwo(cv::Mat &mask, cv::Point2i &point2d, uint16_t &radius);
+  void conceptThree(cv::Mat &mask, cv::Point2i &point2d, uint16_t &radius);
 
   /**
    * Builds a 3D object position from 2D Image via camera model
@@ -106,5 +109,7 @@ public:
   void wait() override;
   void execute() override;
 };
+
+double testFunc(const std::vector<double> &x, std::vector<double> &grad, void *data);
 
 #endif // _VISION_STATE_TRACKING_H_

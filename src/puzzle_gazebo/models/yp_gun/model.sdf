@@ -4,14 +4,14 @@
     <pose>0 0 0 0 0 0</pose>
     <link name='base'>
       <inertial>
-        <mass>5000</mass>
+        <mass>2000</mass>
         <inertia>
-          <ixx>1</ixx>
+          <ixx>10</ixx>
           <ixy>0</ixy>
           <ixz>0</ixz>
-          <iyy>1</iyy>
+          <iyy>10</iyy>
           <iyz>0</iyz>
-          <izz>1</izz>
+          <izz>10</izz>
         </inertia>
         <pose>0 0 0 0 0 0</pose>
       </inertial>

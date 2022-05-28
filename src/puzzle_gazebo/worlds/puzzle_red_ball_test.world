@@ -52,7 +52,7 @@
 
     <include>
       <uri>model://yp_gun</uri>
-      <pose>-11.0 0 0 0 0 0</pose>
+      <pose>0 0 0 0 0 0</pose>
     </include>
 
     <include>
