@@ -16,7 +16,6 @@
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
 #include <tf2/utils.h>
-#include <nlopt.hpp>
 
 #include "../utils/Line.hpp"
 #include "BallTracking.hpp"
@@ -97,6 +96,7 @@ private:
   float getDistToObj(cv::Mat &mask, uint16_t &radius);
   float getVelocity(float x, float y, float angle);
   float getContactProbobility(const tf2::Vector3 &currentObjPosition, const tf2::Vector3 &lastObjPosition, const tf2::Vector3 &cameraPosition);
+  void approxQuadratic(std::vector<tf2::Vector3> &in, std::vector<float> &out);
 
 public:
   StateTracking(BallTrackingRos &context, ros::NodeHandle &nh) : State(context, "Tracking"), _nh(nh) {}
@@ -109,7 +109,5 @@ public:
   void wait() override;
   void execute() override;
 };
-
-double testFunc(const std::vector<double> &x, std::vector<double> &grad, void *data);
 
 #endif // _VISION_STATE_TRACKING_H_

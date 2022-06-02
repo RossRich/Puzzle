@@ -1,9 +1,5 @@
 #include "../../include/PxSitl/vision/StateTracking.hpp"
 
-double testFunc(const std::vector<double> &x, std::vector<double> &grad, void *data) {
-  
-}
-
 StateTracking::~StateTracking() {
   std::cout << "Delete state tracking\n";
   cv::destroyAllWindows();
@@ -178,7 +174,8 @@ float StateTracking::getVelocity(float x, float y, float angle) {
   return sqrtf(abs(v2));
 }
 
-float StateTracking::getContactProbobility(const tf2::Vector3 &currentObjPosition, const tf2::Vector3 &lastObjPosition, const tf2::Vector3 &cameraPosition) {
+float StateTracking::getContactProbobility(const tf2::Vector3 &currentObjPosition, const tf2::Vector3 &lastObjPosition,
+                                           const tf2::Vector3 &cameraPosition) {
   if (_predictedSigments.size() == 0)
     return -1;
 
@@ -397,9 +394,11 @@ void StateTracking::conceptTwo(cv::Mat &mask, cv::Point2i &point2d, uint16_t &ra
   tf2::fromMsg(transform.transform.translation, cameraPosition);
   _rvizPainter->draw(_rvizPainterObject.getRegArrow(), cameraPosition, cameraOrientation);
 
-  tf2::Vector3 camToObjDirection = _firstObjPosition - cameraPosition;                                                            ///< vector from camera to detected obj
-  tf2::Vector3 camToObjDirXY = (cameraPosition + tf2::Vector3(camToObjDirection.x(), camToObjDirection.y(), 0)) - cameraPosition; ///< projection camToObjDirection on plane XY
-  float relatedHeight = (camToObjDirection.normalized() - camToObjDirXY.normalized()).z();                                        ///< droneHeight - detectedObjHeight
+  tf2::Vector3 camToObjDirection = _firstObjPosition - cameraPosition; ///< vector from camera to detected obj
+  tf2::Vector3 camToObjDirXY = (cameraPosition + tf2::Vector3(camToObjDirection.x(), camToObjDirection.y(), 0)) -
+                               cameraPosition; ///< projection camToObjDirection on plane XY
+  float relatedHeight =
+      (camToObjDirection.normalized() - camToObjDirXY.normalized()).z(); ///< droneHeight - detectedObjHeight
   // ROS_DEBUG_STREAM("relaitedHeight " << relatedHeight);
 
   float camToObjAngle = acosf(tf2::tf2Dot(camToObjDirection.normalized(), camToObjDirXY.normalized()));
@@ -408,7 +407,8 @@ void StateTracking::conceptTwo(cv::Mat &mask, cv::Point2i &point2d, uint16_t &ra
   // just for rviz
   tf2::Quaternion dirOrientation;
   dirOrientation.setRotation(tf2::tf2Cross(camToObjDirXY.normalized(), camToObjDirection.normalized()), camToObjAngle);
-  _rvizPainter->draw(_rvizPainterObject.getYellowArrow(), cameraPosition, (dirOrientation * cameraOrientation).normalized());
+  _rvizPainter->draw(_rvizPainterObject.getYellowArrow(), cameraPosition,
+                     (dirOrientation * cameraOrientation).normalized());
 
   if (_isObjDetected && !_isTrekLinePredicted) {
     float dt = _dt4prediction;                      ///< TODO: move to launch param
@@ -478,6 +478,18 @@ void StateTracking::conceptTwo(cv::Mat &mask, cv::Point2i &point2d, uint16_t &ra
   float m = currToLast.y() / currToLast.x(); */
 }
 
+void StateTracking::approxQuadratic(std::vector<tf2::Vector3> &in, std::vector<float> &out) {
+  tf2::Vector3 &p1 = in[0];
+  tf2::Vector3 &p2 = in[1];
+  tf2::Vector3 &p3 = in[2];
+
+  float num = p3.z() - (((p3.x() * (p2.z() - p1.z())) + (p2.x() * p1.z()) - (p1.x() * p2.z())) / (p2.x() - p1.x()));
+  float den = (p3.x() * (p3.x() - p1.x() - p2.x())) + (p1.x() * p2.x());
+  out.push_back(num / den);
+  out.push_back(((p2.z() - p1.z()) / (p2.x() - p1.x())) - (out[0] * (p1.x() + p2.x())));
+  out.push_back((((p2.x() * p1.z()) - (p1.x() * p2.z())) / (p2.x() - p1.x())) + (out[0] * p1.x() * p2.x()));
+}
+
 void StateTracking::conceptThree(cv::Mat &mask, cv::Point2i &point2d, uint16_t &radius) {
   float distToObj = getDistToObj(mask, radius);
   tf2::Vector3 newObjPosition;
@@ -503,7 +515,7 @@ void StateTracking::conceptThree(cv::Mat &mask, cv::Point2i &point2d, uint16_t &
   _realTrajPoints.push_back(newObjPosition);
   _rvizPainter->draw(_rvizPainterObject.getRealTrajLine(), _realTrajPoints);
 
-  if(_realTrajPoints.size() == 2)
+  if (_realTrajPoints.size() == 2)
     _test2222 = newObjPosition;
 
   if (_realTrajPoints.size() < 3)
@@ -516,9 +528,11 @@ void StateTracking::conceptThree(cv::Mat &mask, cv::Point2i &point2d, uint16_t &
   tf2::fromMsg(transform.transform.translation, cameraPosition);
   _rvizPainter->draw(_rvizPainterObject.getRegArrow(), cameraPosition, cameraOrientation);
 
-  tf2::Vector3 camToObjDirection = _firstObjPosition - cameraPosition;                                                            ///< vector from camera to detected obj
-  tf2::Vector3 camToObjDirXY = (cameraPosition + tf2::Vector3(camToObjDirection.x(), camToObjDirection.y(), 0)) - cameraPosition; ///< projection camToObjDirection on plane XY
-  float relatedHeight = (camToObjDirection.normalized() - camToObjDirXY.normalized()).z();                                        ///< droneHeight - detectedObjHeight
+  tf2::Vector3 camToObjDirection = _firstObjPosition - cameraPosition; ///< vector from camera to detected obj
+  tf2::Vector3 camToObjDirXY = (cameraPosition + tf2::Vector3(camToObjDirection.x(), camToObjDirection.y(), 0)) -
+                               cameraPosition; ///< projection camToObjDirection on plane XY
+  float relatedHeight =
+      (camToObjDirection.normalized() - camToObjDirXY.normalized()).z(); ///< droneHeight - detectedObjHeight
   // ROS_DEBUG_STREAM("relaitedHeight " << relatedHeight);
 
   tf2::Vector3 lastToCurrent = newObjPosition - _firstObjPosition;
@@ -531,15 +545,16 @@ void StateTracking::conceptThree(cv::Mat &mask, cv::Point2i &point2d, uint16_t &
   // just for rviz
   tf2::Quaternion dirOrientation;
   dirOrientation.setRotation(tf2::tf2Cross(camToObjDirXY.normalized(), camToObjDirection.normalized()), camToObjAngle);
-  _rvizPainter->draw(_rvizPainterObject.getYellowArrow(), cameraPosition, (dirOrientation * cameraOrientation).normalized());
-
-  nlopt::opt opt(nlopt::LN_BOBYQA, 2);
-  opt.set_min_objective(testFunc, nullptr);
+  _rvizPainter->draw(_rvizPainterObject.getYellowArrow(), cameraPosition,
+                     (dirOrientation * cameraOrientation).normalized());
+  /*
+    nlopt::opt opt(nlopt::LN_BOBYQA, 2);
+    opt.set_min_objective(testFunc, nullptr); */
 
   if (_isObjDetected && !_isTrekLinePredicted) {
     float dt = _dt4prediction;                    ///< TODO: move to launch param
     float gt = (PZ_GRAVITY * powf(dt, 2)) / 2.0f; ///< 4.9 * pow(dt, 2)?
-    tf2::Vector3 startPosition = _test2222;  ///< trek line start from first detected obj
+    tf2::Vector3 startPosition = _test2222;       ///< trek line start from first detected obj
     // if (relatedHeight > 0)
     // startPosition = cameraPosition; ///< trek line start from camera position
 
@@ -594,7 +609,63 @@ void StateTracking::conceptThree(cv::Mat &mask, cv::Point2i &point2d, uint16_t &
       prevPosition = startPosition;
       startPosition = velDirection;
 
-      _predTrajectory.push_back(velDirection);
+      // _predTrajectory.push_back(velDirection);
+    }
+
+    float totalDist2 = tf2::tf2Distance2(_firstObjPosition, cameraPosition);
+    float safeDist2 = totalDist2 / 2.f;
+    float pointDist2 = tf2::tf2Distance2(_firstObjPosition, _test2222);
+    uint8_t totalPoints = std::floor(sqrtf(totalDist2 / pointDist2));
+    uint8_t safePoints = std::floor(totalPoints / 2.f);
+
+    ROS_DEBUG_STREAM("totalPoints: " << (int)totalPoints);
+    ROS_DEBUG_STREAM("safePoints: " << (int)safePoints);
+
+
+    std::vector<float> abc;
+    std::vector<tf2::Vector3> points;
+    uint8_t counter = 0;
+
+    for (auto &point : _realTrajPoints) {
+
+      switch (safePoints) {
+      case 5:
+        if (!(counter & 1)) ///< point: 0, 2, 4
+          points.push_back(point);
+        break;
+      case 4:
+        if (counter == 0 || counter == 1 || counter == 3)
+          points.push_back(point);
+        break;
+      case 3:
+        points.push_back(point);
+        break;
+      case 2:
+        break;
+      default:
+        break;
+      }
+
+      ROS_DEBUG_STREAM("point " << (int)counter << ":\n" << point.x() << "\n" << point.y() << "\n" << point.z());
+      if (points.size() == 3)
+        break;
+      ++counter;
+    }
+
+    approxQuadratic(points, abc);
+    for (auto &i : abc) {
+      ROS_DEBUG("%f", i);
+    }
+
+    float xx = _firstObjPosition.x();
+    tf2::Vector3 approxQuat = _firstObjPosition;
+    for (size_t i = 0; i < totalPoints; i++) {
+      float z = abc[0] * powf(xx, 2) + abc[1] * xx + abc[2];
+      approxQuat.setX(xx);
+      approxQuat.setZ(z);
+      xx += sqrtf(pointDist2);
+
+      _predTrajectory.push_back(approxQuat);
     }
 
     _rvizPainter->draw(_rvizPainterObject.getPredTrajLine(), _predTrajectory);
