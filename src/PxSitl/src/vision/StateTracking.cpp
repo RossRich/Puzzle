@@ -478,16 +478,60 @@ void StateTracking::conceptTwo(cv::Mat &mask, cv::Point2i &point2d, uint16_t &ra
   float m = currToLast.y() / currToLast.x(); */
 }
 
-void StateTracking::approxQuadratic(std::vector<tf2::Vector3> &in, std::vector<float> &out) {
+void StateTracking::approxQuadratic(std::vector<tf2::Vector3> &in, std::vector<float> &out, uint8_t newPoints) {
+  if (in.size() < 3) {
+    ROS_ERROR_STREAM(
+        "[StateTracking::approxQuadratic] Input points number not enother for quadratic approximation. Total points = "
+        << in.size());
+    return;
+  }
+
   tf2::Vector3 &p1 = in[0];
   tf2::Vector3 &p2 = in[1];
   tf2::Vector3 &p3 = in[2];
 
   float num = p3.z() - (((p3.x() * (p2.z() - p1.z())) + (p2.x() * p1.z()) - (p1.x() * p2.z())) / (p2.x() - p1.x()));
   float den = (p3.x() * (p3.x() - p1.x() - p2.x())) + (p1.x() * p2.x());
-  out.push_back(num / den);
+  out.push_back(num / den); ///< TODO: division by zero
   out.push_back(((p2.z() - p1.z()) / (p2.x() - p1.x())) - (out[0] * (p1.x() + p2.x())));
   out.push_back((((p2.x() * p1.z()) - (p1.x() * p2.z())) / (p2.x() - p1.x())) + (out[0] * p1.x() * p2.x()));
+
+  float xx = _firstObjPosition.x();
+  tf2::Vector3 approxQuat = _firstObjPosition;
+  for (size_t i = 0; i < newPoints; i++) {
+    float z = out[0] * powf(xx, 2) + out[1] * xx + out[2];
+    approxQuat.setX(xx);
+    approxQuat.setZ(z);
+    xx += sqrtf(tf2::tf2Distance2(p1, p2));
+
+    _predTrajectory.push_back(approxQuat);
+  }
+}
+
+void StateTracking::approxLinear(std::vector<tf2::Vector3> &in, std::vector<float> &out, uint8_t newPoints) {
+  if (in.size() < 2) {
+    ROS_ERROR_STREAM(
+        "[StateTracking::approxLinear] Input points number not enother for linear approximation. Total points = "
+        << in.size());
+    return;
+  }
+
+  tf2::Vector3 &p1 = in[0];
+  tf2::Vector3 &p2 = in[1];
+
+  out.push_back((p1.z() - p2.z()) / (p1.x() - p2.x())); ///< TODO: division by zero
+  out.push_back(p2.z() - out[0] * p2.x());
+
+  float xx = _firstObjPosition.x();
+  tf2::Vector3 approxQuat = _firstObjPosition;
+  for (size_t i = 0; i < newPoints; i++) {
+    float z = out[0] * xx + out[1];
+    approxQuat.setX(xx);
+    approxQuat.setZ(z);
+    xx += sqrtf(sqrtf(tf2::tf2Distance2(p1, p2)));
+
+    _predTrajectory.push_back(approxQuat);
+  }
 }
 
 void StateTracking::conceptThree(cv::Mat &mask, cv::Point2i &point2d, uint16_t &radius) {
@@ -526,6 +570,21 @@ void StateTracking::conceptThree(cv::Mat &mask, cv::Point2i &point2d, uint16_t &
   tf2::Vector3 cameraPosition;       ///< camera position in map
   tf2::fromMsg(transform.transform.rotation, cameraOrientation);
   tf2::fromMsg(transform.transform.translation, cameraPosition);
+
+  float totalDist2 = tf2::tf2Distance2(_firstObjPosition, cameraPosition);
+  float safeDist2 = totalDist2 / 2.f;
+  float pointDist2 = tf2::tf2Distance2(_firstObjPosition, _test2222);
+  uint8_t totalPoints = std::floor(sqrtf(totalDist2 / pointDist2));
+  uint8_t safePoints = std::floor(totalPoints / 2.f);
+  if (safePoints > 5)
+    safePoints = 5; ///< TODO: not good idea
+
+  ROS_DEBUG_STREAM("totalPoints: " << (int)totalPoints);
+  ROS_DEBUG_STREAM("safePoints: " << (int)safePoints);
+
+  if (_realTrajPoints.size() < safePoints)
+    return;
+
   _rvizPainter->draw(_rvizPainterObject.getRegArrow(), cameraPosition, cameraOrientation);
 
   tf2::Vector3 camToObjDirection = _firstObjPosition - cameraPosition; ///< vector from camera to detected obj
@@ -612,22 +671,11 @@ void StateTracking::conceptThree(cv::Mat &mask, cv::Point2i &point2d, uint16_t &
       // _predTrajectory.push_back(velDirection);
     }
 
-    float totalDist2 = tf2::tf2Distance2(_firstObjPosition, cameraPosition);
-    float safeDist2 = totalDist2 / 2.f;
-    float pointDist2 = tf2::tf2Distance2(_firstObjPosition, _test2222);
-    uint8_t totalPoints = std::floor(sqrtf(totalDist2 / pointDist2));
-    uint8_t safePoints = std::floor(totalPoints / 2.f);
-
-    ROS_DEBUG_STREAM("totalPoints: " << (int)totalPoints);
-    ROS_DEBUG_STREAM("safePoints: " << (int)safePoints);
-
-
     std::vector<float> abc;
     std::vector<tf2::Vector3> points;
     uint8_t counter = 0;
-
+    ROS_ASSERT(_realTrajPoints.size() >= safePoints);
     for (auto &point : _realTrajPoints) {
-
       switch (safePoints) {
       case 5:
         if (!(counter & 1)) ///< point: 0, 2, 4
@@ -640,32 +688,34 @@ void StateTracking::conceptThree(cv::Mat &mask, cv::Point2i &point2d, uint16_t &
       case 3:
         points.push_back(point);
         break;
-      case 2:
+      case 2: ///< TODO: Linear approximation
+        points.push_back(point);
         break;
-      default:
+      default: ///< TODO: ???
         break;
       }
-
-      ROS_DEBUG_STREAM("point " << (int)counter << ":\n" << point.x() << "\n" << point.y() << "\n" << point.z());
-      if (points.size() == 3)
-        break;
       ++counter;
+
+      if (counter == safePoints)
+        break;
     }
 
-    approxQuadratic(points, abc);
-    for (auto &i : abc) {
-      ROS_DEBUG("%f", i);
+    if (points.empty()) {
+      ROS_ERROR_STREAM("Points arr for approximation is empty");
+      return;
     }
 
-    float xx = _firstObjPosition.x();
-    tf2::Vector3 approxQuat = _firstObjPosition;
-    for (size_t i = 0; i < totalPoints; i++) {
-      float z = abc[0] * powf(xx, 2) + abc[1] * xx + abc[2];
-      approxQuat.setX(xx);
-      approxQuat.setZ(z);
-      xx += sqrtf(pointDist2);
+    if (points.size() > 2)
+      approxQuadratic(points, abc, totalPoints);
+    else
+      approxLinear(points, abc, totalPoints);
 
-      _predTrajectory.push_back(approxQuat);
+    for (auto &point : points) {
+      ROS_DEBUG_STREAM("point:\n" << point.x() << "\n" << point.y() << "\n" << point.z());
+    }
+
+    for (auto &k : abc) {
+      ROS_DEBUG("%f", k);
     }
 
     _rvizPainter->draw(_rvizPainterObject.getPredTrajLine(), _predTrajectory);

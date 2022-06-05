@@ -96,7 +96,8 @@ private:
   float getDistToObj(cv::Mat &mask, uint16_t &radius);
   float getVelocity(float x, float y, float angle);
   float getContactProbobility(const tf2::Vector3 &currentObjPosition, const tf2::Vector3 &lastObjPosition, const tf2::Vector3 &cameraPosition);
-  void approxQuadratic(std::vector<tf2::Vector3> &in, std::vector<float> &out);
+  void approxQuadratic(std::vector<tf2::Vector3> &in, std::vector<float> &out, uint8_t newPoints);
+  void approxLinear(std::vector<tf2::Vector3> &in, std::vector<float> &out, uint8_t newPoints);
 
 public:
   StateTracking(BallTrackingRos &context, ros::NodeHandle &nh) : State(context, "Tracking"), _nh(nh) {}
