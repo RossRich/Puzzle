@@ -146,10 +146,28 @@ void StateTracking::transformPose(tf2::Vector3 &position) {
 
 Pose StateTracking::transformPose2(tf2::Vector3 &position, const tf2::Quaternion &orientation) {
   tf2::Transform originalTransform(orientation, position);
+  tf2::Stamped<tf2::Transform> ts4Transform(originalTransform, ros::Time::now(), "base_link_frd");
+  TransformStamped ts(tf2::toMsg(ts4Transform));
+  ts.child_frame_id = "camera_link";
+  TransformStamped transform = _tfBuffer.lookupTransform("map", "base_link_frd", ros::Time(0));
+  TransformStamped newTransform;
+  tf2::doTransform(ts, newTransform, transform);
+
+  Pose pose;
+  pose.orientation = newTransform.transform.rotation;
+  pose.position.x = newTransform.transform.translation.x;
+  pose.position.y = newTransform.transform.translation.y;
+  pose.position.z = newTransform.transform.translation.z;
+
+  return pose;
+}
+
+Pose StateTracking::transformPose3(tf2::Vector3 &position, const tf2::Quaternion &orientation) {
+  tf2::Transform originalTransform(orientation, position);
   tf2::Stamped<tf2::Transform> ts4Transform(originalTransform, ros::Time::now(), "map");
   TransformStamped ts(tf2::toMsg(ts4Transform));
-  ts.child_frame_id = _cameraModel.tfFrame();
-  TransformStamped transform = _tfBuffer.lookupTransform("map", "base_link_frd", ros::Time(0));
+  ts.child_frame_id = "base_link";
+  TransformStamped transform = _tfBuffer.lookupTransform("base_link_frd", "map", ros::Time(0));
   TransformStamped newTransform;
   tf2::doTransform(ts, newTransform, transform);
 
@@ -478,7 +496,7 @@ void StateTracking::conceptTwo(cv::Mat &mask, cv::Point2i &point2d, uint16_t &ra
   float m = currToLast.y() / currToLast.x(); */
 }
 
-void StateTracking::approxQuadratic(std::vector<tf2::Vector3> &in, std::vector<float> &out, uint8_t newPoints) {
+void StateTracking::approxQuadratic(std::vector<tf2::Vector3> &in, std::vector<float> &out, uint8_t newPoints, float dist) {
   if (in.size() < 3) {
     ROS_ERROR_STREAM(
         "[StateTracking::approxQuadratic] Input points number not enother for quadratic approximation. Total points = "
@@ -486,9 +504,18 @@ void StateTracking::approxQuadratic(std::vector<tf2::Vector3> &in, std::vector<f
     return;
   }
 
-  tf2::Vector3 &p1 = in[0];
-  tf2::Vector3 &p2 = in[1];
-  tf2::Vector3 &p3 = in[2];
+  tf2::Vector3 p1 = in[0];
+  tf2::Vector3 p2 = in[1];
+  tf2::Vector3 p3 = in[2];
+
+  Pose pp1, pp2, pp3;
+  pp1 = transformPose3(in[0], tf2::Quaternion::getIdentity());
+  pp2 = transformPose3(in[1], tf2::Quaternion::getIdentity());
+  pp3 = transformPose3(in[2], tf2::Quaternion::getIdentity());
+
+  tf2::fromMsg(pp1.position, p1);
+  tf2::fromMsg(pp2.position, p2);
+  tf2::fromMsg(pp3.position, p3);
 
   float num = p3.z() - (((p3.x() * (p2.z() - p1.z())) + (p2.x() * p1.z()) - (p1.x() * p2.z())) / (p2.x() - p1.x()));
   float den = (p3.x() * (p3.x() - p1.x() - p2.x())) + (p1.x() * p2.x());
@@ -496,15 +523,24 @@ void StateTracking::approxQuadratic(std::vector<tf2::Vector3> &in, std::vector<f
   out.push_back(((p2.z() - p1.z()) / (p2.x() - p1.x())) - (out[0] * (p1.x() + p2.x())));
   out.push_back((((p2.x() * p1.z()) - (p1.x() * p2.z())) / (p2.x() - p1.x())) + (out[0] * p1.x() * p2.x()));
 
-  float xx = _firstObjPosition.x();
-  tf2::Vector3 approxQuat = _firstObjPosition;
+  tf2::Vector3 dir = (p3 - p1).normalize();
+  // Pose testPose = transformPose3(in[0], tf2::Quaternion::getIdentity());
+  // tf2::Vector3 trFirstPoint;
+  // tf2::fromMsg(testPose.position, trFirstPoint);
+  float xx = p1.x();
+  float distance;
+  tf2::Vector3 approxQuat = p1;
   for (size_t i = 0; i < newPoints; i++) {
     float z = out[0] * powf(xx, 2) + out[1] * xx + out[2];
     approxQuat.setX(xx);
+    distance = tf2::tf2Distance(p1, approxQuat);
+    approxQuat = dir * distance + p1;
     approxQuat.setZ(z);
-    xx += sqrtf(tf2::tf2Distance2(p1, p2));
-
-    _predTrajectory.push_back(approxQuat);
+    xx-=dist;
+    tf2::Vector3 tttt;
+    Pose p = transformPose2(approxQuat, tf2::Quaternion::getIdentity());
+    tf2::fromMsg(p.position, tttt);
+    _predTrajectory.push_back(tttt);
   }
 }
 
@@ -532,6 +568,11 @@ void StateTracking::approxLinear(std::vector<tf2::Vector3> &in, std::vector<floa
 
     _predTrajectory.push_back(approxQuat);
   }
+}
+
+float StateTracking::calcPlane(const tf2::Vector3 &p1, const tf2::Vector3 &p2, const tf2::Vector3 &p3, const tf2::Vector3 &targetPosition) {
+  tf2::Vector3 planeNormal = tf2::tf2Cross(p2 - p1, p3 - p1).normalize();
+  return tf2::tf2Dot(planeNormal, targetPosition) - tf2::tf2Dot(planeNormal, p3);
 }
 
 void StateTracking::conceptThree(cv::Mat &mask, cv::Point2i &point2d, uint16_t &radius) {
@@ -705,13 +746,35 @@ void StateTracking::conceptThree(cv::Mat &mask, cv::Point2i &point2d, uint16_t &
       return;
     }
 
-    if (points.size() > 2)
-      approxQuadratic(points, abc, totalPoints);
-    else
+    if (points.size() > 2) {
+      float safeZone = calcPlane(points[0], points[1], points[2], cameraPosition);
+      ROS_DEBUG_STREAM("Plane factor " << safeZone);
+      // if(abs(safeZone) < 0.25f) {
+      approxQuadratic(points, abc, totalPoints, sqrtf(pointDist2));
+      Pose cameraInBaseLink = transformPose3(cameraPosition, cameraOrientation);
+      tf2::Vector3 cameraInBaseLinkPosition;
+      tf2::fromMsg(cameraInBaseLink.position, cameraInBaseLinkPosition);
+      float z = (abc[0] * powf(cameraInBaseLinkPosition.x(), 2) + abc[1] * cameraInBaseLinkPosition.x() + abc[2]) + cameraInBaseLinkPosition.z();
+      cameraInBaseLinkPosition.setZ(z);
+      cameraInBaseLink = transformPose2(cameraInBaseLinkPosition, tf2::Quaternion::getIdentity());
+      tf2::fromMsg(cameraInBaseLink.position, cameraInBaseLinkPosition);
+      tf2::Vector3 objDir = (points[2] - points[0]).normalize();
+      cameraInBaseLinkPosition = objDir * tf2::tf2Distance(points[0], cameraInBaseLinkPosition) + points[0];
+      cameraInBaseLinkPosition.setZ(cameraInBaseLink.position.z);
+      _rvizPainter->draw(_rvizPainterObject.getIntersectPosition(), cameraInBaseLinkPosition);
+      float distToDrone = tf2::tf2Distance(cameraInBaseLinkPosition, cameraPosition);
+      ROS_DEBUG_STREAM("DistToDrone " << distToDrone);
+      ROS_DEBUG("Intersect state %i", distToDrone <= abs(safeZone));
+      // }
+
+    } else
       approxLinear(points, abc, totalPoints);
 
     for (auto &point : points) {
-      ROS_DEBUG_STREAM("point:\n" << point.x() << "\n" << point.y() << "\n" << point.z());
+      ROS_DEBUG_STREAM("point:\n"
+                       << point.x() << "\n"
+                       << point.y() << "\n"
+                       << point.z());
     }
 
     for (auto &k : abc) {

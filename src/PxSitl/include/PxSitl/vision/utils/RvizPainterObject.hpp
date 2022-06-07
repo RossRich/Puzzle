@@ -138,6 +138,7 @@ private:
   RvizPoints _predTraj = {"pred_traj", "map"};
   RvizPosition _objFirstPosition = {"obj_first_position", "map"};
   RvizPosition _pointOnTraj = {"point_on_traj", "map"};
+  RvizPosition _intersectPosition = {"intersect_position", "map"};
   RvizPoints _realTrajLine = {"real_traj", "map"};
   RvizPosition _midPoint = {"mid_point", "map"};
   RvizLine _redLine = {"red_line", "map"};
@@ -160,6 +161,7 @@ public:
     _midPoint.setColor(RvizVisually::Colors().at(RvizVisually::Color::CaribbeanGreen));
     _redLine.setColor(RvizVisually::Colors().at(RvizVisually::Color::Red));
     _yellowLine.setColor(RvizVisually::Colors().at(RvizVisually::Color::Yellow));
+    _intersectPosition.setColor(RvizVisually::Colors().at(RvizVisually::Color::Red));
   }
 
   ~RvizPainterObject() {}
@@ -198,6 +200,10 @@ public:
 
   RvizPosition &getPointOnTraj() {
     return _pointOnTraj;
+  }
+
+  RvizPosition &getIntersectPosition() {
+    return _intersectPosition;
   }
 
   RvizPosition &getMidPoint() {
