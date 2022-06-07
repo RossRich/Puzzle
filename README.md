@@ -92,6 +92,16 @@ No protocol specified
 xhost +local:root
 ```
 ----
+
+При сборке сборки Docker контейнера,выдаёт ошибку подключения к интернета решается перезагрузкой докера
+
+Вводим в терминале (на хосте, т.е. не в контейнере)
+
+```
+sudo systemctl restart docker
+```
+
+----
 >Gazebo долго открывается и выдает предупреждение: [Wrn] [ModelDatabase.cc:340] Getting models from[http://models.gazebosim.org/]. This may take a few seconds.
 
 Отсутствуют необходимые модели и Gazebo пытается загрузить их. Все мадели добавлены в репозиторий. Необходимо прописать: 
