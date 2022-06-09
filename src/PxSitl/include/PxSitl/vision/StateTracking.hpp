@@ -78,9 +78,12 @@ private:
   cv::Mat _frame;
   cv::Mat _depth;
 
+  ///< TMP section
+  ros::Time _objMoveTimer;
+
   void transformPose(tf2::Vector3 &position);
-  Pose transformPose2(tf2::Vector3 &position, const tf2::Quaternion &orientation);
-  Pose transformPose3(tf2::Vector3 &position, const tf2::Quaternion &orientation);
+  Pose transformPose2(const tf2::Vector3 &position, const tf2::Quaternion &orientation);
+  Pose transformPose3(const tf2::Vector3 &position, const tf2::Quaternion &orientation);
   void conceptOne(cv::Mat &mask, cv::Point2i &center, uint16_t &radius);
   void conceptTwo(cv::Mat &mask, cv::Point2i &point2d, uint16_t &radius);
   void conceptThree(cv::Mat &mask, cv::Point2i &point2d, uint16_t &radius);
@@ -97,6 +100,7 @@ private:
   float getDistToObj(cv::Mat &mask, uint16_t &radius);
   float getVelocity(float x, float y, float angle);
   float getContactProbobility(const tf2::Vector3 &currentObjPosition, const tf2::Vector3 &lastObjPosition, const tf2::Vector3 &cameraPosition);
+  void trajectoryPrediction(const tf2::Vector3 &cameraPosition, const tf2::Quaternion &cameraOrientation, uint8_t safePoints, uint8_t totalPoints, float pointDist2);
   void approxQuadratic(std::vector<tf2::Vector3> &in, std::vector<float> &out, uint8_t newPoints, float dist);
   void approxLinear(std::vector<tf2::Vector3> &in, std::vector<float> &out, uint8_t newPoints);
   float calcPlane(const tf2::Vector3 &p1, const tf2::Vector3 &p2, const tf2::Vector3 &p3, const tf2::Vector3 &targetPosition);

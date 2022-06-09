@@ -47,7 +47,7 @@ void BallTracking::process(cv::Mat &color, cv::Mat &maskt, cv::Point2i *center, 
       *center = c;
 
     if (radius != nullptr)
-      *radius = static_cast<uint16_t>(R);
+      *radius = static_cast<uint16_t>(std::round(R));
 
     /* cv::circle(frame, center, radius + 7.0, cv::Scalar(_threshold[1]), 1, cv::LINE_4);
     cv::circle(frame, center, 3, cv::Scalar(0, 255, 0), cv::FILLED, cv::LINE_8);

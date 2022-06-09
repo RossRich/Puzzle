@@ -140,6 +140,7 @@ private:
   RvizPosition _pointOnTraj = {"point_on_traj", "map"};
   RvizPosition _intersectPosition = {"intersect_position", "map"};
   RvizPoints _realTrajLine = {"real_traj", "map"};
+  RvizPoints _trajectoryPlane = {"trajectory_plane", "map"};
   RvizPosition _midPoint = {"mid_point", "map"};
   RvizLine _redLine = {"red_line", "map"};
   RvizLine _yellowLine = {"yellow_line", "map"};
@@ -162,6 +163,8 @@ public:
     _redLine.setColor(RvizVisually::Colors().at(RvizVisually::Color::Red));
     _yellowLine.setColor(RvizVisually::Colors().at(RvizVisually::Color::Yellow));
     _intersectPosition.setColor(RvizVisually::Colors().at(RvizVisually::Color::Red));
+    _trajectoryPlane.setColor(RvizVisually::Colors().at(RvizVisually::Color::AlfaBlue));
+    _trajectoryPlane.setScale(0.03);
   }
 
   ~RvizPainterObject() {}
@@ -216,6 +219,10 @@ public:
 
   RvizLine &getYellowLine() {
     return _yellowLine;
+  }
+
+  RvizPoints &getTrajectoryPlane() {
+    return _trajectoryPlane;
   }
 };
 
