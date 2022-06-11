@@ -15,9 +15,9 @@ int main(int argc, char *argv[]) {
     return EXIT_FAILURE;
   }
 
-  ros::Rate loop_rate(100);
+  ros::Rate loop_rate(250);
   while (ros::ok()) {
-    ros::spin();
+    ros::spinOnce();
     loop_rate.sleep();
   }
 }

@@ -6,15 +6,18 @@
 class RvizPainterObjects
 {
 private:
-  RvizMesh _droneMArker = {"puzzle_drone_marker", "puzzle_drone_marker"};
+  RvizMesh _droneMarker = {"puzzle_drone_marker", "puzzle_drone_marker"};
 public:
   RvizPainterObjects() {
-    _droneMArker.setResource("package://puzzle_drone_marker/data/quadrotor.dae");
+    _droneMarker.setResource("package://puzzle_drone_marker/data/quadrotor.dae");
+    tf2::Quaternion orientation;
+    orientation.setRPY(3.14,0,1.57);
+    _droneMarker.setOrientation(orientation);
   }
   ~RvizPainterObjects() {}
 
   RvizMesh &getDroneMarker() {
-    return _droneMArker;
+    return _droneMarker;
   }
 };
 

@@ -24,7 +24,6 @@ Marker &PainterObjectBase::drawMarker() {
 Marker &PainterObjectBase::updateMarker() {
   _marker.header.stamp = ros::Time::now();
   _marker.action = Marker::MODIFY;
-  _marker.id = _id - 1;
   return _marker;
 }
 

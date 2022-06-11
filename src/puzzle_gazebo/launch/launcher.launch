@@ -7,7 +7,7 @@
   <remap from="/iris_puzzle0/camera/rgb/image_raw" to="/camera/color/image_raw"/>
   <remap from="/iris_puzzle0/camera/rgb/camera_info" to="/camera/color/camera_info"/>
   
-  <arg name="world_name" default="$(find puzzle_gazebo)/worlds/puzzle.world"/>
+  <arg name="world_name" default="$(find puzzle_gazebo)/worlds/puzzle_red_ball_test.world"/>
   <arg name="verbose" default="true"/>
   <arg name="gui" default="true"/>
   <arg name="model" default="iris_puzzle"/>
@@ -44,5 +44,6 @@
   </group>
 
   <include file="$(find puzzle_gazebo)/launch/static_tf.launch"/>
-  
+  <include file="$(find puzzle_transform)/launch/launcher.launch"/>
+  <include file="$(find puzzle_drone_marker)/launch/launcher.launch"/>
 </launch>

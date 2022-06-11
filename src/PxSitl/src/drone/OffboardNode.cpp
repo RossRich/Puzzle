@@ -17,7 +17,6 @@ using visualization_msgs::Marker;
 State currentState;
 geometry_msgs::PoseStamped currentPose;
 geometry_msgs::PoseStamped droneGoalPose;
-ros::Publisher droneMarkerPublisher;
 
 void stateCb(const State::ConstPtr &msg) {
   currentState = *msg;
@@ -33,31 +32,6 @@ void goalPoseCallback(const geometry_msgs::PoseStampedConstPtr &goalPoseMsg) {
   droneGoalPose = *goalPoseMsg;
 }
 
-void drawDronePose(geometry_msgs::TransformStamped &ts) {
-  Marker drone;
-  drone.action = Marker::ADD;
-  drone.ns = "drone";
-  drone.type = Marker::MESH_RESOURCE;
-  drone.mesh_resource = "package://PxSitl/data/quadrotor.dae";
-  drone.header.frame_id = "map";
-  drone.header.stamp = ros::Time::now();
-
-  drone.scale.x = 1;
-  drone.scale.y = 1;
-  drone.scale.z = 1;
-  drone.pose.orientation = ts.transform.rotation;
-  drone.pose.position.x = ts.transform.translation.x;
-  drone.pose.position.y = ts.transform.translation.y;
-  drone.pose.position.z = ts.transform.translation.z;
-
-  drone.color.a = 1.0;
-  drone.color.r = 0;
-  drone.color.g = .8;
-  drone.color.b = .2;
-
-  droneMarkerPublisher.publish(drone);
-}
-
 int main(int argc, char *argv[]) {
   std::string vehicleName = "";
   float xPosition = 2.0;
@@ -71,7 +45,7 @@ int main(int argc, char *argv[]) {
 
   if (!nh.hasParam(nodeName + "/vehicle_name")) {
     ROS_ERROR("No uav name");
-    return -1;
+    return EXIT_FAILURE;
   }
 
   nh.getParam(nodeName + "/vehicle_name", vehicleName);
@@ -87,7 +61,6 @@ int main(int argc, char *argv[]) {
   ros::ServiceClient setModeCli = nh.serviceClient<SetMode>(vehicleName + "/mavros/set_mode");
   ros::Subscriber pos = nh.subscribe<geometry_msgs::PoseStamped>(vehicleName + "/mavros/local_position/pose", 10, poseCb);
   ros::Subscriber goalPose = nh.subscribe("/move_base_simple/goal", 1, goalPoseCallback);
-  droneMarkerPublisher = nh.advertise<Marker>("/drone_marker", 5);
 
   ros::Rate rate(20.0);
 

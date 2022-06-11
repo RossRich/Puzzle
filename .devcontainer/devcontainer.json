@@ -8,7 +8,7 @@
 		"args": {"USER_HOST": "${localEnv:USER}"}
 	},
 	// Update the 'dockerFile' property if you aren't using the standard 'Dockerfile' filename.
-	"dockerFile": "Dockerfile",
+	"dockerFile": "DockerfileDev",
 	// Set *default* container specific settings.json values on container create.
 	"settings": {
 		"ros.distro": "noetic",
@@ -20,7 +20,8 @@
 		"twxs.cmake",
 		"ms-vscode.cmake-tools",
 		"mhutchie.git-graph",
-		"redhat.vscode-xml"
+		"redhat.vscode-xml",
+		"sweilz.ros-snippets"
 	],
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],

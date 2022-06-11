@@ -16,6 +16,7 @@ public:
     setScale(.5, .02, .02);
     setColor(RvizVisually::Colors().at(RvizVisually::Color::Green));
   }
+
   ~RvizArrow() {}
 };
 
@@ -60,9 +61,6 @@ public:
 };
 
 class RvizMesh : public PainterObjectBase {
-private:
-  std::string _meshResource;
-
 public:
   RvizMesh(const char *name, const char *frameId) : PainterObjectBase(name, frameId) {
     _marker.type = Marker::MESH_RESOURCE;
@@ -71,7 +69,7 @@ public:
   }
 
   inline void setResource(const std::string &resource) {
-    _meshResource = resource;
+    _marker.mesh_resource = resource;
   }
   ~RvizMesh() {}
 };

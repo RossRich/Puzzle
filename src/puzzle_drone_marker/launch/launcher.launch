@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
 <launch>
   <include file="$(find puzzle_drone_marker)/launch/static_tf.launch"/>
-  <node name="puzzle_drone_marker" pkg="puzzle_drone_marker" type="puzzle_drone_marker_node" output="screen"/>
+  <node name="puzzle_drone_marker" pkg="puzzle_drone_marker" type="puzzle_drone_marker_node" output="log"/>
 </launch>

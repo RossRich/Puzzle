@@ -1,9 +1,6 @@
 #include "puzzle_transform/PuzzleTransform.hpp"
 
-void PuzzleTransform::getLocalPosition(const PoseStampedConstPtr &localPosition) {
-  _dronePose = *localPosition;
-  transform();
-}
+void PuzzleTransform::getLocalPosition(const PoseStampedConstPtr &localPosition) { transform(localPosition); }
 
 bool PuzzleTransform::loadParam() {
   if (!_nh.getParam(ros::this_node::getName() + "/mavros_local_position", _mavrosLocalPositionTopic)) {
@@ -20,15 +17,16 @@ bool PuzzleTransform::loadParam() {
 }
 
 void PuzzleTransform::connect() {
-  _localPositionSubs = _nh.subscribe<PoseStamped>("/" + _vehicleName + _mavrosLocalPositionTopic, 100, &PuzzleTransform::getLocalPosition, this);
+  _localPositionSubs = _nh.subscribe<PoseStamped>("/" + _vehicleName + _mavrosLocalPositionTopic, 100,
+                                                  &PuzzleTransform::getLocalPosition, this);
 }
 
-void PuzzleTransform::transform() {
+void PuzzleTransform::transform(const PoseStampedConstPtr &ps) {
   _transformMsg.header.stamp = ros::Time::now();
-  _transformMsg.transform.rotation = _dronePose.pose.orientation;
-  _transformMsg.transform.translation.x = _dronePose.pose.position.x;
-  _transformMsg.transform.translation.y = _dronePose.pose.position.y;
-  _transformMsg.transform.translation.z = _dronePose.pose.position.z;
+  _transformMsg.transform.rotation = ps->pose.orientation;
+  _transformMsg.transform.translation.x = ps->pose.position.x;
+  _transformMsg.transform.translation.y = ps->pose.position.y;
+  _transformMsg.transform.translation.z = ps->pose.position.z;
   _transformBroadcaster.sendTransform(_transformMsg);
 }
 

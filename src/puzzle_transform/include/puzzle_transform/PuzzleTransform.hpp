@@ -19,14 +19,13 @@ private:
   ros::NodeHandle &_nh;
   ros::Subscriber _localPositionSubs;
 
-  PoseStamped _dronePose;
   TransformStamped _transformMsg;
   tf2_ros::TransformBroadcaster _transformBroadcaster;
 
   void getLocalPosition(const PoseStampedConstPtr &localPosition);
   void connect();
   bool loadParam();
-  void transform();
+  void transform(const PoseStampedConstPtr &ps);
 
 public:
   PuzzleTransform(ros::NodeHandle &nh);

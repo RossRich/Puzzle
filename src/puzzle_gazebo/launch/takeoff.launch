@@ -5,7 +5,6 @@
         <param name="vehicle_name" value="/iris_puzzle0" type="string"/>
         <param name="vehicle_x" value="2.5"/>
         <param name="vehicle_z" value="1.8"/>
-        
     </node>
 
     <!-- <node name="offboard_node_uav1" pkg="PxSitl" type="PxSitl_node" output="screen">

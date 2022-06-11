@@ -23,11 +23,20 @@ public:
     _markersPublisher.shutdown();
   }
 
-  // TODO: void update(Marker) { Marker.update() };
-
   void draw(PainterObjectBase &obj, const Pose &pose) {
     Marker &m = obj.drawMarker();
     m.pose = pose;
+    _markersPublisher.publish(m);
+  }
+
+  void update(PainterObjectBase &obj, const Pose &pose) {
+    Marker &m = obj.updateMarker();
+    m.pose = pose;
+    _markersPublisher.publish(m);
+  }
+
+  void update(PainterObjectBase &obj) {
+    Marker &m = obj.updateMarker();
     _markersPublisher.publish(m);
   }
 

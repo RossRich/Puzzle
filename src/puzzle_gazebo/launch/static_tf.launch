@@ -1,4 +1,4 @@
 <?xml version="1.0"?>
 <launch>
-  <node name="tf_depth_camera" pkg="tf2_ros" type="static_transform_publisher"  args="0.1 0 0 1.57 0 1.57 base_link_frd camera_link"/>
+  <node name="tf_depth_camera" pkg="tf2_ros" type="static_transform_publisher" args="0.1 0 0 1.57 0 1.57 base_link_frd camera_link" output="log"/>
 </launch>
