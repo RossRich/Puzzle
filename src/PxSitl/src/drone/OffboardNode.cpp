@@ -42,11 +42,9 @@ void drawDronePose(geometry_msgs::TransformStamped &ts) {
   drone.header.frame_id = "map";
   drone.header.stamp = ros::Time::now();
 
-  geometry_msgs::Vector3 scale;
-  scale.x = 1;
-  scale.y = 1;
-  scale.z = 1;
-  drone.scale = scale;
+  drone.scale.x = 1;
+  drone.scale.y = 1;
+  drone.scale.z = 1;
   drone.pose.orientation = ts.transform.rotation;
   drone.pose.position.x = ts.transform.translation.x;
   drone.pose.position.y = ts.transform.translation.y;
@@ -89,7 +87,6 @@ int main(int argc, char *argv[]) {
   ros::ServiceClient setModeCli = nh.serviceClient<SetMode>(vehicleName + "/mavros/set_mode");
   ros::Subscriber pos = nh.subscribe<geometry_msgs::PoseStamped>(vehicleName + "/mavros/local_position/pose", 10, poseCb);
   ros::Subscriber goalPose = nh.subscribe("/move_base_simple/goal", 1, goalPoseCallback);
-
   droneMarkerPublisher = nh.advertise<Marker>("/drone_marker", 5);
 
   ros::Rate rate(20.0);
@@ -145,18 +142,6 @@ int main(int argc, char *argv[]) {
 
         lastRequest = ros::Time::now();
       }
-    }
-
-    if (currentState.mode == "OFFBOARD" && currentState.armed == 1) {
-      tf2::Quaternion q;
-      tf2::fromMsg(currentPose.pose.orientation, q);
-      tf2::Vector3 v;
-      tf2::fromMsg(currentPose.pose.position, v);
-      tf2::Stamped<tf2::Transform> ts(tf2::Transform(tf2::Quaternion(q), tf2::Vector3(v)), ros::Time::now(), "map");
-      tfTransformStamped = tf2::toMsg(ts);
-      tfTransformStamped.child_frame_id = "base_link";
-      tfBroadcaster.sendTransform(tfTransformStamped);
-      drawDronePose(tfTransformStamped);
     }
 
     droneGoalPose.pose.position.z = zPosition;

@@ -2,28 +2,28 @@
 #define _VISION_STATE_TRACKING_H_
 #define PZ_GRAVITY 9.8f
 
-#include <puzzle_msgs/Metrics.h>
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <image_geometry/pinhole_camera_model.h>
 #include <image_transport/image_transport.h>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <puzzle_common/RvizPainter.hpp>
+#include <puzzle_msgs/Metrics.h>
 #include <ros/ros.h>
 #include <sensor_msgs/CameraInfo.h>
 #include <std_srvs/Empty.h>
+#include <tf2/utils.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
-#include <tf2/utils.h>
 
-#include "../utils/Line.hpp"
 #include "BallTracking.hpp"
 #include "BallTrackingRos.hpp"
+#include "PxSitl/utils/Line.hpp"
 #include "RosVH.hpp"
 #include "State.hpp"
 #include "VideoHandler.hpp"
-#include "utils/RvizPainter.hpp"
 #include "utils/RvizPainterObject.hpp"
 #include "utils/Utils.hpp"
 #include "utils/thresholdtype.hpp"
@@ -31,10 +31,9 @@
 using geometry_msgs::Pose;
 using geometry_msgs::TransformStamped;
 using image_geometry::PinholeCameraModel;
+using puzzle_msgs::Metrics;
 using sensor_msgs::CameraInfo;
 using sensor_msgs::CameraInfoConstPtr;
-using puzzle_msgs::Metrics;
-
 
 class StateTracking : public State {
 private:
@@ -96,7 +95,7 @@ private:
    * @param[out] objPos tf2::Vector3 - 3d point
    **/
   void getObjPosFromImg(cv::Point2i &point2d, float distToObj, tf2::Vector3 &objPos);
-  
+
   float getDistToObj(cv::Mat &mask, uint16_t &radius);
   float getVelocity(float x, float y, float angle);
   float getContactProbobility(const tf2::Vector3 &currentObjPosition, const tf2::Vector3 &lastObjPosition, const tf2::Vector3 &cameraPosition);

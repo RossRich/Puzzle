@@ -1,11 +1,7 @@
-#if !defined(_PUZLLE_ROS_RVIZ_PAINTER_H_)
-#define _PUZLLE_ROS_RVIZ_PAINTER_H_
+#if !defined(_PUZLLE_COMMON_RVIZ_PAINTER_H_)
+#define _PUZLLE_COMMON_RVIZ_PAINTER_H_
 
-#include "RvizPainterObject.hpp"
-#include <ros/ros.h>
-#include <tf2/LinearMath/Quaternion.h>
-#include <tf2/LinearMath/Vector3.h>
-#include <visualization_msgs/Marker.h>
+#include "RvizPainterObjects.hpp"
 
 using geometry_msgs::Point;
 using geometry_msgs::Pose;
@@ -19,7 +15,7 @@ private:
   ros::Publisher _markersPublisher;
 
 public:
-  explicit RvizPainter(ros::NodeHandle &nh, const char *pubName = "rviz_painter") : _nh(nh), _pubName(pubName) {
+  RvizPainter(ros::NodeHandle &nh, const char *pubName = "rviz_painter") : _nh(nh), _pubName(pubName) {
     _markersPublisher = _nh.advertise<Marker>(_pubName, 100);
   }
 
@@ -27,7 +23,7 @@ public:
     _markersPublisher.shutdown();
   }
 
-  //TODO: void update(Marker) { Marker.update() };
+  // TODO: void update(Marker) { Marker.update() };
 
   void draw(PainterObjectBase &obj, const Pose &pose) {
     Marker &m = obj.drawMarker();
@@ -54,7 +50,7 @@ public:
     m.points.clear();
     m.points.push_back(p1);
     m.points.push_back(p2);
-    
+
     _markersPublisher.publish(m);
   }
 
@@ -74,7 +70,7 @@ public:
       tf2::toMsg(point, pMsg);
       m.points.push_back(pMsg);
     }
-    
+
     _markersPublisher.publish(m);
   }
 
@@ -82,12 +78,11 @@ public:
     Marker &m = obj.drawMarker();
     Point pMsg;
     m.points.clear();
-    for (auto &point : points)
-    {
+    for (auto &point : points) {
       tf2::toMsg(point, pMsg);
       m.points.push_back(pMsg);
     }
-    
+
     _markersPublisher.publish(m);
   }
 
@@ -99,4 +94,4 @@ public:
   }
 };
 
-#endif // _PUZLLE_ROS_RVIZ_PAINTER_H_
+#endif // _PUZLLE_COMMON_RVIZ_PAINTER_H_

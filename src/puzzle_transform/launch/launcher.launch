@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<launch>
+  <node name="puzzle_transform" pkg="puzzle_transform" type="puzzle_transform_node" output="screen" respawn="false">
+    <param name="puzzle_vehicle_name" value="iris_puzzle0" type="string" />
+    <param name="mavros_local_position" value="/mavros/local_position/pose" type="string" />
+  </node>
+</launch>

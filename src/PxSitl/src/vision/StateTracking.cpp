@@ -107,11 +107,11 @@ float StateTracking::getDistToObj(cv::Mat &mask, uint16_t &radius) {
     if (mapOfDist.count(d) > 0) {
       mapOfDist.at(d) += 1;
       uint16_t num = mapOfDist.at(d);
-      if(num > maxCount) {
+      if (num > maxCount) {
         maxCount = num;
         bestDist = d;
       }
-      
+
     } else
       mapOfDist.insert(std::pair<uint16_t, uint16_t>(d, 1));
   }
@@ -128,7 +128,7 @@ float StateTracking::getDistToObj(cv::Mat &mask, uint16_t &radius) {
   for (std::multimap<uint16_t, uint16_t>::const_iterator i = inv.cend(); i != inv.cbegin(); i--) {
     if (i->second <= 100)
       continue;
-  
+
     distToBall = i->second;
     break;
   } */
@@ -696,8 +696,8 @@ void StateTracking::conceptThree(cv::Mat &mask, cv::Point2i &point2d, uint16_t &
   }
 
   float distToObj = getDistToObj(mask, radius);
-  
-  if(distToObj == 0) {
+
+  if (distToObj == 0) {
     ROS_WARN_STREAM_THROTTLE(5.0, "Distance to object out of range [0.1, 5.0]");
     return;
   }
@@ -715,7 +715,7 @@ void StateTracking::conceptThree(cv::Mat &mask, cv::Point2i &point2d, uint16_t &
     return;
   }
 
-  if(tf2::tf2Distance2(_firstObjPosition, newObjPosition) > 0.0225 && _objMoveTimer.is_zero()) {
+  if (tf2::tf2Distance2(_firstObjPosition, newObjPosition) > 0.0225 && _objMoveTimer.is_zero()) {
     _objMoveTimer = ros::Time::now();
   }
 
@@ -733,7 +733,7 @@ void StateTracking::conceptThree(cv::Mat &mask, cv::Point2i &point2d, uint16_t &
     _test2222 = newObjPosition;
 
   // if (_realTrajPoints.size() < 3)
-    // return;
+  // return;
 
   TransformStamped transform = _tfBuffer.lookupTransform("map", "base_link_frd", ros::Time(0));
   tf2::Quaternion cameraOrientation; ///< camera orientation in map
@@ -752,7 +752,6 @@ void StateTracking::conceptThree(cv::Mat &mask, cv::Point2i &point2d, uint16_t &
   ROS_DEBUG_STREAM("safeDist: " << safeDist);
   ROS_DEBUG_STREAM("pointsInTraj: " << _realTrajPoints.size());
   ROS_DEBUG_STREAM("objMoveTimer: " << ros::Duration(ros::Time::now() - _objMoveTimer).toSec());
-
 
   if (safeDist > .5f && ros::Duration(ros::Time::now() - _objMoveTimer).toSec() < 0.1) {
     return;
@@ -822,7 +821,7 @@ void StateTracking::execute() {
   // ROS_DEBUG("RADIUS: %i", radius);
 
   if (radius != 0) {
-    
+
     /* try {
       conceptOne(mask, center, radius);
       conceptTwo(mask, center, radius);
@@ -853,7 +852,7 @@ void StateTracking::execute() {
                 cv::FONT_HERSHEY_SIMPLEX, .4, cv::Scalar::all(0)); */
     _resetTimer = ros::Time::now();
   } else {
-    ROS_DEBUG_STREAM_THROTTLE(0.25,"Obj lost");
+    ROS_DEBUG_STREAM_THROTTLE(0.25, "Obj lost");
     if (ros::Time::now() - _resetTimer >= ros::Duration(3.0)) {
       _resetTimer = ros::Time::now();
       _predTrajectory.clear();
