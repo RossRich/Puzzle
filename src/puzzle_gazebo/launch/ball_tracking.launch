@@ -2,6 +2,10 @@
 <launch>
   <arg name="rviz_cong" value="$(find puzzle_gazebo)/rviz/ballTest.rviz"/>
 
+  <remap from="/iris_puzzle0/camera/depth/image_raw" to="/camera/aligned_depth_to_color/image_raw"/>
+  <remap from="/iris_puzzle0/camera/rgb/image_raw" to="/camera/color/image_raw"/>
+  <remap from="/iris_puzzle0/camera/rgb/camera_info" to="/camera/color/camera_info"/>
+
   <node name="ball_tracking" pkg="PxSitl" type="BallTrackingNode" output="screen" required="true">
     <param name="color_topic" value="/camera/color/image_raw"/>
     <param name="depth_topic" value="/camera/aligned_depth_to_color/image_raw"/>

@@ -1,7 +1,10 @@
 <?xml version="1.0"?>
 <launch>
+  <arg name="puzzle_vehicle_name" default="iris_puzzle0"/>
+  <arg name="mavros_local_position" default="/mavros/local_position/pose"/>
+
   <node name="puzzle_transform" pkg="puzzle_transform" type="puzzle_transform_node" output="log" respawn="false">
-    <param name="puzzle_vehicle_name" value="iris_puzzle0" type="string" />
-    <param name="mavros_local_position" value="/mavros/local_position/pose" type="string" />
+    <param name="puzzle_vehicle_name" value="$(arg puzzle_vehicle_name)" type="string" />
+    <param name="mavros_local_position" value="$(arg mavros_local_position)" type="string" />
   </node>
 </launch>
