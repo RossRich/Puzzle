@@ -1,7 +1,11 @@
 <?xml version="1.0"?>
-<launch>
+  <launch>
+  <!--  Puzzel Gazebo -->
   <env name="GAZEBO_MODEL_PATH" value="$(find puzzle_gazebo)/models:$(optenv GAZEBO_MODEL_PATH)" />
   <env name="GAZEBO_PLUGIN_PATH" value="$(find puzzle_gazebo)/plugins/build:$(optenv GAZEBO_PLUGIN_PATH)" />
+  <!--   sitl_PIX  -->
+  <env name="GAZEBO_MODEL_PATH" value="$(find px4)/Tools/sitl_gazebo/models:$(optenv GAZEBO_MODEL_PATH)" />
+  <env name="GAZEBO_PLUGIN_PATH" value="$(find px4)/build/px4_sitl_default/build_gazebo:$(optenv GAZEBO_PLUGIN_PATH)" /> 
 
   <remap from="/iris_puzzle0/camera/depth/image_raw" to="/camera/aligned_depth_to_color/image_raw"/>
   <remap from="/iris_puzzle0/camera/rgb/image_raw" to="/camera/color/image_raw"/>
@@ -11,7 +15,7 @@
   <arg name="verbose" default="true"/>
   <arg name="gui" default="true"/>
   <arg name="model" default="iris_puzzle"/>
-  
+
   <!-- gazebo -->
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
     <arg name="world_name" value="$(arg world_name)"/>
