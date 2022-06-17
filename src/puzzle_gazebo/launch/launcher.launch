@@ -1,48 +1,52 @@
 <?xml version="1.0"?>
 <launch>
+  <!--  Puzzel Gazebo -->
   <env name="GAZEBO_MODEL_PATH" value="$(find puzzle_gazebo)/models:$(optenv GAZEBO_MODEL_PATH)" />
   <env name="GAZEBO_PLUGIN_PATH" value="$(find puzzle_gazebo)/plugins/build:$(optenv GAZEBO_PLUGIN_PATH)" />
+  <!--   px4_sitl  -->
+  <env name="GAZEBO_MODEL_PATH" value="$(find px4)/Tools/sitl_gazebo/models:$(optenv GAZEBO_MODEL_PATH)" />
+  <env name="GAZEBO_PLUGIN_PATH" value="$(find px4)/build/px4_sitl_default/build_gazebo:$(optenv GAZEBO_PLUGIN_PATH)" />
 
-  <remap from="/iris_puzzle0/camera/depth/image_raw" to="/camera/aligned_depth_to_color/image_raw"/>
-  <remap from="/iris_puzzle0/camera/rgb/image_raw" to="/camera/color/image_raw"/>
-  <remap from="/iris_puzzle0/camera/rgb/camera_info" to="/camera/color/camera_info"/>
-  
-  <arg name="world_name" default="$(find puzzle_gazebo)/worlds/puzzle.world"/>
-  <arg name="verbose" default="true"/>
-  <arg name="gui" default="true"/>
-  <arg name="model" default="iris_puzzle"/>
-  
+  <remap from="/iris_puzzle0/camera/depth/image_raw" to="/camera/aligned_depth_to_color/image_raw" />
+  <remap from="/iris_puzzle0/camera/rgb/image_raw" to="/camera/color/image_raw" />
+  <remap from="/iris_puzzle0/camera/rgb/camera_info" to="/camera/color/camera_info" />
+
+  <arg name="world_name" default="$(find puzzle_gazebo)/worlds/puzzle.world" />
+  <arg name="verbose" default="true" />
+  <arg name="gui" default="true" />
+  <arg name="model" default="iris_puzzle" />
+
   <!-- gazebo -->
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
-    <arg name="world_name" value="$(arg world_name)"/>
-    <arg name="verbose" value="$(arg verbose)"/>
-    <arg name="gui" default="$(arg gui)"/>
-    <arg name="physics" value="ode"/>
+    <arg name="world_name" value="$(arg world_name)" />
+    <arg name="verbose" value="$(arg verbose)" />
+    <arg name="gui" default="$(arg gui)" />
+    <arg name="physics" value="ode" />
   </include>
 
   <!-- mavros -->
   <!-- start id must be equivals 0 -->
-  <arg name="ID" value="0"/>
+  <arg name="ID" value="0" />
   <group ns="$(arg model)$(arg ID)">
     <!-- iris -->
     <include file="$(find puzzle_gazebo)/launch/single_uav_spawn.launch">
-      <arg name="model" value="$(arg model)"/>
-      <arg name="ID" value="$(arg ID)"/>
-      <arg name="x" value="5"/>
-      <arg name="y" value="0"/>
-      <arg name="z" value=".2"/>
-      <arg name="Y" value="3.14"/>
+      <arg name="model" value="$(arg model)" />
+      <arg name="ID" value="$(arg ID)" />
+      <arg name="x" value="5" />
+      <arg name="y" value="0" />
+      <arg name="z" value=".2" />
+      <arg name="Y" value="3.14" />
     </include>
 
-    <arg name="fcu_url" default="udp://:14540@localhost:14580"/>
+    <arg name="fcu_url" default="udp://:14540@localhost:14580" />
     <include file="$(find mavros)/launch/px4.launch">
-        <arg name="fcu_url" value="$(arg fcu_url)"/>
-        <arg name="gcs_url" value=""/>
-        <arg name="tgt_system" value="$(eval 1 + arg('ID'))"/>
-        <arg name="tgt_component" value="1"/>
+      <arg name="fcu_url" value="$(arg fcu_url)" />
+      <arg name="gcs_url" value="" />
+      <arg name="tgt_system" value="$(eval 1 + arg('ID'))" />
+      <arg name="tgt_component" value="1" />
     </include>
   </group>
 
-  <include file="$(find puzzle_gazebo)/launch/static_tf.launch"/>
-  
+  <include file="$(find puzzle_gazebo)/launch/static_tf.launch" />
+
 </launch>
