@@ -289,7 +289,20 @@ float StateTracking::getContactProbobility(const tf2::Vector3 &currentObjPositio
   return 1;
 }
 
-void StateTracking::trajectoryPrediction(const tf2::Vector3 &cameraPosition, const tf2::Quaternion &cameraOrientation, uint8_t safePoints, uint8_t totalPoints, float pointDist2) {
+void StateTracking::trajectoryPrediction(const tf2::Vector3 &cameraPosition, const tf2::Quaternion &cameraOrientation,
+                                         uint8_t safePoints, uint8_t totalPoints, float pointDist2) {
+  if (_realTrajPoints.size() >= 5)
+    safePoints = 5;
+  else if (_realTrajPoints.size() < 5 && _realTrajPoints.size() > 1) {
+    safePoints = _realTrajPoints.size();
+  } else {
+    ROS_ERROR_STREAM("Too few poinst for estimate object trajectory.");
+    return;
+  }
+
+  ROS_DEBUG_STREAM("totalPoints: " << (int)totalPoints);
+  ROS_DEBUG_STREAM("safePoints: " << (int)safePoints);
+
   std::vector<float> abc;
   std::vector<tf2::Vector3> points;
   uint8_t counter = 0;
@@ -333,7 +346,8 @@ void StateTracking::trajectoryPrediction(const tf2::Vector3 &cameraPosition, con
     Pose cameraInBaseLink = transformPose3(cameraPosition, cameraOrientation);
     tf2::Vector3 cameraInBaseLinkPosition;
     tf2::fromMsg(cameraInBaseLink.position, cameraInBaseLinkPosition);
-    float z = (abc[0] * powf(cameraInBaseLinkPosition.x(), 2) + abc[1] * cameraInBaseLinkPosition.x() + abc[2]) + cameraInBaseLinkPosition.z();
+    float z = (abc[0] * powf(cameraInBaseLinkPosition.x(), 2) + abc[1] * cameraInBaseLinkPosition.x() + abc[2]) +
+              cameraInBaseLinkPosition.z();
     cameraInBaseLinkPosition.setZ(z);
     cameraInBaseLink = transformPose2(cameraInBaseLinkPosition, tf2::Quaternion::getIdentity());
     tf2::fromMsg(cameraInBaseLink.position, cameraInBaseLinkPosition);
@@ -350,10 +364,7 @@ void StateTracking::trajectoryPrediction(const tf2::Vector3 &cameraPosition, con
     approxLinear(points, abc, totalPoints);
 
   for (auto &point : points) {
-    ROS_DEBUG_STREAM("point:\n"
-                     << point.x() << "\n"
-                     << point.y() << "\n"
-                     << point.z());
+    ROS_DEBUG_STREAM("point:\n" << point.x() << "\n" << point.y() << "\n" << point.z());
   }
 
   for (auto &k : abc) {
@@ -582,7 +593,8 @@ void StateTracking::conceptTwo(cv::Mat &mask, cv::Point2i &point2d, uint16_t &ra
   float m = currToLast.y() / currToLast.x(); */
 }
 
-void StateTracking::approxQuadratic(std::vector<tf2::Vector3> &in, std::vector<float> &out, uint8_t newPoints, float dist) {
+void StateTracking::approxQuadratic(std::vector<tf2::Vector3> &in, std::vector<float> &out, uint8_t newPoints,
+                                    float dist) {
   if (in.size() < 3) {
     ROS_ERROR_STREAM(
         "[StateTracking::approxQuadratic] Input points number not enother for quadratic approximation. Total points = "
@@ -656,7 +668,8 @@ void StateTracking::approxLinear(std::vector<tf2::Vector3> &in, std::vector<floa
   }
 }
 
-float StateTracking::calcPlane(const tf2::Vector3 &p1, const tf2::Vector3 &p2, const tf2::Vector3 &p3, const tf2::Vector3 &targetPosition) {
+float StateTracking::calcPlane(const tf2::Vector3 &p1, const tf2::Vector3 &p2, const tf2::Vector3 &p3,
+                               const tf2::Vector3 &targetPosition) {
   tf2::Vector3 planeNormal = tf2::tf2Cross(p2 - p1, p3 - p1).normalize();
   tf2::Vector3 planeNormalUp = tf2::tf2Cross(p2 - p1, planeNormal).normalize();
 
@@ -688,7 +701,7 @@ void StateTracking::conceptThree(cv::Mat &mask, cv::Point2i &point2d, uint16_t &
     if (timeOut >= 0.1) {
       if (_isObjDetected && !_isTrekLinePredicted) {
         ROS_DEBUG("predict");
-        // trajectoryPrediction(cameraPosition, cameraOrientation, safePoints, totalPoints, pointDist2);
+        trajectoryPrediction(cameraPosition, cameraOrientation, safePoints, totalPoints, pointDist2);
         _isTrekLinePredicted = true;
       }
     }
@@ -736,15 +749,18 @@ void StateTracking::conceptThree(cv::Mat &mask, cv::Point2i &point2d, uint16_t &
   // return;
 
   TransformStamped transform = _tfBuffer.lookupTransform("map", "base_link_frd", ros::Time(0));
-  tf2::Quaternion cameraOrientation; ///< camera orientation in map
-  tf2::Vector3 cameraPosition;       ///< camera position in map
+  // tf2::Quaternion cameraOrientation; ///< camera orientation in map
+  // tf2::Vector3 cameraPosition;       ///< camera position in map
   tf2::fromMsg(transform.transform.rotation, cameraOrientation);
   tf2::fromMsg(transform.transform.translation, cameraPosition);
 
   float totalDist2 = tf2::tf2Distance2(_firstObjPosition, cameraPosition);
-  float pointDist2 = tf2::tf2Distance2(_firstObjPosition, _test2222);
-  uint8_t totalPoints = std::floor(sqrtf(totalDist2 / pointDist2));
-  uint8_t safePoints = std::floor(totalPoints / 2.f);
+  pointDist2 = tf2::tf2Distance2(_firstObjPosition, _test2222);
+  // float pointDist2 = tf2::tf2Distance2(_firstObjPosition, _test2222);
+  totalPoints = std::floor(sqrtf(totalDist2 / pointDist2));
+  // uint8_t totalPoints = std::floor(sqrtf(totalDist2 / pointDist2));
+  safePoints = std::floor(totalPoints / 2.f);
+  // uint8_t safePoints = std::floor(totalPoints / 2.f);
   if (safePoints > 5)
     safePoints = 5; ///< TODO: not good idea
 
@@ -756,18 +772,6 @@ void StateTracking::conceptThree(cv::Mat &mask, cv::Point2i &point2d, uint16_t &
   if (safeDist > .5f && ros::Duration(ros::Time::now() - _objMoveTimer).toSec() < 0.1) {
     return;
   }
-
-  if (_realTrajPoints.size() >= 5)
-    safePoints = 5;
-  else if (_realTrajPoints.size() < 5 && _realTrajPoints.size() > 1) {
-    safePoints = _realTrajPoints.size();
-  } else {
-    ROS_ERROR_STREAM("Too few poinst for estimate object trajectory.");
-    return;
-  }
-
-  ROS_DEBUG_STREAM("totalPoints: " << (int)totalPoints);
-  ROS_DEBUG_STREAM("safePoints: " << (int)safePoints);
 
   _rvizPainter->draw(_rvizPainterObject.getRegArrow(), cameraPosition, cameraOrientation);
 

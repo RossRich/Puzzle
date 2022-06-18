@@ -60,7 +60,7 @@
       <pose>0 8 0.5 0 0 0</pose>
       <static>true</static>
     </include>
-    
+
     <include>
       <uri>model://red_ball</uri>
       <name>ball_2</name>
@@ -74,7 +74,7 @@
       <pose>0 -8 0.5 0 0 0</pose>
       <static>true</static>
     </include>
-        
+
     <include>
       <uri>model://red_ball</uri>
       <name>ball_5</name>
@@ -160,13 +160,13 @@
     </include>
 
     <include>
-        <uri>model://red_ball</uri>
-        <name>ball_16</name>
-        <pose> 6.9 -4 0.5 0 0 0</pose>
-        <static>true</static>
+      <uri>model://red_ball</uri>
+      <name>ball_16</name>
+      <pose> 6.9 -4 0.5 0 0 0</pose>
+      <static>true</static>
     </include>
 
-        <include>
+    <include>
       <uri>model://red_ball</uri>
       <name>ball_17</name>
       <pose> 2 -7.7 0.5 0 0 0</pose>
@@ -558,7 +558,6 @@
       <static>true</static>
     </include>
 
-    __________________
     <include>
       <uri>model://red_ball</uri>
       <name>ball_73</name>
@@ -761,7 +760,7 @@
       <pose>2.8 2.8 4.5 0 0 0</pose>
       <static>true</static>
     </include>
-    
+
     <include>
       <uri>model://red_ball</uri>
       <name>ball_102</name>
@@ -929,7 +928,7 @@
       <pose>1.7 1.7 5.5 0 0 0</pose>
       <static>true</static>
     </include>
-    
+
     <include>
       <uri>model://red_ball</uri>
       <name>ball_126</name>
@@ -1062,9 +1061,5 @@
       <pose> 0.65 -2.4 5.5 0 0 0</pose>
       <static>true</static>
     </include>
-
-
-    -->
-
-      </world>
-    </sdf>
+  </world>
+</sdf>

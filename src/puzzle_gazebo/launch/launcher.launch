@@ -1,17 +1,18 @@
 <?xml version="1.0"?>
 <launch>
-  <!-- puzzle_gazebo -->
-  <env name="GAZEBO_MODEL_PATH" value="$(find puzzle_gazebo)/models:$(optenv GAZEBO_MODEL_PATH)" />
-  <env name="GAZEBO_PLUGIN_PATH" value="$(find puzzle_gazebo)/plugins/build:$(optenv GAZEBO_PLUGIN_PATH)" />
-
-  <!-- px4_sitl -->
-  <env name="GAZEBO_MODEL_PATH" value="$(find px4)/Tools/sitl_gazebo/models:$(optenv GAZEBO_MODEL_PATH)" />
-  <env name="GAZEBO_PLUGIN_PATH" value="$(find px4)/build/px4_sitl_default/build_gazebo:$(optenv GAZEBO_PLUGIN_PATH)" />
-
-  <arg name="world_name" default="$(find puzzle_gazebo)/worlds/puzzle.world" />
-  <arg name="verbose" default="true" />
+  <arg name="world_name" default="$(find puzzle_gazebo)/worlds/puzzle_sphere_red_ball.world" />
+  <arg name="verbose" default="false" />
   <arg name="gui" default="true" />
   <arg name="model" default="iris_puzzle" />
+
+  <!-- puzzle sitl env variables -->
+  <env name="GAZEBO_MODEL_PATH" value="$(optenv GAZEBO_MODEL_PATH):$(find puzzle_gazebo)/models:$(find px4)/Tools/sitl_gazebo/models" />
+  <env name="GAZEBO_PLUGIN_PATH" value="$(optenv GAZEBO_PLUGIN_PATH):$(find puzzle_gazebo)/plugins/build:$(find px4)/build/px4_sitl_default/build_gazebo" />
+  <env name="LD_LIBRARY_PATH" value="$(optenv LD_LIBRARY_PATH):$(find px4)/build/px4_sitl_default/build_gazebo" />
+
+  <remap from="/iris_puzzle0/camera/depth/image_raw" to="/camera/aligned_depth_to_color/image_raw" />
+  <remap from="/iris_puzzle0/camera/rgb/image_raw" to="/camera/color/image_raw" />
+  <remap from="/iris_puzzle0/camera/rgb/camera_info" to="/camera/color/camera_info" />
 
   <!-- gazebo -->
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
@@ -44,7 +45,7 @@
     </include>
   </group>
 
-  <include file="$(find puzzle_gazebo)/launch/static_tf.launch"/>
-  <include file="$(find puzzle_transform)/launch/launcher.launch"/>
-  <include file="$(find puzzle_drone_marker)/launch/launcher.launch"/>
+  <include file="$(find puzzle_gazebo)/launch/static_tf.launch" />
+  <include file="$(find puzzle_transform)/launch/launcher.launch" />
+  <include file="$(find puzzle_drone_marker)/launch/launcher.launch" />
 </launch>
