@@ -1,8 +1,8 @@
 #if !defined(_TRACKING_PARAM_H_)
 #define _TRACKING_PARAM_H_
 
-#include "../utils/Utils.hpp"
-#include "../utils/thresholdtype.hpp"
+#include "PxSitl/vision/utils/Utils.hpp"
+#include "PxSitl/vision/utils/thresholdtype.hpp"
 #include <iostream>
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>

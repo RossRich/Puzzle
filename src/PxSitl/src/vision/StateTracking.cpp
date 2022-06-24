@@ -1,42 +1,37 @@
-#include "../../include/PxSitl/vision/StateTracking.hpp"
+#include "PxSitl/vision/StateTracking.hpp"
 
 StateTracking::~StateTracking() {
   std::cout << "Delete state tracking\n";
-  cv::destroyAllWindows();
-  delete _tfListener;
-  delete _bt;
-  delete _vh;
-  delete _it;
-  delete _rvizPainter;
+  // cv::destroyAllWindows();
 }
 
 bool StateTracking::loadParam() {
 
   if (!_nh.getParam("data_config", _confFile)) {
-    ROS_ERROR("No data_config param");
+    ROS_ERROR("[StateTracking] No data_config param");
     return false;
   }
 
-  ROS_INFO("Reads camera info from topic \'%s\'  ...", _cameraInfoTopic.c_str());
+  ROS_INFO("[StateTracking] Reads camera info from topic \'%s\'  ...", _cameraInfoTopic.c_str());
   try {
     _cameraInfo = ros::topic::waitForMessage<sensor_msgs::CameraInfo>(_cameraInfoTopic, _nh);
   } catch (const ros::Exception &e) {
-    ROS_ERROR("%s", e.what());
-    ROS_ERROR("Failed to get camera info. Exit.");
+    ROS_ERROR("[StateTracking] %s", e.what());
+    ROS_ERROR("[StateTracking] Failed to get camera info. Exit.");
     return false;
   }
 
   if (!_cameraInfo || _cameraInfo->width <= 0 || _cameraInfo->height <= 0) {
-    ROS_ERROR("Failed to get camera info. Exit.");
+    ROS_ERROR("[StateTracking] Failed to get camera info. Exit.");
     return false;
   }
 
   if (!_nh.getParam("filter_gain", _filterGain)) {
-    ROS_INFO("No filter_gain param. Use default value %f", _filterGain);
+    ROS_INFO("[StateTracking] No filter_gain param. Use default value %f", _filterGain);
   }
 
   if (!_nh.getParam("dt_for_prediction", _dt4prediction)) {
-    ROS_INFO("No dt_for_prediction param. Use default value %f", _dt4prediction);
+    ROS_INFO("[StateTracking] No dt_for_prediction param. Use default value %f", _dt4prediction);
   }
 
   return true;
@@ -45,37 +40,43 @@ bool StateTracking::loadParam() {
 bool StateTracking::setup() {
   threshold_t threshold;
   if (!Utils::readThresholds(_confFile.c_str(), threshold)) {
-    ROS_ERROR("Failed to read color treshold. Exit.");
+    ROS_ERROR("[StateTracking] Failed to read color treshold. Exit.");
     return false;
   }
 
   if (!_cameraModel.initialized()) {
     if (!_cameraModel.fromCameraInfo(_cameraInfo)) {
-      ROS_ERROR("Failed to build model of camera. Exit.");
+      ROS_ERROR("[StateTracking] Failed to build model of camera. Exit.");
       return false;
     }
   }
 
-  if (_it == nullptr)
-    _it = new image_transport::ImageTransport(_nh);
+  if (!_it)
+    _it = std::make_shared<image_transport::ImageTransport>(_nh);
 
-  if (_vh == nullptr)
-    _vh = new RosVH(_nh, *_it, _cameraInfo->width, _cameraInfo->height);
+  if (!_vh) {
+    try {
+      _vh = std::make_unique<RosVH>(_nh, *_it, _cameraInfo->width, _cameraInfo->height);
+    } catch (const ros::Exception &e) {
+      ROS_ERROR_STREAM("[StateTracking] " << e.what());
+      return false;
+    }
+  }
 
-  if (_bt == nullptr)
-    _bt = new BallTracking(_vh->getWidth(), _vh->getHeight(), threshold);
+  if (!_bt)
+    _bt = std::make_unique<BallTracking>(_vh->getWidth(), _vh->getHeight(), threshold);
 
-  if (_tfListener == nullptr)
-    _tfListener = new tf2_ros::TransformListener(_tfBuffer, _nh);
+  if (!_tfListener)
+    _tfListener = std::make_unique<tf2_ros::TransformListener>(_tfBuffer, _nh);
 
-  if (_rvizPainter == nullptr)
-    _rvizPainter = new RvizPainter(_nh);
+  if (!_rvizPainter)
+    _rvizPainter = std::make_unique<RvizPainter>(_nh, "tracking_painter");
 
   if (_metricsPublisher.getTopic().empty()) {
     _metricsPublisher = _nh.advertise<puzzle_msgs::Metrics>("metrics", 1500);
   }
 
-  cv::namedWindow(_winName, cv::WINDOW_AUTOSIZE);
+  // cv::namedWindow(_winName, cv::WINDOW_AUTOSIZE);
   // cv::namedWindow("test", cv::WINDOW_AUTOSIZE);
 
   _loopTimer = ros::Time::now();
@@ -86,8 +87,8 @@ bool StateTracking::setup() {
 }
 
 void StateTracking::wait() {
-  ROS_INFO("Transition from %s state to Wait state", toString().c_str());
-  cv::destroyAllWindows();
+  ROS_INFO("[StateTracking] Transition from %s state to Wait state", toString().c_str());
+  // cv::destroyAllWindows();
   _context.setState(static_cast<State *>(_context.getStateWait()));
 }
 
@@ -102,7 +103,7 @@ float StateTracking::getDistToObj(cv::Mat &mask, uint16_t &radius) {
   uint16_t bestDist = 0;
   std::map<uint16_t, uint16_t> mapOfDist; ///< <Dist, NumOfTheDist>
   for (auto &&d : cv::Mat_<uint16_t>(ballDist)) {
-    if (d <= 100 || d > 5000) ///< min dist = 10 cm, max dist = 5 m
+    if (d <= 100 || d > 3000) ///< min dist = 10 cm, max dist = 3 m
       continue;
     if (mapOfDist.count(d) > 0) {
       mapOfDist.at(d) += 1;
@@ -160,7 +161,7 @@ Pose StateTracking::transformPose2(const tf2::Vector3 &position, const tf2::Quat
   tf2::Transform originalTransform(orientation, position);
   tf2::Stamped<tf2::Transform> ts4Transform(originalTransform, ros::Time::now(), "base_link_frd");
   TransformStamped ts(tf2::toMsg(ts4Transform));
-  ts.child_frame_id = "camera_link";
+  ts.child_frame_id = _cameraModel.tfFrame();
   TransformStamped transform = _tfBuffer.lookupTransform("map", "base_link_frd", ros::Time(0));
   TransformStamped newTransform;
   tf2::doTransform(ts, newTransform, transform);
@@ -364,7 +365,10 @@ void StateTracking::trajectoryPrediction(const tf2::Vector3 &cameraPosition, con
     approxLinear(points, abc, totalPoints);
 
   for (auto &point : points) {
-    ROS_DEBUG_STREAM("point:\n" << point.x() << "\n" << point.y() << "\n" << point.z());
+    ROS_DEBUG_STREAM("point:\n"
+                     << point.x() << "\n"
+                     << point.y() << "\n"
+                     << point.z());
   }
 
   for (auto &k : abc) {
@@ -709,6 +713,7 @@ void StateTracking::conceptThree(cv::Mat &mask, cv::Point2i &point2d, uint16_t &
   }
 
   float distToObj = getDistToObj(mask, radius);
+  ROS_DEBUG_STREAM_THROTTLE(1.0, "distToObj " << distToObj);
 
   if (distToObj == 0) {
     ROS_WARN_STREAM_THROTTLE(5.0, "Distance to object out of range [0.1, 5.0]");
@@ -811,7 +816,7 @@ void StateTracking::execute() {
   _vh->readDepth(_depth);
 
   if (_frame.empty() || _depth.empty()) {
-    ROS_WARN("Frame is empty");
+    ROS_WARN_THROTTLE(1.0, "Frame is empty");
     return;
   }
 
@@ -891,8 +896,8 @@ void StateTracking::execute() {
 
   try {
     // cv::imshow("test", mask);
-    cv::imshow(_winName, tmpFrame);
-    cv::waitKey(1);
+    // cv::imshow(_winName, tmpFrame);
+    // cv::waitKey(1);
   } catch (const cv::Exception &e) {
     ROS_ERROR("[StateTracking] The video in current environment not available.\n%s", e.what());
     wait();

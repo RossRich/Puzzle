@@ -1,11 +1,6 @@
-#include "../../../include/PxSitl/vision/setup/BallTrackingSetupRos.hpp"
+#include "PxSitl/vision/setup/BallTrackingSetupRos.hpp"
 
-BallTrackingSetupRos::BallTrackingSetupRos(ros::NodeHandle nh, VideoHandler &vh) : _nh(nh), _vh(vh) {
-
-  if (!loadParam()) {
-    return;
-  }
-
+BallTrackingSetupRos::BallTrackingSetupRos(ros::NodeHandle &nh, VideoHandler &vh) : _nh(nh), _vh(vh) {
   _tp = TrackingParam(_confFile.c_str());
 
   cv::namedWindow(_winName, cv::WINDOW_AUTOSIZE | cv::WINDOW_GUI_NORMAL);
@@ -13,8 +8,6 @@ BallTrackingSetupRos::BallTrackingSetupRos(ros::NodeHandle nh, VideoHandler &vh)
 }
 
 BallTrackingSetupRos::~BallTrackingSetupRos() { cv::destroyWindow(_winName); }
-
-bool BallTrackingSetupRos::loadParam() { return true; }
 
 void BallTrackingSetupRos::onMouseCallback(int ev, int x, int y, int flag) {
   if (ev == cv::MouseEventTypes::EVENT_LBUTTONUP) {
@@ -34,7 +27,7 @@ void BallTrackingSetupRos::loop() {
     _vh >> _frame;
 
   if (_frame.empty()) {
-    ROS_WARN("Frame is empty");
+    ROS_WARN("[BallTrackingSetupRos] Frame is empty");
     return;
   }
 
@@ -70,7 +63,6 @@ void BallTrackingSetupRos::loop() {
   cv::waitKey(1);
 }
 
-// static functions
 void BallTrackingSetupRos::onMouseCallbackCv(int ev, int x, int y, int flag, void *uData) {
   BallTrackingSetupRos *tp = static_cast<BallTrackingSetupRos *>(uData);
   tp->onMouseCallback(ev, x, y, flag);

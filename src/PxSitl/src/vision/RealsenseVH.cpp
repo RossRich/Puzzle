@@ -1,4 +1,4 @@
-#include "../../include/PxSitl/vision/RealsenseVH.hpp"
+#include "PxSitl/vision/RealsenseVH.hpp"
 
 RealsenseVH::RealsenseVH(uint16_t width, uint16_t height, rs2::pipeline &rsPipe)
     : VideoHandler(width, height), _rsPipe(rsPipe) {

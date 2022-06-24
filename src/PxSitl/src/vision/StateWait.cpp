@@ -1,7 +1,7 @@
-#include "../../include/PxSitl/vision/StateWait.hpp"
+#include "PxSitl/vision/StateWait.hpp"
 
 void StateWait::tracking() {
-  ROS_INFO("Transition from %s state to Tracking state", toString().c_str());
+  ROS_INFO("[StateWait] Transition from %s state to Tracking state", toString().c_str());
 
   if(!_context.getStateTracking()->loadParam())
     return;

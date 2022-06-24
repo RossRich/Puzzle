@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="rviz_cong" default="$(find puzzle_gazebo)/rviz/ballTest.rviz" />
+
+  <include file="$(find puzzle_drone)/launch/static_tf.launch" />
+
+  <include file="$(find realsense2_camera)/launch/rs_aligned_depth.launch">
+    <arg name="enable_pointcloud" value="false" />
+    <arg name="enable_fisheye" value="false" />
+    <arg name="camera" value="camera_d435i" />
+    <arg name="depth_fps" value="60" />
+    <arg name="color_fps" value="60" />
+    <arg name="infra_fps" value="60" />
+    <arg name="filters" value="hole_filling,hdr_merge,spatial" />
+  </include>
+
+  <node name="ball_tracking" pkg="PxSitl" type="BallTrackingNode" output="screen">
+    <param name="camera_color_topic" value="/camera_d435i/color/image_raw" />
+    <param name="camera_depth_topic" value="/camera_d435i/aligned_depth_to_color/image_raw" />
+    <param name="data_config" value="$(find PxSitl)/data/config.yaml" />
+    <param name="filter_gain" value="0.0" />
+    <param name="dt_for_prediction" value="0.01" />
+  </node>
+
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rviz_cong)" output="log" />
+</launch>

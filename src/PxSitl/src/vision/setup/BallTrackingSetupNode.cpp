@@ -1,24 +1,31 @@
-#include "../../../include/PxSitl/vision/RosVH.hpp"
-#include "../../../include/PxSitl/vision/setup/BallTrackingSetupRos.hpp"
+#include "PxSitl/vision/RosVH.hpp"
+#include "PxSitl/vision/setup/BallTrackingSetupRos.hpp"
 #include <ros/ros.h>
 
 int main(int argc, char *argv[]) {
   ros::init(argc, argv, "BallTrackingSetup");
   ros::NodeHandle nh;
-
-  nh.setParam("color_topic", "/camera/color/image_raw");
-  nh.setParam("depth_topic", "/camera/aligned_depth_to_color/image_raw");
-
+  RosVH videoHandler;
   image_transport::ImageTransport it(nh);
-  RosVH videoHandler(nh, it, 640, 480);
+
+  try {
+    videoHandler = RosVH(nh, it, 640, 480);
+  } catch (const ros::Exception &e) {
+    ROS_ERROR_STREAM("[RosVH] " << e.what());
+    ros::shutdown();
+  }
+
+  if(!videoHandler.isValid())
+    return EXIT_FAILURE;
+
   BallTrackingSetupRos tp(nh, videoHandler);
   ros::Rate loop_rate(30);
-
   while (ros::ok()) {
     tp.loop();
     ros::spinOnce();
     loop_rate.sleep();
   }
 
-  std::cout << "Threshold updated\n";
+  ROS_INFO("[BallTrackingSetupNode] Threshold updated");
+  return 0;
 }

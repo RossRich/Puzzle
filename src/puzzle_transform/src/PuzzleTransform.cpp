@@ -8,8 +8,8 @@ bool PuzzleTransform::loadParam() {
     return false;
   }
 
-  if (!_nh.getParam(ros::this_node::getName() + "/puzzle_vehicle_name", _vehicleName)) {
-    ROS_ERROR("[PuzzleTransform::loadParam] no parameter \'puzzle_vehicle_name\'");
+  if (!_nh.getParam(ros::this_node::getName() + "/drone_name", _vehicleName)) {
+    ROS_ERROR("[PuzzleTransform::loadParam] no parameter \'drone_name\'");
     return false;
   }
 
@@ -17,7 +17,7 @@ bool PuzzleTransform::loadParam() {
 }
 
 void PuzzleTransform::connect() {
-  _localPositionSubs = _nh.subscribe<PoseStamped>("/" + _vehicleName + _mavrosLocalPositionTopic, 100,
+  _localPositionSubs = _nh.subscribe<PoseStamped>("/" + _vehicleName + _mavrosLocalPositionTopic, 10,
                                                   &PuzzleTransform::getLocalPosition, this);
 }
 

@@ -7,3 +7,6 @@
 [submodule "src/ddynamic_reconfigure"]
 	path = src/ddynamic_reconfigure
 	url = https://github.com/pal-robotics/ddynamic_reconfigure.git
+[submodule "src/px4_vio"]
+	path = src/px4_vio
+	url = https://github.com/RossRich/Px4VIO.git

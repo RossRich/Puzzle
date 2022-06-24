@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="camera_color_topic" default="/camera/color/image_raw" />
+  <arg name="camera_depth_topic" default="/camera/depth/image_rect_raw" />
+  <param name="camera_color_topic" value="$(arg camera_color_topic)" />
+  <param name="camera_depth_topic" value="$(arg camera_depth_topic)" />
+  <node name="ball_tracking_setup" pkg="PxSitl" type="BallTrackingSetupNode" output="screen" />
+</launch>

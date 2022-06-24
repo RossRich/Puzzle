@@ -11,26 +11,22 @@ class StateTracking;
 class BallTrackingRos {
 
 private:
-  static BallTrackingRos *_instance;
-
   State *_state = nullptr;
   StateWait *_stateWait = nullptr;
   StateTracking *_stateTracking = nullptr;
 
   ros::NodeHandle &_nh;
-  ros::ServiceServer _strategySrv;
-
-  BallTrackingRos(ros::NodeHandle &nh);
-
+  // ros::ServiceServer _strategySrv;
 public:
+  BallTrackingRos(ros::NodeHandle &nh);
   ~BallTrackingRos();
-  static BallTrackingRos* getInstanse(ros::NodeHandle &nh);
+  // static BallTrackingRos* getInstanse(ros::NodeHandle &nh);
 
   void shutdown();
   void setState(State *state);
   void loop();
 
-  bool runSetupSrv(std_srvs::EmptyRequest &request, std_srvs::EmptyResponse &response);
+  // bool runSetupSrv(std_srvs::EmptyRequest &request, std_srvs::EmptyResponse &response);
 
   inline ros::NodeHandle& getNodeHandler() { return _nh; }
   inline StateWait *getStateWait() { return _stateWait; }
@@ -40,8 +36,6 @@ public:
     return &state == btr._state;
   }
 };
-
-BallTrackingRos *BallTrackingRos::_instance = nullptr;
 
 #include "State.hpp"
 #include "StateWait.hpp"

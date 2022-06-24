@@ -10,6 +10,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <puzzle_common/RvizPainter.hpp>
 #include <puzzle_msgs/Metrics.h>
+#include <puzzle_msgs/Detection.h>
 #include <ros/ros.h>
 #include <sensor_msgs/CameraInfo.h>
 #include <std_srvs/Empty.h>
@@ -32,6 +33,7 @@ using geometry_msgs::Pose;
 using geometry_msgs::TransformStamped;
 using image_geometry::PinholeCameraModel;
 using puzzle_msgs::Metrics;
+using puzzle_msgs::Detection;
 using sensor_msgs::CameraInfo;
 using sensor_msgs::CameraInfoConstPtr;
 
@@ -45,11 +47,11 @@ private:
   float _prevDist = 0.f;
   float _dt4prediction = 0.01f;
 
-  BallTracking *_bt = nullptr;
-  RosVH *_vh = nullptr;
+  std::unique_ptr<BallTracking> _bt;
+  std::unique_ptr<RosVH> _vh;
 
   std::string _confFile = "";
-  std::string _cameraInfoTopic = "/camera/color/camera_info";
+  std::string _cameraInfoTopic = "/camera_d435i/depth/camera_info";
   std::list<tf2::Vector3> _realTrajPoints;
   std::list<tf2::Vector3> _predTrajectory;
   std::vector<Line> _predictedSigments;
@@ -63,15 +65,15 @@ private:
   ros::Time _aTimer;
 
   tf2_ros::Buffer _tfBuffer;
-  tf2_ros::TransformListener *_tfListener;
+  std::unique_ptr<tf2_ros::TransformListener> _tfListener;
   tf2::Vector3 _firstObjPosition;
   tf2::Vector3 _test2222;
   tf2::Vector3 _lastObjPosition;
-  image_transport::ImageTransport *_it;
+  std::shared_ptr<image_transport::ImageTransport> _it;
   CameraInfoConstPtr _cameraInfo;
   PinholeCameraModel _cameraModel;
 
-  RvizPainter *_rvizPainter; //< TODO: smart pointer
+  std::unique_ptr<RvizPainter> _rvizPainter;
   RvizPainterObject _rvizPainterObject;
 
   cv::Mat _frame;

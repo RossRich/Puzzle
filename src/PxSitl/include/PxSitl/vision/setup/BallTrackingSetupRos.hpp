@@ -1,7 +1,7 @@
 #if !defined(_BALL_TRACKING_SETUP_H_)
 #define _BALL_TRACKING_SETUP_H_
 
-#include "../VideoHandler.hpp"
+#include "PxSitl/vision/VideoHandler.hpp"
 #include "TrackingParam.hpp"
 #include <opencv2/highgui/highgui.hpp>
 #include <ros/ros.h>
@@ -21,10 +21,9 @@ private:
   ros::NodeHandle _nh;
 
 public:
-  BallTrackingSetupRos(ros::NodeHandle nh, VideoHandler &vh);
+  BallTrackingSetupRos(ros::NodeHandle &nh, VideoHandler &vh);
   ~BallTrackingSetupRos();
 
-  bool loadParam();
   void onMouseCallback(int ev, int x, int y, int flag);
   static void onMouseCallbackCv(int ev, int x, int y, int flag, void *uData);
   void loop();

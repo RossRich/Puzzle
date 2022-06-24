@@ -1,4 +1,4 @@
-#include "../../include/PxSitl/vision/BallTracking.hpp"
+#include "PxSitl/vision/BallTracking.hpp"
 
 BallTracking::BallTracking(uint16_t width, uint16_t height, cv::Vec<cv::Scalar_<uint8_t>, 2> threshold) {
   _imSize = cv::Size2i(width, height);
@@ -22,8 +22,8 @@ void BallTracking::process(cv::Mat &color, cv::Mat &maskt, cv::Point2i *center, 
 
   cv::inRange(frame, cv::Scalar(_threshold[0]), cv::Scalar(_threshold[1]), mask);
 
-  // cv::erode(mask, mask, cv::Mat(), cv::Point2i(), 5);
-  // cv::dilate(mask, mask, cv::Mat(), cv::Point2i(), 6);
+  cv::erode(mask, mask, cv::Mat(), cv::Point2i(), 5);
+  cv::dilate(mask, mask, cv::Mat(), cv::Point2i(), 6);
 
   maskt = mask.clone();
 
