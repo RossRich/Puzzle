@@ -10,7 +10,6 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <puzzle_common/RvizPainter.hpp>
 #include <puzzle_msgs/Metrics.h>
-#include <puzzle_msgs/Detection.h>
 #include <ros/ros.h>
 #include <sensor_msgs/CameraInfo.h>
 #include <std_srvs/Empty.h>
@@ -33,7 +32,6 @@ using geometry_msgs::Pose;
 using geometry_msgs::TransformStamped;
 using image_geometry::PinholeCameraModel;
 using puzzle_msgs::Metrics;
-using puzzle_msgs::Detection;
 using sensor_msgs::CameraInfo;
 using sensor_msgs::CameraInfoConstPtr;
 
