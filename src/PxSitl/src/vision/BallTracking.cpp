@@ -5,49 +5,47 @@ BallTracking::BallTracking(uint16_t width, uint16_t height, cv::Vec<cv::Scalar_<
   _threshold = threshold;
 }
 
-BallTracking::~BallTracking() {}
-
-/* void BallTracking::operator=(const BallTracking &bt) {
-  _imSize = bt._imSize;
-  _threshold = bt._threshold;
-} */
-
-void BallTracking::process(cv::Mat &color, cv::Mat &maskt, cv::Point2i *center, uint16_t *radius) {
+void BallTracking::process(cv::Mat &color, cv::Mat &mask, cv::Point2i *center, uint16_t *radius) {
 
   cv::Mat frame = color.clone();
-  cv::Mat mask(_imSize, CV_8UC1, cv::Scalar::all(0));
+  cv::Mat colorMask(_imSize, CV_8UC1, cv::Scalar::all(0));
 
   GaussianBlur(frame, frame, cv::Size2i(9, 9), 0);
   cv::cvtColor(frame, frame, cv::COLOR_BGR2HSV);
 
-  cv::inRange(frame, cv::Scalar(_threshold[0]), cv::Scalar(_threshold[1]), mask);
+  cv::inRange(frame, cv::Scalar(_threshold[0]), cv::Scalar(_threshold[1]), colorMask);
 
-  cv::erode(mask, mask, cv::Mat(), cv::Point2i(), 5);
-  cv::dilate(mask, mask, cv::Mat(), cv::Point2i(), 6);
+  cv::erode(colorMask, colorMask, cv::Mat(), cv::Point2i(), 2);
+  cv::dilate(colorMask, colorMask, cv::Mat(), cv::Point2i(), 4);
 
-  maskt = mask.clone();
+  mask = colorMask.clone();
 
-  cv::findContours(mask.clone(), _cnts, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
-
-  float R = 0.0;
-  cv::Point2f c;
+  cv::findContours(colorMask, _cnts, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+  
   if (_cnts.size() > 0) {
-    std::vector<cv::Point> cnt0 = _cnts[0];
+    std::vector<cv::Point> bestCnt = _cnts[0];
+    std::cout << "conturs cout: " << _cnts.size() << std::endl;
     int maxSiza = _cnts[0].size();
-    for (auto c : _cnts) {
-      if (c.size() > maxSiza) {
-        cnt0 = c;
-        maxSiza = c.size();
+    for (auto cnt : _cnts) {
+      std::cout << "points in contur: " << cnt.size() << std::endl;
+      if(cnt.size() < 25) ///< TODO: to params
+        continue;
+
+      if (cnt.size() > maxSiza) {
+        bestCnt = cnt;
+        maxSiza = cnt.size();
       }
     }
 
-    cv::minEnclosingCircle(cnt0, c, R);
+    float circleRadius = 0.0;
+    cv::Point2f circleCenter;
+    cv::minEnclosingCircle(bestCnt, circleCenter, circleRadius);
 
     if (center != nullptr)
-      *center = c;
+      *center = circleCenter;
 
     if (radius != nullptr)
-      *radius = static_cast<uint16_t>(std::round(R));
+      *radius = static_cast<uint16_t>(std::round(circleRadius));
 
     /* cv::circle(frame, center, radius + 7.0, cv::Scalar(_threshold[1]), 1, cv::LINE_4);
     cv::circle(frame, center, 3, cv::Scalar(0, 255, 0), cv::FILLED, cv::LINE_8);

@@ -79,8 +79,8 @@ RosVH &RosVH::operator=(RosVH &&vh) {
   _colorTopic = vh._colorTopic;
   _depthTopic = vh._depthTopic;
 
-    vh._itDepth.unsubscribe();
-    vh._itRgb.unsubscribe();
+  vh._itDepth.unsubscribe();
+  vh._itRgb.unsubscribe();
   _itRgb.subscribe(*_it, _colorTopic, 1);
   _itDepth.subscribe(*_it, _depthTopic, 1);
 

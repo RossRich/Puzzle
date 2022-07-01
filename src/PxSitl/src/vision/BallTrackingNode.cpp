@@ -6,7 +6,7 @@ int main(int argc, char *argv[]) {
 
   auto ballTrackingRos = std::make_unique<BallTrackingRos>(nh);
 
-  ros::Rate loop_rate(250);
+  ros::Rate loop_rate(180);
 
   while (nh.ok()) {
     ballTrackingRos->loop();

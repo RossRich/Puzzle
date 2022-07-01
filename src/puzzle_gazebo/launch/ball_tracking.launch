@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <launch>
-  <arg name="rviz_cong" default="$(find puzzle_gazebo)/rviz/ballTest.rviz" />
+  <arg name="rviz_cong" default="$(find puzzle_common)/rviz/ballTest.rviz" />
 
   <node name="ball_tracking" pkg="PxSitl" type="BallTrackingNode" output="log" required="true">
     <param name="camera_color_topic" value="/camera_d435i/color/image_raw" />

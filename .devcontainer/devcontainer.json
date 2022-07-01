@@ -8,7 +8,7 @@
 		"args": {"USER_HOST": "${localEnv:USER}"}
 	},
 	// Update the 'dockerFile' property if you aren't using the standard 'Dockerfile' filename.
-	"dockerFile": "DockerfileDev",
+	"dockerFile": "Dockerfile",
 	// Set *default* container specific settings.json values on container create.
 	"settings": {
 		"ros.distro": "noetic",

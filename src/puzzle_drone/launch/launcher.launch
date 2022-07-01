@@ -1,17 +1,18 @@
 <?xml version="1.0"?>
 <launch>
-  <arg name="drone_name" default="puzzle_protium"/>
-  <remap from="/mavros/odometry/out" to="/$(arg drone_name)/mavros/odometry/out"/>
-  <remap from="/mavros/companion_process/status" to="/$(arg drone_name)/mavros/companion_process/status"/>
-  
+  <arg name="drone_name" default="puzzle_protium" />
+  <arg name="fcu_url"    default="/dev/ttyTHS1:921600" />
+
+  <remap from="/mavros/odometry/out" to="/$(arg drone_name)/mavros/odometry/out" />
+  <remap from="/mavros/companion_process/status" to="/$(arg drone_name)/mavros/companion_process/status" />
+
   <include file="$(find px4_realsense_bridge)/launch/bridge_mavros.launch">
-    <!-- <arg name="fcu_url" value="/dev/ttyTHS1:921600" /> -->
-    <arg name="fcu_url" value="/dev/ttyACM0" />
-    <arg name="ns" value="$(arg drone_name)"/>
+    <arg name="fcu_url" value="$(arg fcu_url)" />
+    <arg name="ns"      value="$(arg drone_name)" />
   </include>
 
-  <include file="$(find puzzle_transform)/launch/launcher.launch" >
-    <arg name="drone_name" value="$(arg drone_name)"/>
+  <include file="$(find puzzle_transform)/launch/launcher.launch">
+    <arg name="drone_name" value="$(arg drone_name)" />
   </include>
 
   <include file="$(find puzzle_drone_marker)/launch/launcher.launch" />

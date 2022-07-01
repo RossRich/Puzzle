@@ -17,6 +17,7 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
+#include <cv_bridge/cv_bridge.h>
 
 #include "BallTracking.hpp"
 #include "BallTrackingRos.hpp"
@@ -34,6 +35,7 @@ using image_geometry::PinholeCameraModel;
 using puzzle_msgs::Metrics;
 using sensor_msgs::CameraInfo;
 using sensor_msgs::CameraInfoConstPtr;
+using cv_bridge::CvImage;
 
 class StateTracking : public State {
 private:
@@ -70,12 +72,14 @@ private:
   std::shared_ptr<image_transport::ImageTransport> _it;
   CameraInfoConstPtr _cameraInfo;
   PinholeCameraModel _cameraModel;
+  image_transport::Publisher _debugPub;
+  image_transport::Publisher _resultPub;
 
   std::unique_ptr<RvizPainter> _rvizPainter;
   RvizPainterObject _rvizPainterObject;
 
-  cv::Mat _frame;
-  cv::Mat _depth;
+  // cv::Mat _frame;
+  // cv::Mat _depth;
 
   ///< TMP section
   ros::Time _objMoveTimer;
@@ -87,9 +91,7 @@ private:
   void transformPose(tf2::Vector3 &position);
   Pose transformPose2(const tf2::Vector3 &position, const tf2::Quaternion &orientation);
   Pose transformPose3(const tf2::Vector3 &position, const tf2::Quaternion &orientation);
-  void conceptOne(cv::Mat &mask, cv::Point2i &center, uint16_t &radius);
-  void conceptTwo(cv::Mat &mask, cv::Point2i &point2d, uint16_t &radius);
-  void conceptThree(cv::Mat &mask, cv::Point2i &point2d, uint16_t &radius);
+  void conceptThree(tf2::Vector3 &objPosition, uint16_t &radius);
 
   /**
    * Builds a 3D object position from 2D Image via camera model
@@ -100,7 +102,7 @@ private:
    **/
   void getObjPosFromImg(cv::Point2i &point2d, float distToObj, tf2::Vector3 &objPos);
 
-  float getDistToObj(cv::Mat &mask, uint16_t &radius);
+  float getDistToObj(cv::Mat &depth, cv::Mat &mask, uint16_t &radius);
   float getVelocity(float x, float y, float angle);
   float getContactProbobility(const tf2::Vector3 &currentObjPosition, const tf2::Vector3 &lastObjPosition, const tf2::Vector3 &cameraPosition);
   void trajectoryPrediction(const tf2::Vector3 &cameraPosition, const tf2::Quaternion &cameraOrientation, uint8_t safePoints, uint8_t totalPoints, float pointDist2);

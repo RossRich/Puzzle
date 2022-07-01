@@ -1,7 +1,9 @@
 <?xml version="1.0"?>
 <launch>
-  <include file="$(find puzzle_drone)/launch/static_tf.launch" />
+  <arg name="gui" default="false" />
+  <arg name="rviz_cong" default="$(find puzzle_common)/rviz/ballTest.rviz" />
 
+  <include file="$(find puzzle_drone)/launch/static_tf.launch" />
   <include file="$(find realsense2_camera)/launch/rs_aligned_depth.launch">
     <arg name="camera"            value="camera_d435i" />
     <arg name="enable_infra1"     value="false" />
@@ -11,8 +13,6 @@
     <arg name="depth_fps"         value="60" />
     <arg name="color_fps"         value="60" />
     <arg name="filters"           value="hole_filling" />
-    <arg name="initial_reset"     value="true"/>
-    <arg name="reconnect_timeout" value="6.0"/>
   </include>
 
   <node name="ball_tracking" pkg="PxSitl" type="BallTrackingNode" output="screen">
@@ -22,4 +22,9 @@
     <param name="filter_gain"        value="0.0" />
     <param name="dt_for_prediction"  value="0.01" />
   </node>
+
+  <group if="$(arg gui)">
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rviz_cong)" output="log" />
+  </group>
+
 </launch>

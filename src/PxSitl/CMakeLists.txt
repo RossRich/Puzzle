@@ -121,7 +121,7 @@ find_package(OpenCV 4.2.0 REQUIRED)
 catkin_package(
  INCLUDE_DIRS include
  LIBRARIES ${PROJECT_NAME} video_handler vision_state
-#  CATKIN_DEPENDS roscpp std_msgs sensor_msgs cv_bridge image_transport tf2 tf2_ros tf2_geometry_msgs image_geometry puzzle_msgs
+ CATKIN_DEPENDS roscpp std_msgs sensor_msgs cv_bridge image_transport tf2 tf2_ros tf2_geometry_msgs image_geometry
 #  DEPENDS system_lib
 )
 

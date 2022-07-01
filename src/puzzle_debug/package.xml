@@ -1,25 +1,16 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>puzzle_drone</name>
+  <name>puzzle_debug</name>
   <version>0.0.1</version>
-  <description>The puzzle_drone package</description>
-
-  <!-- One maintainer tag required, multiple allowed, one person per tag -->
-  <!-- Example:  -->
-  <!-- <maintainer email="jane.doe@example.com">Jane Doe</maintainer> -->
-  <maintainer email="RossRich@bk.ru">RossRich</maintainer>
-
-
-  <!-- One license tag required, multiple allowed, one license per tag -->
-  <!-- Commonly used license strings: -->
-  <!--   BSD, MIT, Boost Software License, GPLv2, GPLv3, LGPLv2.1, LGPLv3 -->
+  <description>Пакет для отладки проекта puzzle</description>
+  <maintainer email="rossrich@bk.ru">RossRich</maintainer>
   <license>BSD</license>
 
 
   <!-- Url tags are optional, but multiple are allowed, one per tag -->
   <!-- Optional attribute type can be: website, bugtracker, or repository -->
   <!-- Example: -->
-  <!-- <url type="website">http://wiki.ros.org/puzzle_drone</url> -->
+  <!-- <url type="website">http://wiki.ros.org/puzzle_debug</url> -->
 
 
   <!-- Author tags are optional, multiple are allowed, one per tag -->
@@ -49,14 +40,19 @@
   <!-- Use doc_depend for packages you need only for building documentation: -->
   <!--   <doc_depend>doxygen</doc_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>mavros</build_depend>
+  <build_depend>mavros_extras</build_depend>
   <build_depend>roscpp</build_depend>
-  <build_depend>rospy</build_depend>
+  <build_export_depend>mavros</build_export_depend>
+  <build_export_depend>mavros_extras</build_export_depend>
   <build_export_depend>roscpp</build_export_depend>
-  <build_export_depend>rospy</build_export_depend>
-  <exec_depend>roscpp</exec_depend>
-  <exec_depend>rospy</exec_depend>
+  <exec_depend>mavros</exec_depend>
+  <exec_depend>mavros_extras</exec_depend>
+  <exec_depend>puzzle_drone</exec_depend>
   <exec_depend>realsense2_camera</exec_depend>
+  <exec_depend>roscpp</exec_depend>
   <exec_depend>px4_realsense_bridge</exec_depend>
+
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
