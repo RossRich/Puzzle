@@ -86,7 +86,7 @@ private:
   tf2::Vector3 cameraPosition;
   tf2::Quaternion cameraOrientation;
   uint8_t safePoints, totalPoints;
-  float pointDist2;
+  float pointDist2 = 0.15f;
 
   void transformPose(tf2::Vector3 &position);
   Pose transformPose2(const tf2::Vector3 &position, const tf2::Quaternion &orientation);

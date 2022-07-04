@@ -2,7 +2,6 @@
 
 StateTracking::~StateTracking() {
   std::cout << "Delete state tracking\n";
-  // cv::destroyAllWindows();
 }
 
 bool StateTracking::loadParam() {
@@ -84,9 +83,6 @@ bool StateTracking::setup() {
     _resultPub = _it->advertise("ball_tracking_result", 1, true);
   }
 
-  // cv::namedWindow(_winName, cv::WINDOW_AUTOSIZE);
-  // cv::namedWindow("test", cv::WINDOW_AUTOSIZE);
-
   _loopTimer = ros::Time::now();
   _detectionTimer = ros::Time::now();
   _resetTimer = ros::Time::now();
@@ -96,7 +92,6 @@ bool StateTracking::setup() {
 
 void StateTracking::wait() {
   ROS_INFO("[StateTracking] Transition from %s state to Wait state", toString().c_str());
-  // cv::destroyAllWindows();
   _context.setState(static_cast<State *>(_context.getStateWait()));
 }
 
@@ -300,9 +295,9 @@ float StateTracking::getContactProbobility(const tf2::Vector3 &currentObjPositio
 
 void StateTracking::trajectoryPrediction(const tf2::Vector3 &cameraPosition, const tf2::Quaternion &cameraOrientation,
                                          uint8_t safePoints, uint8_t totalPoints, float pointDist2) {
-  if (_realTrajPoints.size() >= 5)
+  if (_realTrajPoints.size() >= 5) {
     safePoints = 5;
-  else if (_realTrajPoints.size() < 5 && _realTrajPoints.size() > 1) {
+  } else if (_realTrajPoints.size() < 5 && _realTrajPoints.size() > 1) {
     safePoints = _realTrajPoints.size();
   } else {
     ROS_ERROR_STREAM("Too few poinst for estimate object trajectory.");
@@ -510,22 +505,22 @@ void StateTracking::conceptThree(tf2::Vector3 &objPosition, uint16_t &radius) {
     return;
   }
 
-  if (tf2::tf2Distance2(_firstObjPosition, objPosition) > 0.0225 && _objMoveTimer.is_zero()) {
+  if (tf2::tf2Distance2(_firstObjPosition, objPosition) > 0.25f && _objMoveTimer.is_zero()) {
     _objMoveTimer = ros::Time::now();
   }
 
   tf2::Vector3 lastPointInRealTrajectory = _realTrajPoints.back();
-  if (tf2::tf2Distance2(lastPointInRealTrajectory, objPosition) < 0.0225)
+  if (tf2::tf2Distance2(lastPointInRealTrajectory, objPosition) < 0.0225f)
     return;
 
-  if (_realTrajPoints.size() > 30) ///< TODO: add to launch param
+  if (_realTrajPoints.size() > 25) ///< TODO: add to launch param
     _realTrajPoints.pop_front();
 
   _realTrajPoints.push_back(objPosition);
-  _rvizPainter->draw(_rvizPainterObject.getRealTrajLine(), _realTrajPoints);
+  _rvizPainter->draw(_rvizPainterObject.getRealTrajLine(), _realTrajPoints); ///< TODO: delete from rviz old point
 
-  if (_realTrajPoints.size() == 2)
-    _test2222 = objPosition;
+  // if (_realTrajPoints.size() == 2)
+    // _test2222 = objPosition;
 
   // if (_realTrajPoints.size() < 3)
   // return;
@@ -537,7 +532,7 @@ void StateTracking::conceptThree(tf2::Vector3 &objPosition, uint16_t &radius) {
   tf2::fromMsg(transform.transform.translation, cameraPosition);
 
   float totalDist2 = tf2::tf2Distance2(_firstObjPosition, cameraPosition);
-  pointDist2 = tf2::tf2Distance2(_firstObjPosition, _test2222);
+  // pointDist2 = 0.15f;
   // float pointDist2 = tf2::tf2Distance2(_firstObjPosition, _test2222);
   totalPoints = std::floor(sqrtf(totalDist2 / pointDist2));
   // uint8_t totalPoints = std::floor(sqrtf(totalDist2 / pointDist2));
@@ -555,13 +550,11 @@ void StateTracking::conceptThree(tf2::Vector3 &objPosition, uint16_t &radius) {
     return;
   }
 
-  _rvizPainter->draw(_rvizPainterObject.getRegArrow(), cameraPosition, cameraOrientation);
+  // _rvizPainter->draw(_rvizPainterObject.getRegArrow(), cameraPosition, cameraOrientation);
 
-  tf2::Vector3 camToObjDirection = _firstObjPosition - cameraPosition; ///< vector from camera to detected obj
-  tf2::Vector3 camToObjDirXY = (cameraPosition + tf2::Vector3(camToObjDirection.x(), camToObjDirection.y(), 0)) -
-                               cameraPosition; ///< projection camToObjDirection on plane XY
-  float relatedHeight =
-      (camToObjDirection.normalized() - camToObjDirXY.normalized()).z(); ///< droneHeight - detectedObjHeight
+  // tf2::Vector3 camToObjDirection = _firstObjPosition - cameraPosition; ///< vector from camera to detected obj
+  // tf2::Vector3 camToObjDirXY = (cameraPosition + tf2::Vector3(camToObjDirection.x(), camToObjDirection.y(), 0)) - cameraPosition; ///< projection camToObjDirection on plane XY
+  // float relatedHeight = (camToObjDirection.normalized() - camToObjDirXY.normalized()).z(); ///< droneHeight - detectedObjHeight
   // ROS_DEBUG_STREAM("relaitedHeight " << relatedHeight);
 
   tf2::Vector3 lastToCurrent = objPosition - _firstObjPosition;
@@ -572,10 +565,9 @@ void StateTracking::conceptThree(tf2::Vector3 &objPosition, uint16_t &radius) {
   // ROS_DEBUG_STREAM_NAMED("cam_to_obj_angle", "InRad " << camToObjAngle << " InDeg " << tf2Degrees(camToObjAngle));
 
   // just for rviz
-  tf2::Quaternion dirOrientation;
-  dirOrientation.setRotation(tf2::tf2Cross(camToObjDirXY.normalized(), camToObjDirection.normalized()), camToObjAngle);
-  _rvizPainter->draw(_rvizPainterObject.getYellowArrow(), cameraPosition,
-                     (dirOrientation * cameraOrientation).normalized());
+  // tf2::Quaternion dirOrientation;
+  // dirOrientation.setRotation(tf2::tf2Cross(camToObjDirXY.normalized(), camToObjDirection.normalized()), camToObjAngle);
+  // _rvizPainter->draw(_rvizPainterObject.getYellowArrow(), cameraPosition, (dirOrientation * cameraOrientation).normalized());
 
   if (_isObjDetected && !_isTrekLinePredicted) {
     trajectoryPrediction(cameraPosition, cameraOrientation, safePoints, totalPoints, pointDist2);
@@ -649,11 +641,7 @@ _vh->readDepth(depth);
     _fps = static_cast<int>(std::ceil(1.0 / ros::Duration(ros::Time::now() - _loopTimer).toSec()));
 
     cv::Size textSize = cv::getTextSize(std::to_string(_fps), cv::FONT_HERSHEY_SIMPLEX, 0.4, 2, nullptr);
-    cv::putText(tmpFrame, std::to_string(_fps), cv::Point(5, textSize.height * 2), cv::FONT_HERSHEY_SIMPLEX, 0.4,
-                cv::Scalar::all(0));
-    /* cv::putText(tmpFrame, info.str(),
-                cv::Point(5, (textSize.height * 4) + textSize.height),
-                cv::FONT_HERSHEY_SIMPLEX, .4, cv::Scalar::all(0)); */
+    cv::putText(tmpFrame, std::to_string(_fps), cv::Point(5, textSize.height * 2), cv::FONT_HERSHEY_SIMPLEX, 0.4, cv::Scalar::all(0));
 
     sensor_msgs::ImagePtr debugImg;
     sensor_msgs::ImagePtr resultImg;
@@ -705,15 +693,6 @@ _vh->readDepth(depth);
     wait();
   } catch (...) {
     ros::Duration(1.0).sleep();
-    wait();
-  }
-
-  try {
-    // cv::imshow("test", mask);
-    // cv::imshow(_winName, tmpFrame);
-    // cv::waitKey(1);
-  } catch (const cv::Exception &e) {
-    ROS_ERROR("[StateTracking] The video in current environment not available.\n%s", e.what());
     wait();
   }
 

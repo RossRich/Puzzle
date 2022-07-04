@@ -4,15 +4,19 @@
 	"name": "Puzzle",
 	// Sets the run context to one level up instead of the .devcontainer folder.
 	"context": "..",
-	"build": {
-		"args": {"USER_HOST": "${localEnv:USER}"}
-	},
 	// Update the 'dockerFile' property if you aren't using the standard 'Dockerfile' filename.
 	"dockerFile": "Dockerfile",
 	// Set *default* container specific settings.json values on container create.
 	"settings": {
 		"ros.distro": "noetic",
-		"cmake.configureOnEdit": false
+		"cmake.configureOnEdit": false,
+		"cmake.buildDirectory": "${containerWorkspaceFolder}/src/puzzle_gazebo/plugins/build",
+		"cmake.sourceDirectory": "${containerWorkspaceFolder}/src/puzzle_gazebo/plugins",
+		"C_Cpp.default.clang_format_fallbackStyle": "{BasedOnStyle: LLVM, ColumnLimit: 120, IndentWidth: 2, TabWidth: 2, AlignTrailingComments: true}",
+		"C_Cpp.default.compilerPath": "/usr/bin/gcc",
+		"C_Cpp.default.intelliSenseMode": "linux-gcc-x64",
+		"C_Cpp.default.cStandard": "c11",
+		"C_Cpp.default.cppStandard": "c++14"
 	},
 	// Add the IDs of extensions you want installed when the container is created.
 	"extensions": [
@@ -32,29 +36,21 @@
 		"--privileged",
 		"--rm",
 		"-it",
-		"--gpus",
-		"all",
+		"--gpus=all",
 		"--runtime=nvidia",
-		"--tmpfs",
-		"/tmp",
+		"--tmpfs=/tmp",
+		"--network=host",
 		"-v",
 		"/tmp/.X11-unix:/tmp/.X11-unix:rw",
 		"-v",
 		"/dev:/dev",
-		"--device",
-		"/dev/dri:/dev/dri",
 		"-v",
-		"/home/${localEnv:USER}/.gitconfig:/etc/gitconfig",
-		"--network",
-		"host"
+		"/home/${localEnv:USER}/.gitconfig:/etc/gitconfig"
 	],
+	"workspaceFolder": "/workspaces/Puzzle",
 	"containerEnv": {
 		"DISPLAY": "${localEnv:DISPLAY}",
 		"QT_X11_NO_MITSHM": "1",
 		"PYTHONPATH": "/opt/ros/noetic/lib/python3/dist-packages"
 	}
-	// Uncomment to use the Docker CLI from inside the container. See https://aka.ms/vscode-remote/samples/docker-from-docker.
-	// "mounts": ["source=/home/asus/Opencv,target=${cwd}/Opencv"]
-	// Uncomment to connect as a non-root user if you've added one. See https://aka.ms/vscode-remote/containers/non-root.
-	// "remoteUser": "vscode"
 }
