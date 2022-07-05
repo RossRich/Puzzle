@@ -28,6 +28,10 @@ public:
     m.pose = pose;
     _markersPublisher.publish(m);
   }
+  
+  void clear(PainterObjectBase &obj) {
+    _markersPublisher.publish(obj.clear());
+  }
 
   void update(PainterObjectBase &obj, const Pose &pose) {
     Marker &m = obj.updateMarker();
@@ -85,6 +89,18 @@ public:
 
   void draw(RvizPoints &obj, const std::list<tf2::Vector3> &points) {
     Marker &m = obj.drawMarker();
+    Point pMsg;
+    m.points.clear();
+    for (auto &point : points) {
+      tf2::toMsg(point, pMsg);
+      m.points.push_back(pMsg);
+    }
+
+    _markersPublisher.publish(m);
+  }
+
+  void update(RvizPoints &obj, const std::list<tf2::Vector3> &points) {
+    Marker &m = obj.updateMarker();
     Point pMsg;
     m.points.clear();
     for (auto &point : points) {

@@ -27,6 +27,12 @@ Marker &PainterObjectBase::updateMarker() {
   return _marker;
 }
 
+Marker &PainterObjectBase::clear() {
+  _marker.header.stamp = ros::Time::now();
+  _marker.action = Marker::DELETEALL;
+  return _marker;
+}
+
 void PainterObjectBase::setColor(float r, float g, float b, float a) {
   _marker.color = RvizVisually::getColorMsg(r, g, b, a);
 }

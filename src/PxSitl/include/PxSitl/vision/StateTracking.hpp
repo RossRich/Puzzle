@@ -51,7 +51,7 @@ private:
   std::unique_ptr<RosVH> _vh;
 
   std::string _confFile = "";
-  std::string _cameraInfoTopic = "/camera_d435i/depth/camera_info";
+  std::string _cameraInfoTopic = "";
   std::list<tf2::Vector3> _realTrajPoints;
   std::list<tf2::Vector3> _predTrajectory;
   std::vector<Line> _predictedSigments;
@@ -86,7 +86,7 @@ private:
   tf2::Vector3 cameraPosition;
   tf2::Quaternion cameraOrientation;
   uint8_t safePoints, totalPoints;
-  float pointDist2 = 0.15f;
+  float pointDist2 = 0.0225f;
 
   void transformPose(tf2::Vector3 &position);
   Pose transformPose2(const tf2::Vector3 &position, const tf2::Quaternion &orientation);

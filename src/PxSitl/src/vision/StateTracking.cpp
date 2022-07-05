@@ -11,6 +11,11 @@ bool StateTracking::loadParam() {
     return false;
   }
 
+  if (!_nh.getParam("camera_info_topic", _cameraInfoTopic)) {
+    ROS_ERROR("[StateTracking] Topic with camera info not set");
+    return false;
+  }
+
   ROS_INFO("[StateTracking] Reads camera info from topic \'%s\'  ...", _cameraInfoTopic.c_str());
   try {
     _cameraInfo = ros::topic::waitForMessage<sensor_msgs::CameraInfo>(_cameraInfoTopic, _nh);
@@ -86,6 +91,7 @@ bool StateTracking::setup() {
   _loopTimer = ros::Time::now();
   _detectionTimer = ros::Time::now();
   _resetTimer = ros::Time::now();
+  _objMoveTimer = ros::Time(0);
 
   return true;
 }
@@ -106,7 +112,7 @@ float StateTracking::getDistToObj(cv::Mat &depth, cv::Mat &mask, uint16_t &radiu
   uint16_t bestDist = 0;
   std::map<uint16_t, uint16_t> mapOfDist; ///< <Dist, NumOfTheDist>
   for (auto &&d : cv::Mat_<uint16_t>(ballDist)) {
-    if (d <= 100 || d > 3000) ///< min dist = 10 cm, max dist = 3 m
+    if (d <= 100 || d > 3200) ///< min dist = 10 cm, max dist = 3 m
       continue;
     if (mapOfDist.count(d) > 0) {
       mapOfDist.at(d) += 1;
@@ -120,23 +126,6 @@ float StateTracking::getDistToObj(cv::Mat &depth, cv::Mat &mask, uint16_t &radiu
       mapOfDist.insert(std::pair<uint16_t, uint16_t>(d, 1));
   }
 
-  /* ROS_DEBUG_STREAM("maxCount " << maxCount << " bestDist " << bestDist);
-
-  std::multimap<uint16_t, uint16_t> inv;
-  for (auto &&i : mapOfDist) {
-    inv.insert(std::pair<uint16_t, uint16_t>(i.second, i.first));
-    ROS_DEBUG_STREAM("count " << i.second << " dist " << i.first);
-  }
-
-  uint16_t distToBall;
-  for (std::multimap<uint16_t, uint16_t>::const_iterator i = inv.cend(); i != inv.cbegin(); i--) {
-    if (i->second <= 100)
-      continue;
-
-    distToBall = i->second;
-    break;
-  } */
-
   return bestDist * 0.001f;
 }
 
@@ -145,29 +134,28 @@ void StateTracking::getObjPosFromImg(cv::Point2i &point2d, float distToObj, tf2:
   objPos.setValue(point3d.x, point3d.y, distToObj);
 }
 
+//for camera to map
 void StateTracking::transformPose(tf2::Vector3 &position) {
-  TransformStamped transform = _tfBuffer.lookupTransform("map", _cameraModel.tfFrame(), ros::Time(0));
+  TransformStamped transformation = _tfBuffer.lookupTransform("map", _cameraModel.tfFrame(), ros::Time(0)); ///< Take the transformation from camera_frame (frame from camera_info) to map
 
   tf2::Transform originalTransform(tf2::Quaternion::getIdentity(), position);
-  TransformStamped ts;
-  ts.header.frame_id = "map";
-  ts.header.stamp = ros::Time::now();
-  ts.child_frame_id = _cameraModel.tfFrame();
-  tf2::convert(originalTransform, ts.transform);
+  tf2::Stamped<tf2::Transform> ts(originalTransform, ros::Time::now(), _cameraModel.tfFrame());
 
   TransformStamped newTransform;
-  tf2::doTransform(ts, newTransform, transform);
+  tf2::doTransform(tf2::toMsg(ts), newTransform, transformation);
+
   tf2::convert(newTransform.transform.translation, position);
 }
 
+//from base_link_frd to map
 Pose StateTracking::transformPose2(const tf2::Vector3 &position, const tf2::Quaternion &orientation) {
+  TransformStamped transformation = _tfBuffer.lookupTransform("map", "base_link_frd", ros::Time(0));
+
   tf2::Transform originalTransform(orientation, position);
-  tf2::Stamped<tf2::Transform> ts4Transform(originalTransform, ros::Time::now(), "base_link_frd");
-  TransformStamped ts(tf2::toMsg(ts4Transform));
-  ts.child_frame_id = _cameraModel.tfFrame();
-  TransformStamped transform = _tfBuffer.lookupTransform("map", "base_link_frd", ros::Time(0));
+  tf2::Stamped<tf2::Transform> ts(originalTransform, ros::Time::now(), "base_link_frd");
+
   TransformStamped newTransform;
-  tf2::doTransform(ts, newTransform, transform);
+  tf2::doTransform(tf2::toMsg(ts), newTransform, transformation);
 
   Pose pose;
   pose.orientation = newTransform.transform.rotation;
@@ -178,14 +166,15 @@ Pose StateTracking::transformPose2(const tf2::Vector3 &position, const tf2::Quat
   return pose;
 }
 
+// form map to base_link_frd
 Pose StateTracking::transformPose3(const tf2::Vector3 &position, const tf2::Quaternion &orientation) {
+  TransformStamped transformation = _tfBuffer.lookupTransform("base_link_frd", "map", ros::Time(0));
+
   tf2::Transform originalTransform(orientation, position);
-  tf2::Stamped<tf2::Transform> ts4Transform(originalTransform, ros::Time::now(), "map");
-  TransformStamped ts(tf2::toMsg(ts4Transform));
-  ts.child_frame_id = "base_link";
-  TransformStamped transform = _tfBuffer.lookupTransform("base_link_frd", "map", ros::Time(0));
+  tf2::Stamped<tf2::Transform> ts(originalTransform, ros::Time::now(), "map");
+
   TransformStamped newTransform;
-  tf2::doTransform(ts, newTransform, transform);
+  tf2::doTransform(tf2::toMsg(ts), newTransform, transformation);
 
   Pose pose;
   pose.orientation = newTransform.transform.rotation;
@@ -480,7 +469,7 @@ float StateTracking::calcPlane(const tf2::Vector3 &p1, const tf2::Vector3 &p2, c
 
 void StateTracking::conceptThree(tf2::Vector3 &objPosition, uint16_t &radius) {
 
-  if (radius == 0 && _realTrajPoints.empty())
+  /* if (radius == 0 && _realTrajPoints.empty())
     return;
 
   if (radius == 0 && !_realTrajPoints.empty()) {
@@ -494,7 +483,7 @@ void StateTracking::conceptThree(tf2::Vector3 &objPosition, uint16_t &radius) {
       }
     }
     return;
-  }
+  } */
 
   if (!_isObjDetected) {
     _firstObjPosition = objPosition;
@@ -505,7 +494,7 @@ void StateTracking::conceptThree(tf2::Vector3 &objPosition, uint16_t &radius) {
     return;
   }
 
-  if (tf2::tf2Distance2(_firstObjPosition, objPosition) > 0.25f && _objMoveTimer.is_zero()) {
+  if (tf2::tf2Distance2(_firstObjPosition, objPosition) > 0.0225f && _objMoveTimer.is_zero()) {
     _objMoveTimer = ros::Time::now();
   }
 
@@ -513,14 +502,14 @@ void StateTracking::conceptThree(tf2::Vector3 &objPosition, uint16_t &radius) {
   if (tf2::tf2Distance2(lastPointInRealTrajectory, objPosition) < 0.0225f)
     return;
 
-  if (_realTrajPoints.size() > 25) ///< TODO: add to launch param
+  if (_realTrajPoints.size() > 20) ///< TODO: add to launch param
     _realTrajPoints.pop_front();
 
   _realTrajPoints.push_back(objPosition);
-  _rvizPainter->draw(_rvizPainterObject.getRealTrajLine(), _realTrajPoints); ///< TODO: delete from rviz old point
+  _rvizPainter->update(_rvizPainterObject.getRealTrajLine(), _realTrajPoints); ///< TODO: delete from rviz old point
 
   // if (_realTrajPoints.size() == 2)
-    // _test2222 = objPosition;
+  // _test2222 = objPosition;
 
   // if (_realTrajPoints.size() < 3)
   // return;
@@ -585,8 +574,8 @@ void StateTracking::execute() {
   cv::Mat frame;
   cv::Mat depth;
 
-_vh->readColor(frame);
-_vh->readDepth(depth);
+  _vh->readColor(frame);
+  _vh->readDepth(depth);
 
   if (frame.empty() || depth.empty()) {
     ROS_WARN_THROTTLE(1.0, "Frame is empty");
@@ -602,26 +591,22 @@ _vh->readDepth(depth);
 
   _bt->process(frame, mask, &center, &radius);
 
-  // ROS_DEBUG("RADIUS: %i", radius);
-  tf2::Vector3 newObjPosition;
-
   if (radius != 0) {
-
     float distToObj = getDistToObj(depth, mask, radius);
     ROS_DEBUG_STREAM_THROTTLE(1.0, "distToObj " << distToObj);
+    ROS_DEBUG_THROTTLE(1.0, "objRadius: %i", radius);
 
     if (distToObj == 0) {
       ROS_WARN_STREAM_THROTTLE(5.0, "Distance to object out of range [0.1, 5.0]");
       return;
     }
 
+    tf2::Vector3 newObjPosition;
     getObjPosFromImg(center, distToObj, newObjPosition);
     transformPose(newObjPosition);
 
-    /* try {
-      conceptOne(mask, center, radius);
-      conceptTwo(mask, center, radius);
-      conceptThree(mask, center, radius);
+    try {
+      conceptThree(newObjPosition, radius);
     } catch (const tf2::TransformException &e) {
       ROS_ERROR("[StateTracking] %s", e.what());
       ros::Duration(1.0).sleep();
@@ -633,7 +618,7 @@ _vh->readDepth(depth);
     } catch (...) {
       ros::Duration(1.0).sleep();
       wait();
-    } */
+    }
 
     cv::circle(tmpFrame, center, radius + 2.0, cv::Scalar::all(128), 1, cv::LINE_4);
     cv::circle(tmpFrame, center, 3, cv::Scalar(0, 255, 0), cv::FILLED, cv::LINE_8);
@@ -649,12 +634,12 @@ _vh->readDepth(depth);
 
     CvImage n1;
     n1.header = hhhh;
-    n1.encoding =  enc::MONO8;
+    n1.encoding = enc::MONO8;
     n1.image = mask;
 
     CvImage n2;
     n2.header = hhhh;
-    n2.encoding =  enc::BGR8;
+    n2.encoding = enc::BGR8;
     n2.image = tmpFrame;
 
     debugImg = n1.toImageMsg();
@@ -677,23 +662,25 @@ _vh->readDepth(depth);
       _lastObjPosition.setZero();
       _startTrackingTimer = ros::Time::now();
       _objMoveTimer = ros::Time(0);
+      // _rvizPainter->clear(_rvizPainterObject.getRealTrajLine());
       ROS_DEBUG("Clean lines");
     }
   }
 
-  try {
-    conceptThree(newObjPosition, radius);
-  } catch (const tf2::TransformException &e) {
-    ROS_ERROR("[StateTracking] %s", e.what());
-    ros::Duration(1.0).sleep();
-    wait();
-  } catch (const cv::Exception &e) {
-    ROS_ERROR("[StateTracking] %s", e.what());
-    ros::Duration(1.0).sleep();
-    wait();
-  } catch (...) {
-    ros::Duration(1.0).sleep();
-    wait();
+/*   if (radius == 0 && _realTrajPoints.empty())
+    return; */
+
+  if (radius == 0 && !_realTrajPoints.empty() && !_isTrekLinePredicted) {
+    double timeOut = ros::Duration(ros::Time::now() - _resetTimer).toSec();
+    ROS_DEBUG_THROTTLE(.5, "timeOut %lf", timeOut);
+    if (timeOut >= 0.1) {
+      if (_isObjDetected && !_isTrekLinePredicted) {
+        ROS_DEBUG("predict");
+        trajectoryPrediction(cameraPosition, cameraOrientation, safePoints, totalPoints, pointDist2);
+        _isTrekLinePredicted = true;
+      }
+    }
+    // return;
   }
 
   _loopTimer = ros::Time::now();

@@ -30,6 +30,8 @@ public:
 
   Marker &updateMarker();
 
+  Marker &clear();
+
   void setColor(float r, float g, float b, float a = 1.0f);
 
   void setColor(const ColorRGBA &color);

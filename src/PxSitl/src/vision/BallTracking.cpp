@@ -16,7 +16,7 @@ void BallTracking::process(cv::Mat &color, cv::Mat &mask, cv::Point2i *center, u
   cv::inRange(frame, cv::Scalar(_threshold[0]), cv::Scalar(_threshold[1]), colorMask);
 
   cv::erode(colorMask, colorMask, cv::Mat(), cv::Point2i(), 2);
-  cv::dilate(colorMask, colorMask, cv::Mat(), cv::Point2i(), 4);
+  cv::dilate(colorMask, colorMask, cv::Mat(), cv::Point2i(), 1);
 
   mask = colorMask.clone();
 
@@ -24,11 +24,9 @@ void BallTracking::process(cv::Mat &color, cv::Mat &mask, cv::Point2i *center, u
   
   if (_cnts.size() > 0) {
     std::vector<cv::Point> bestCnt = _cnts[0];
-    std::cout << "conturs cout: " << _cnts.size() << std::endl;
     int maxSiza = _cnts[0].size();
     for (auto cnt : _cnts) {
-      std::cout << "points in contur: " << cnt.size() << std::endl;
-      if(cnt.size() < 25) ///< TODO: to params
+      if(cnt.size() < 20) ///< TODO: to params
         continue;
 
       if (cnt.size() > maxSiza) {

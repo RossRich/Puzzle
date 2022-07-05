@@ -10,6 +10,7 @@ ENV NVIDIA_DRIVER_CAPABILITIES ${NVIDIA_DRIVER_CAPABILITIES:+$NVIDIA_DRIVER_CAPA
 
 RUN groupadd -g $GROUP_ID $USER_NAME
 RUN useradd -rm -d /home/$USER_NAME -s /bin/bash -g $GROUP_ID -u $USER_ID $USER_NAME
+RUN gpasswd -a $USER_NAME dialout
 # -r, --system Create a system account. see: Implications creating system accounts
 # -m, --create-home Create the user's home directory.
 # -d, --home-dir HOME_DIR Home directory of the new account.
@@ -32,9 +33,6 @@ RUN apt update \
     && apt install ros-noetic-rviz -y \
     && apt install ros-noetic-rqt-common-plugins -y \
     && apt install ros-noetic-rqt-robot-plugins -y \
-    && apt-get install ros-noetic-robot-state-publisher -y \
-    && apt-get install ros-noetic-joint-state-publisher -y \
-    && apt-get install ros-noetic-xacro -y \
     && apt install ros-noetic-image-geometry -y \
     && apt-get install librealsense2-dkms -y \
     && apt-get install librealsense2-utils -y \
