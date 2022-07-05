@@ -122,3 +122,13 @@ source /usr/share/gazebo/setup.sh
 (cd src/puzzle_gazebo/plugins/build && cmake ../ && make -j8)
 ```
 ---
+>[ WARN] [1656580307.684461415]: OGRE EXCEPTION(3:RenderingAPIException): Unable to create a suitable GLXContext in GLXContext::GLXContext at /build/ogre-1.9-B6QkmW/ogre-1.9-1.9.0+dfsg1/RenderSystems/GL/src/GLX/OgreGLXContext.cpp (line 61) 
+
+В контейнере с ubuntu 18.04 и  ROS melodic не запускается RVIZ. Для решения еобходимо добавить Dockerfile следующих строк:
+```
+ENV NVIDIA_VISIBLE_DEVICES \
+    ${NVIDIA_VISIBLE_DEVICES:-all}
+ENV NVIDIA_DRIVER_CAPABILITIES \
+   ${NVIDIA_DRIVER_CAPABILITIES:+$NVIDIA_DRIVER_CAPABILITIES,}graphics
+```
+---
