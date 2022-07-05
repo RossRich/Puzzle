@@ -1,4 +1,4 @@
-#include "PxSitl/vision/setup/BallTrackingSetupRos.hpp"
+#include "puzzle_reaction/vision/setup/BallTrackingSetupRos.hpp"
 
 BallTrackingSetupRos::BallTrackingSetupRos(ros::NodeHandle &nh, VideoHandler &vh) : _nh(nh), _vh(vh) {
   _tp = TrackingParam(_confFile.c_str());

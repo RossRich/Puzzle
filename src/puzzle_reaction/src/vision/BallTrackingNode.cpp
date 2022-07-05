@@ -1,4 +1,4 @@
-#include "PxSitl/vision/BallTrackingRos.hpp"
+#include "puzzle_reaction/vision/BallTrackingRos.hpp"
 
 int main(int argc, char *argv[]) {
   ros::init(argc, argv, "ball_tracking");

@@ -79,7 +79,7 @@ cap = cv2.VideoCapture(0)
 if(cap.isOpened() == False):
     print("Unable to read camera feed")
 
-query_img = cv2.imread('/workspaces/Puzzle/src/PxSitl/data/IMG_20210920_201017.jpg', cv2.IMREAD_COLOR)
+query_img = cv2.imread('/workspaces/Puzzle/src/puzzle_reaction/data/IMG_20210920_201017.jpg', cv2.IMREAD_COLOR)
 try:
     while True:
         frames = cap.read()

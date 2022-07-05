@@ -1,17 +1,17 @@
 <?xml version="1.0"?>
 <launch>
 
-    <node name="offboard_node_uav0" pkg="PxSitl" type="PxSitl_node" output="screen">
+    <node name="offboard_node_uav0" pkg="puzzle_reaction" type="puzzle_reaction_node" output="screen">
         <param name="vehicle_name" value="/iris_puzzle0" type="string"/>
         <param name="vehicle_x" value="2.5"/>
         <param name="vehicle_z" value="1.8"/>
     </node>
 
-    <!-- <node name="offboard_node_uav1" pkg="PxSitl" type="PxSitl_node" output="screen">
+    <!-- <node name="offboard_node_uav1" pkg="puzzle_reaction" type="puzzle_reaction_node" output="screen">
         <param name="vehicle_name" value="iris1/" type="string"/>
     </node> -->
 
-    <!-- <node name="offboard_node_uav2" pkg="PxSitl" type="PxSitl_node" output="screen">
+    <!-- <node name="offboard_node_uav2" pkg="puzzle_reaction" type="puzzle_reaction_node" output="screen">
         <param name="vehicle_name" value="uav2/" type="string"/>
     </node> -->
 </launch>

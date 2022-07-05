@@ -6,7 +6,7 @@
     <arg name="debug" default="false"/>
     <arg name="verbose" default="true"/>
     <arg name="paused" default="false"/>
-    <arg name="world" default="$(find PxSitl)/gazebo_sitl/worlds/puzzle.world"/>
+    <arg name="world" default="$(find puzzle_reaction)/gazebo_sitl/worlds/puzzle.world"/>
 
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
         <arg name="gui" default="$(arg gui)"/>
@@ -21,7 +21,7 @@
     <arg name="vehicle" default="iris"/>
     <arg name="model" default="iris_puzzle"/>
 
-    <include file="$(find PxSitl)/launch/single_uav_spawn.launch">
+    <include file="$(find puzzle_reaction)/launch/single_uav_spawn.launch">
         <arg name="x" default="0"/>
         <arg name="y" default="0"/>
         <arg name="z" default="0"/>

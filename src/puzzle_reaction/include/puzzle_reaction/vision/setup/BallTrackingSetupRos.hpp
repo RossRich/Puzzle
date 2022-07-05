@@ -1,7 +1,7 @@
 #if !defined(_BALL_TRACKING_SETUP_H_)
 #define _BALL_TRACKING_SETUP_H_
 
-#include "PxSitl/vision/VideoHandler.hpp"
+#include "puzzle_reaction/vision/VideoHandler.hpp"
 #include "TrackingParam.hpp"
 #include <opencv2/highgui/highgui.hpp>
 #include <ros/ros.h>
@@ -10,7 +10,7 @@ class BallTrackingSetupRos {
 private:
   const char *_winName = "Setup";
 
-  std::string _confFile = "/workspaces/Puzzle/src/PxSitl/data/config.yaml";
+  std::string _confFile = "/workspaces/Puzzle/src/puzzle_reaction/data/config.yaml";
   std::vector<cv::Point2i> _roiPoints;
   cv::Point2i _cursor;
   cv::Mat _frame;

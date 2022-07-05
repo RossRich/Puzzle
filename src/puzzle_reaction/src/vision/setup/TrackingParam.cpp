@@ -1,4 +1,4 @@
-#include "PxSitl/vision/setup/TrackingParam.hpp"
+#include "puzzle_reaction/vision/setup/TrackingParam.hpp"
 
 TrackingParam::TrackingParam(const char *confFile) : _confFile(confFile) {}
 
