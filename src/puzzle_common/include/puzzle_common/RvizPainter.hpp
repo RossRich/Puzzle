@@ -39,6 +39,14 @@ public:
     _markersPublisher.publish(m);
   }
 
+  // void update(PainterObjectBase &obj, const tf2::Vector3 &position, const tf2::Quaternion &orientation = tf2::Quaternion::getIdentity()) {
+  //   Marker &m = obj.updateMarker();
+  //   m.id = 9999;
+  //   tf2::toMsg(position, m.pose.position);
+  //   m.pose.orientation = tf2::toMsg(orientation);
+  //   _markersPublisher.publish(m);
+  // }
+
   void update(PainterObjectBase &obj) {
     Marker &m = obj.updateMarker();
     _markersPublisher.publish(m);

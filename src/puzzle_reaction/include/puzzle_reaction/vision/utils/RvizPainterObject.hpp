@@ -14,6 +14,7 @@ private:
   RvizPosition _objFirstPosition = {"obj_first_position", "map"};
   RvizPosition _pointOnTraj = {"point_on_traj", "map"};
   RvizPosition _intersectPosition = {"intersect_position", "map"};
+  RvizPosition _objPosition = {"object", "map"};
   RvizPoints _realTrajLine = {"real_traj", "map"};
   RvizPoints _trajectoryPlane = {"trajectory_plane", "map"};
   RvizPosition _midPoint = {"mid_point", "map"};
@@ -29,6 +30,7 @@ public:
     _vecArrowOfPred.setScale(.15f, .01f, .01f);
     _predTraj.setColor(RvizVisually::Colors().at(RvizVisually::Color::CyanProcess));
     _objFirstPosition.setColor(RvizVisually::Colors().at(RvizVisually::Color::Marigold));
+    _objPosition.setColor(RvizVisually::Colors().at(RvizVisually::Color::Yellow));
     _shortAlfaBlueLine.setColor(RvizVisually::Colors().at(RvizVisually::Color::AlfaBlue));
     _shortAlfaBlueLine.setScale(0.02f);
     _pointOnTraj.setColor(RvizVisually::Colors().at(RvizVisually::Color::SonicSilver));
@@ -86,6 +88,10 @@ public:
 
   RvizPosition &getMidPoint() {
     return _midPoint;
+  }
+
+  RvizPosition &getObjPosition() {
+    return _objPosition;
   }
 
   RvizLine &getRedLine() {
