@@ -6,5 +6,5 @@
   <param name="camera_color_topic" value="$(arg camera_color_topic)" />
   <param name="camera_depth_topic" value="$(arg camera_depth_topic)" />
   
-  <node name="ball_tracking_setup" pkg="PxSitl" type="BallTrackingSetupNode" output="screen" />
+  <node name="ball_tracking_setup" pkg="puzzle_reaction" type="BallTrackingSetupNode" output="screen" />
 </launch>

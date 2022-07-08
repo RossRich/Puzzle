@@ -15,11 +15,11 @@
     <arg name="reconnect_timeout" value="6.0"/>
   </include>
 
-  <node name="ball_tracking" pkg="PxSitl" type="BallTrackingNode" output="screen">
+  <node name="ball_tracking" pkg="puzzle_reaction" type="BallTrackingNode" output="screen">
     <param name="camera_color_topic" value="/camera_d435i/color/image_raw" />
     <param name="camera_depth_topic" value="/camera_d435i/aligned_depth_to_color/image_raw" />
     <param name="camera_info_topic"  value="/camera_d435i/depth/camera_info" />
-    <param name="data_config"        value="$(find PxSitl)/data/config.yaml" />
+    <param name="data_config"        value="$(find puzzle_reaction)/data/config.yaml" />
     <param name="filter_gain"        value="0.0" />
     <param name="dt_for_prediction"  value="0.01" />
   </node>

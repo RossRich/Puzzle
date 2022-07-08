@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(PxSitl)
+project(puzzle_reaction)
 
 set(OpenCV_DIR "/home/user/opencv/build/")
 
@@ -253,7 +253,7 @@ install(FILES
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_PxSitl.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_puzzle_reaction.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

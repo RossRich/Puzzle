@@ -1,5 +1,5 @@
-#include "PxSitl/vision/RosVH.hpp"
-#include "PxSitl/vision/setup/BallTrackingSetupRos.hpp"
+#include "puzzle_reaction/vision/RosVH.hpp"
+#include "puzzle_reaction/vision/setup/BallTrackingSetupRos.hpp"
 #include <ros/ros.h>
 
 int main(int argc, char *argv[]) {
