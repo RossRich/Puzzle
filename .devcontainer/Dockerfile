@@ -34,9 +34,9 @@ RUN apt update \
     && apt install ros-noetic-rqt-common-plugins -y \
     && apt install ros-noetic-rqt-robot-plugins -y \
     && apt install ros-noetic-image-geometry -y \
-    && apt-get install librealsense2-dkms -y \
-    && apt-get install librealsense2-utils -y \
-    && apt-get install librealsense2-dev -y\
+    && apt install librealsense2-dkms -y \
+    && apt install librealsense2-utils -y \
+    && apt install librealsense2-dev -y \
     && apt install ros-noetic-aruco-ros -y
 RUN pip3 install pyqtgraph
 
