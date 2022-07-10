@@ -132,3 +132,9 @@ ENV NVIDIA_DRIVER_CAPABILITIES \
    ${NVIDIA_DRIVER_CAPABILITIES:+$NVIDIA_DRIVER_CAPABILITIES,}graphics
 ```
 ---
+>[ERROR] [1657465485.402691263]: An exception has been thrown: Failed to open scan_element ..... Last Error: Permission denied
+
+Отсутствуют разрешения для udev. На хосте находясь в папке **Puzzle/.devcontainer**, необходимо выполнить :
+```
+sudo chmod +x scripts/*.sh && ./scripts/setup_udev_rules.sh
+```
