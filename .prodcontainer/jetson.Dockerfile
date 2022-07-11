@@ -1,5 +1,3 @@
-# This is an auto generated Dockerfile for ros:ros-core
-# generated from docker_images/create_ros_core_image.Dockerfile.em
 FROM nvcr.io/nvidia/l4t-base:r32.7.1
 
 # To avoid waiting for input during package installation
@@ -19,7 +17,7 @@ RUN echo 'Etc/UTC' > /etc/timezone && \
 RUN apt-get update && apt-get install -q -y --no-install-recommends \
     dirmngr \
     gnupg2 \
-    dpkg\
+    dpkg \
     && rm -rf /var/lib/apt/lists/*
 
 # setup sources.list
@@ -47,14 +45,14 @@ RUN apt-get update && apt-get install -q -y --no-install-recommends \
     ros-melodic-resource-retriever \
     ca-certificates \
     openssl \
-     && rm -rf /var/lib/apt/lists/*    
+    && rm -rf /var/lib/apt/lists/*    
     
 COPY src /puzzle/src
 WORKDIR /puzzle
 RUN catkin init --workspace .
 
 #Cloning and installing the package Librealsense
-RUN git clone https://github.com/IntelRealSense/librealsense.git 
+#RUN git clone https://github.com/IntelRealSense/librealsense.git 
 COPY .prodcontainer/scripts/build_librealsense.sh /tmp
 WORKDIR /tmp
 RUN chmod +x build_librealsense.sh
@@ -65,14 +63,16 @@ RUN wget https://raw.githubusercontent.com/mavlink/mavros/master/mavros/scripts/
 RUN chmod +x install_geographiclib_datasets.sh
 RUN ./install_geographiclib_datasets.sh
 
-RUN apt update && \
+RUN apt-get update && \
     rosdep init && \
     rosdep --rosdistro $ROS_DISTRO update && \
     rosdep install -y \
     --from-paths /puzzle/src \
     --ignore-src \
     --rosdistro ${ROS_DISTRO} \
-    --as-root=apt:false
+    --as-root=apt:false \
+    && rm -rf /var/lib/apt/lists/*
+
     
 WORKDIR /puzzle   
 
