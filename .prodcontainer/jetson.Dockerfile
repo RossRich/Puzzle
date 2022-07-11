@@ -51,8 +51,6 @@ COPY src /puzzle/src
 WORKDIR /puzzle
 RUN catkin init --workspace .
 
-#Cloning and installing the package Librealsense
-#RUN git clone https://github.com/IntelRealSense/librealsense.git 
 COPY .prodcontainer/scripts/build_librealsense.sh /tmp
 WORKDIR /tmp
 RUN chmod +x build_librealsense.sh
