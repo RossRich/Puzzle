@@ -31,7 +31,8 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C1CF6E31E6
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ros-melodic-ros-core \
     && rm -rf /var/lib/apt/lists/*
-
+    
+# installing tools for ros
 RUN apt-get update && apt-get install -q -y --no-install-recommends \
     build-essential \
     python-rosdep \
@@ -46,11 +47,13 @@ RUN apt-get update && apt-get install -q -y --no-install-recommends \
     ca-certificates \
     openssl \
     && rm -rf /var/lib/apt/lists/*    
-    
+
+# copying a puzzle in docker conteiner    
 COPY src /puzzle/src
 WORKDIR /puzzle
 RUN catkin init --workspace .
 
+# Cloning and installing the package Librealsense
 COPY .prodcontainer/scripts/build_librealsense.sh /tmp
 WORKDIR /tmp
 RUN chmod +x build_librealsense.sh
@@ -61,6 +64,7 @@ RUN wget https://raw.githubusercontent.com/mavlink/mavros/master/mavros/scripts/
 RUN chmod +x install_geographiclib_datasets.sh
 RUN ./install_geographiclib_datasets.sh
 
+# installing tools for ros
 RUN apt-get update && \
     rosdep init && \
     rosdep --rosdistro $ROS_DISTRO update && \
