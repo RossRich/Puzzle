@@ -1,8 +1,8 @@
 #if !defined(_PUZZLE_COMMON_PAINTER_OBJECTS_H_)
 #define _PUZZLE_COMMON_PAINTER_OBJECTS_H_
 
-#include "RvizVisually.hpp"
 #include "PainterObjectBase.hpp"
+#include "RvizVisually.hpp"
 
 using geometry_msgs::Point;
 using geometry_msgs::Pose;
@@ -74,4 +74,13 @@ public:
   ~RvizMesh() {}
 };
 
+class RvizCylinder : public PainterObjectBase {
+public:
+  RvizCylinder(const char *name, const char *frameId) : PainterObjectBase(name, frameId) {
+    _marker.type = Marker::CYLINDER;
+    setScale(1.0f);
+    setColor(RvizVisually::Colors().at(RvizVisually::Color::Green));
+  }
+  ~RvizCylinder() {}
+};
 #endif // _PUZZLE_COMMON_PAINTER_OBJECTS_H_

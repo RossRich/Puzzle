@@ -20,6 +20,7 @@ private:
   RvizPosition _midPoint = {"mid_point", "map"};
   RvizLine _redLine = {"red_line", "map"};
   RvizLine _yellowLine = {"yellow_line", "map"};
+  RvizCylinder _calcZone = {"_calc_zone", "map"};
 
 public:
   RvizPainterObject() {
@@ -31,7 +32,8 @@ public:
     _predTraj.setColor(RvizVisually::Colors().at(RvizVisually::Color::CyanProcess));
     _objFirstPosition.setColor(RvizVisually::Colors().at(RvizVisually::Color::Marigold));
     _objPosition.setColor(RvizVisually::Colors().at(RvizVisually::Color::Yellow));
-    _shortAlfaBlueLine.setColor(RvizVisually::Colors().at(RvizVisually::Color::AlfaBlue));
+    _objPosition.setScale(0.12f);
+    _shortAlfaBlueLine.setColor(RvizVisually::Colors().at(RvizVisually::Color::BlueAlfa55));
     _shortAlfaBlueLine.setScale(0.02f);
     _pointOnTraj.setColor(RvizVisually::Colors().at(RvizVisually::Color::SonicSilver));
     _pointOnTraj.setScale(.05f);
@@ -40,8 +42,10 @@ public:
     _redLine.setColor(RvizVisually::Colors().at(RvizVisually::Color::Red));
     _yellowLine.setColor(RvizVisually::Colors().at(RvizVisually::Color::Yellow));
     _intersectPosition.setColor(RvizVisually::Colors().at(RvizVisually::Color::Red));
-    _trajectoryPlane.setColor(RvizVisually::Colors().at(RvizVisually::Color::AlfaBlue));
+    _trajectoryPlane.setColor(RvizVisually::Colors().at(RvizVisually::Color::BlueAlfa55));
     _trajectoryPlane.setScale(0.03);
+    _calcZone.setColor(RvizVisually::Colors().at(RvizVisually::Color::RedAlpha20));
+    _calcZone.setScale(6.4f, 6.4f, 2.0f);
   }
 
   ~RvizPainterObject() {}
@@ -104,6 +108,10 @@ public:
 
   RvizPoints &getTrajectoryPlane() {
     return _trajectoryPlane;
+  }
+
+  RvizCylinder &getCalcZone() {
+    return _calcZone;
   }
 };
 
