@@ -1,3 +1,0 @@
-Сборка контейнера для jetsen nano осуществляется командой  
-docker buildx build --platform linux/arm64 -f .prodcontainer/jetson.Dockerfile --network=host -t devdotnetorg/alpine-ssh:aarch64 .
-вызывной  в терминале в директории и puzzle
