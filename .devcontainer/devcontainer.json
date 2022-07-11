@@ -3,11 +3,6 @@
 {
 	"name": "Puzzle",
 	"context": "..",
-	"build": {
-		"args": {
-			"--tag": "dev/puzzle:latest"
-		}
-	},
 	"dockerFile": "Dockerfile",
 	"settings": {
 		"ros.distro": "noetic",
@@ -41,13 +36,13 @@
 		"-v",
 		"/dev:/dev:ro",
 		"-v",
-		"/home/${localEnv:USER}/.gitconfig:/etc/gitconfig",
-		"--device=/dev/ttyACM0:/dev/ttyACM0"
+		"/home/${localEnv:USER}/.gitconfig:/etc/gitconfig"
 	],
 	"workspaceFolder": "/workspaces/Puzzle",
 	"containerEnv": {
 		"DISPLAY": "${localEnv:DISPLAY}",
 		"QT_X11_NO_MITSHM": "1",
 		"PYTHONPATH": "/opt/ros/noetic/lib/python3/dist-packages"
-	}
+	}, 
+	"remoteUser": "dev"
 }
