@@ -70,17 +70,6 @@ public:
 
     return true;
   }
-
-  template <typename T>
-  static T fastFilter(T oldVar, T newVar, float gain) {
-    return oldVar * gain + (newVar * (1.0f - gain));
-  }
-
-  static void fastFilterCvPoint3d(cv::Point3d &point, cv::Point3d &newPoint, float gain) {
-    point.x = fastFilter(point.x, newPoint.x, gain);
-    point.y = fastFilter(point.y, newPoint.y, gain);
-    point.z = fastFilter(point.z, newPoint.z, gain);
-  }
 };
 
 #endif // _VISION_UTILS_H_

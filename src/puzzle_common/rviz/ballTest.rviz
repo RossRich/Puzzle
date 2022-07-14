@@ -6,11 +6,7 @@ Panels:
       Expanded:
         - /Grid1/Offset1
         - /Marker1/Namespaces1
-        - /TF1
         - /TF1/Frames1
-        - /Image1
-        - /Image2
-        - /Image3
       Splitter Ratio: 0.5029411911964417
     Tree Height: 489
   - Class: rviz/Selection
@@ -57,14 +53,10 @@ Visualization Manager:
       Value: true
     - Class: rviz/Marker
       Enabled: true
-      Marker Topic: /ball_tracking/tracking_painter
+      Marker Topic: /ball_tracking/puzzle_reaction_painter
       Name: Marker
       Namespaces:
-        intersect_position: true
-        obj_first_position: true
-        pred_traj: true
-        real_traj: true
-        trajectory_plane: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/Marker

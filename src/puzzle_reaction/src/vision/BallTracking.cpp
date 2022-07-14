@@ -5,7 +5,7 @@ BallTracking::BallTracking(uint16_t width, uint16_t height, cv::Vec<cv::Scalar_<
   _threshold = threshold;
 }
 
-void BallTracking::process(cv::Mat &color, cv::Mat &mask, cv::Point2i *center, uint16_t *radius) {
+void BallTracking::process(cv::Mat &color, cv::Mat &mask, cv::Point2f *center, uint16_t *radius) {
 
   cv::Mat frame = color.clone();
   cv::Mat colorMask(_imSize, CV_8UC1, cv::Scalar::all(0));

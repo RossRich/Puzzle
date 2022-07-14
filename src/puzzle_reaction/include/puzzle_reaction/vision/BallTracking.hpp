@@ -33,7 +33,7 @@ public:
    * @param[out] center center of target color area
    * @param[out] radius area radius
    */
-  void process(cv::Mat &color, cv::Mat &mask, cv::Point2i *center = nullptr, uint16_t *radius = nullptr);
+  void process(cv::Mat &color, cv::Mat &mask, cv::Point2f *center = nullptr, uint16_t *radius = nullptr);
 
   inline void setThreshold(const threshold_t th) { _threshold = th; }
 };
