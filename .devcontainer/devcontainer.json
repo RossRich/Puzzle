@@ -14,7 +14,7 @@
 		"cmake.configureOnEdit": false,
 		"cmake.buildDirectory": "${containerWorkspaceFolder}/src/puzzle_gazebo/plugins/build",
 		"cmake.sourceDirectory": "${containerWorkspaceFolder}/src/puzzle_gazebo/plugins",
-		"C_Cpp.default.clang_format_fallbackStyle": "{BasedOnStyle: LLVM, ColumnLimit: 120, IndentWidth: 2, TabWidth: 2, AlignTrailingComments: true}",
+		"C_Cpp.default.clang_format_fallbackStyle": "{ BasedOnStyle: LLVM, ColumnLimit: 130, IndentWidth: 2, TabWidth: 2, AlignTrailingComments: true, AllowShortIfStatementsOnASingleLine: AllIfsAndElse }",
 		"C_Cpp.default.compilerPath": "/usr/bin/gcc",
 		"C_Cpp.default.intelliSenseMode": "linux-gcc-x64",
 		"C_Cpp.default.cStandard": "c11",
