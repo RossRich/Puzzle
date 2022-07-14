@@ -9,7 +9,6 @@
   <arg name="camera_image_topic" default="/camera_d435i/color/image_raw" />
   <arg name="marker_base_link"   default="aruco_marker_base_link"/>
 
-
   <remap from="/camera_info" to="$(arg camera_info_topic)" />
   <remap from="/image"       to="$(arg camera_image_topic)" />
 

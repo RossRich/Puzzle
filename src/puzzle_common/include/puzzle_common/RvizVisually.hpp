@@ -9,7 +9,7 @@ private:
 
 public:
   ~RvizVisually() {}
-  enum Color { Black = 0, SonicSilver, White, CyanProcess, Blue, AlfaBlue, CaribbeanGreen, DarkGreen, Red, Marigold, Yellow, Green };
+  enum Color { Black = 0, SonicSilver, White, CyanProcess, Blue, BlueAlfa55, CaribbeanGreen, DarkGreen, Red, Marigold, Yellow, Green, RedAlpha20, RedAlpha10};
 
   /**
    * Wrapper function for get "color msg" of ros  as "one shot"
@@ -52,7 +52,7 @@ public:
     colors.push_back(RvizVisually::getColorMsg(1.f / 255.f, 186.f / 255.f, 239.f / 255.f, 1.0f));
     ///< Blue(4) - 21, 229, 244
     colors.push_back(RvizVisually::getColorMsg(21.f / 255.f, 229.f / 255.f, 244.f / 255.f, 1.0f));
-    ///< AlfaBlue(5)
+    ///< BlueAlpha55(5)
     colors.push_back(RvizVisually::getColorMsg(21.f / 255.f, 229.f / 255.f, 244.f / 255.f, 0.55f));
     ///< CaribbeanGreen(6) - 19, 205, 177
     colors.push_back(RvizVisually::getColorMsg(19.f / 255.f, 205.f / 255.f, 177.f / 255.f, 1.0f));
@@ -66,7 +66,10 @@ public:
     colors.push_back(RvizVisually::getColorMsg(226.f / 255.f, 245.f / 255.f, 60.f / 255.f, 1.0f));
     ///< Green(11) - 0, 0, 255
     colors.push_back(RvizVisually::getColorMsg(0.f / 255.f, 255.f / 255.f, 0.f / 255.f, 1.0f));
-
+    ///< RedAlpha20(12)
+    colors.push_back(RvizVisually::getColorMsg(255.f / 255.f, 0.f / 255.f, 0.f / 255.f, 0.2f));
+    ///< RedAlpha10(13)
+    colors.push_back(RvizVisually::getColorMsg(255.f / 255.f, 0.f / 255.f, 0.f / 255.f, 0.1f));
     return colors;
   }
 };
