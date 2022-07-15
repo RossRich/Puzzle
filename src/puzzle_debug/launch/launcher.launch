@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="gui"       default="false" />
+  <arg name="rviz_cong" default="$(find puzzle_common)/rviz/ballTest.rviz" />
+
+  <include file="$(find puzzle_debug)/launch/transform.launch" />
+  <include file="$(find puzzle_debug)/launch/d435i_launcher.launch" />
+  <include file="$(find puzzle_debug)/launch/ball_tracking.launch">
+    <group if="$(arg gui)">
+      <arg name="gui" value="false" />
+    </group>
+  </include>
+
+  <group if="$(arg gui)">
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rviz_cong)" output="log" />
+  </group>
+</launch>

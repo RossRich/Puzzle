@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<launch>
+  <include file="$(find puzzle_drone)/launch/static_tf.launch" />
+  <include file="$(find realsense2_camera)/launch/rs_aligned_depth.launch">
+    <arg name="camera"            value="camera_d435i" />
+    <arg name="enable_infra1"     value="false" />
+    <arg name="enable_infra2"     value="false" />
+    <arg name="enable_fisheye"    value="false" />
+    <arg name="enable_pointcloud" value="false" />
+    <arg name="depth_fps"         value="60" />
+    <arg name="color_fps"         value="60" />
+    <arg name="filters"           value="hole_filling" />
+  </include>
+</launch>
