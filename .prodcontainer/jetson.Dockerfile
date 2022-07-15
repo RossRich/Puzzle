@@ -79,4 +79,5 @@ RUN apt-get update && \
 WORKDIR /puzzle   
 
 RUN . /opt/ros/${ROS_DISTRO}/setup.sh && \
+    catkin config --cmake-args -DBALL_TRACKING_FILTER=11 && \
     catkin build

@@ -220,8 +220,8 @@ float StateTracking::getDistToObj(const cv::Mat &depth, const cv::Rect2f &roi) {
     Point objPositionMsg;
     objPositionMsg.x = dist;
     objPositionMsg.y = filtredDist;
-    objPositionMsg.z = filtredDist;
-    _objPositionPub.publish(objPositionMsg);
+    
+    
 
     if (std::fabs(filtredDist - dist) < 500.0f && dist != 0) {
       dist = filtredDist;
@@ -229,6 +229,9 @@ float StateTracking::getDistToObj(const cv::Mat &depth, const cv::Rect2f &roi) {
     } else {
       _isSoftFiltringEnabled = false;
     }
+
+    objPositionMsg.z = 3000 + (500 * _isSoftFiltringEnabled);
+    _objPositionPub.publish(objPositionMsg);
 
     ROS_DEBUG_STREAM_THROTTLE(0.5, "Is filter enabled: " << _isSoftFiltringEnabled);
   }
