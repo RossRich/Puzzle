@@ -1,0 +1,1065 @@
+<?xml version="1.0"?>
+<sdf version="1.7">
+  <world name="puzzle_red_ball_test_world">
+    <scene>
+      <sky>
+        <clouds>
+          <speed>12.0</speed>
+        </clouds>
+      </sky>
+      <shadows>true</shadows>
+      <grid>false</grid>
+      <origin_visual>false</origin_visual>
+    </scene>
+
+    <physics type="ode">
+      <max_step_size>0.004</max_step_size>
+      <real_time_factor>1</real_time_factor>
+      <real_time_update_rate>250</real_time_update_rate>
+      <max_contacts>10</max_contacts>
+      <magnetic_field>6.0e-6 2.3e-5 -4.2e-5</magnetic_field>
+      <ode>
+        <solver>
+          <type>quick</type>
+          <iters>10</iters>
+          <sor>1.3</sor>
+          <use_dynamic_moi_rescaling>0</use_dynamic_moi_rescaling>
+        </solver>
+        <constraints>
+          <cfm>0</cfm>
+          <erp>0.2</erp>
+          <contact_max_correcting_vel>100</contact_max_correcting_vel>
+          <contact_surface_layer>0.001</contact_surface_layer>
+        </constraints>
+      </ode>
+    </physics>
+
+    <gui>
+      <plugin name="ShootButton" filename="libGUIShootPlugin.so" />
+    </gui>
+
+    <!-- A global light source -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+    <!-- A ground plane -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+    <include>
+      <uri>model://asphalt_plane</uri>
+    </include>
+
+    <include>
+      <uri>model://yp_gun</uri>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_0</name>
+      <pose>0 8 0.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_2</name>
+      <pose>8 0 0.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_4</name>
+      <pose>0 -8 0.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_5</name>
+      <pose>-8 0 0.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_1</name>
+      <pose>5.6 5.6 0.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_7</name>
+      <pose>-5.6 -5.6 0.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_3</name>
+      <pose>5.6 -5.6 0.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_6</name>
+      <pose>-5.6 5.6 0.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_9</name>
+      <pose>4 6.9 0.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_10</name>
+      <pose>-4 6.9 0.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_11</name>
+      <pose>4 -6.9 0.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_12</name>
+      <pose>-4 -6.9 0.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_13</name>
+      <pose> 6.9 4 0.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_14</name>
+      <pose> -6.9 -4 0.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_15</name>
+      <pose> -6.9 4 0.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_16</name>
+      <pose> 6.9 -4 0.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_17</name>
+      <pose> 2 -7.7 0.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_18</name>
+      <pose> 2 7.7 0.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_19</name>
+      <pose> -2 7.7 0.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_20</name>
+      <pose> -2 -7.7 0.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_21</name>
+      <pose> 7.7 2 0.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_22</name>
+      <pose> -7.7 -2 0.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_23</name>
+      <pose> -7.7 2 0.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_24</name>
+      <pose> 7.7 -2 0.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_25</name>
+      <pose>0 7.7 1.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_26</name>
+      <pose>7.7 0 1.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_27</name>
+      <pose>0 -7.7 1.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_28</name>
+      <pose>-7.7 0 1.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_29</name>
+      <pose>5.4 5.4 1.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_30</name>
+      <pose>-5.4 -5.4 1.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_31</name>
+      <pose>5.4 -5.4 1.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_32</name>
+      <pose>-5.4 5.4 1.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_33</name>
+      <pose>3.85 6.6 1.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_34</name>
+      <pose>-3.85 6.6 1.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_35</name>
+      <pose>3.85 -6.6 1.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_36</name>
+      <pose>-3.85 -6.6 1.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_37</name>
+      <pose> 6.6 3.85 1.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_38</name>
+      <pose> -6.6 -3.85 1.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_39</name>
+      <pose> -6.6 3.85 1.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_40</name>
+      <pose> 6.6 -3.85 1.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_41</name>
+      <pose> 1.9 -7.4 1.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_42</name>
+      <pose> 1.9 7.4 1.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_43</name>
+      <pose> -1.9 7.4 1.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_44</name>
+      <pose> -1.9 -7.4 1.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_45</name>
+      <pose> 7.4 1.9 1.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_46</name>
+      <pose> -7.4 -1.9 1.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_47</name>
+      <pose> -7.4 1.9 1.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_48</name>
+      <pose> 7.4 -1.9 1.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_49</name>
+      <pose>0 6.9 2.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_50</name>
+      <pose>6.9  0 2.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_51</name>
+      <pose>0 -6.9 2.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_52</name>
+      <pose>-6.9 0 2.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_53</name>
+      <pose>4.8 4.8 2.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_54</name>
+      <pose>-4.8 -4.8 2.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_55</name>
+      <pose>4.8 -4.8 2.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_56</name>
+      <pose>-4.8 4.8 2.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_57</name>
+      <pose>3.4 5.9 2.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_58</name>
+      <pose>-3.4 5.9 2.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_59</name>
+      <pose>3.4 -5.9 2.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_60</name>
+      <pose>-3.4 -5.9 2.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_61</name>
+      <pose> 5.9 3.4 2.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_62</name>
+      <pose> -5.9 -3.4 2.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_63</name>
+      <pose> -5.9 3.4 2.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_64</name>
+      <pose> 5.9 -3.4 2.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_65</name>
+      <pose> 1.7 -6.6 2.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_66</name>
+      <pose> 1.7 6.6 2.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_67</name>
+      <pose> -1.7 6.6 2.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_68</name>
+      <pose> -1.7 -6.6 2.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_69</name>
+      <pose> 6.6 1.7 2.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_70</name>
+      <pose> -6.6 -1.7 2.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_71</name>
+      <pose> -6.6 1.7 2.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_72</name>
+      <pose> 6.6 -1.7 2.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_73</name>
+      <pose>0 5.6 3.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_74</name>
+      <pose>5.6  0 3.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_75</name>
+      <pose>0 -5.6 3.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_76</name>
+      <pose>-5.6 0 3.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_77</name>
+      <pose>3.95 3.95 3.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_78</name>
+      <pose>-3.95 -3.95 3.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_79</name>
+      <pose>3.95 -3.95 3.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_80</name>
+      <pose>-3.95 3.95 3.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_81</name>
+      <pose>2.8 4.8 3.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_82</name>
+      <pose>-2.8 4.8 3.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_83</name>
+      <pose>2.8 -4.8 3.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_84</name>
+      <pose>-2.8 -4.8 3.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_85</name>
+      <pose> 4.8 2.8 3.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_86</name>
+      <pose> -4.8 -2.8 3.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_87</name>
+      <pose> -4.8 2.8 3.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_88</name>
+      <pose> 4.8 -2.8 3.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_89</name>
+      <pose> 1.4 -5.4 3.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_90</name>
+      <pose> 1.4 5.4 3.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_91</name>
+      <pose> -1.4 5.4 3.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_92</name>
+      <pose> -1.4 -5.4 3.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_93</name>
+      <pose> 5.4 1.4 3.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_94</name>
+      <pose> -5.4 -1.4 3.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_95</name>
+      <pose> -5.4 1.4 3.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_96</name>
+      <pose> 5.4 -1.4 3.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_97</name>
+      <pose>0 4 4.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_98</name>
+      <pose>4  0 4.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_99</name>
+      <pose>0 -4 4.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_100</name>
+      <pose>-4 0 4.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_101</name>
+      <pose>2.8 2.8 4.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_102</name>
+      <pose>-2.8 -2.8 4.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_103</name>
+      <pose>2.8 -2.8 4.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_104</name>
+      <pose>-2.8 2.8 4.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_105</name>
+      <pose>2 3.4 4.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_106</name>
+      <pose>-2 3.4 4.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_107</name>
+      <pose>2 -3.4 4.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_108</name>
+      <pose>-2 -3.4 4.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_109</name>
+      <pose> 3.4 2 4.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_110</name>
+      <pose> -3.4 -2 4.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_111</name>
+      <pose> -3.4 2 4.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_112</name>
+      <pose> 3.4 -2 4.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_113</name>
+      <pose> 1 -3.8 4.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_114</name>
+      <pose> 1 3.8 4.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_115</name>
+      <pose> -1 3.8 4.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_116</name>
+      <pose> -1 -3.8 4.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_117</name>
+      <pose> 3.8 1 4.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_118</name>
+      <pose> -3.8 -1 4.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_119</name>
+      <pose> -3.8 1 4.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_120</name>
+      <pose> 3.8 -1 4.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_121</name>
+      <pose>0 2.5 5.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_122</name>
+      <pose>2.5  0 5.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_123</name>
+      <pose>0 -2.5 5.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_124</name>
+      <pose>-2.5 0 5.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_125</name>
+      <pose>1.7 1.7 5.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_126</name>
+      <pose>-1.7 -1.7 5.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_127</name>
+      <pose>1.7 -1.7 5.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_128</name>
+      <pose>-1.7 1.7 5.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_129</name>
+      <pose>1.25 2.1 5.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_130</name>
+      <pose>-1.25 2.1 5.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_131</name>
+      <pose>1.25 -2.1 5.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_132</name>
+      <pose>-1.25 -2.1 5.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_133</name>
+      <pose> 2.1 1.25 5.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_134</name>
+      <pose> -2.1 -1.25 5.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_135</name>
+      <pose> -2.1 1.25 5.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_136</name>
+      <pose> 2.1 -1.25 5.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_137</name>
+      <pose> 2.4 -0.65 5.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_138</name>
+      <pose> 2.4 0.65 5.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_139</name>
+      <pose> -2.4 0.65 5.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_140</name>
+      <pose> -2.4 -0.65 5.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_141</name>
+      <pose> 0.65 2.4 5.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_142</name>
+      <pose> -0.65 -2.4 5.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_143</name>
+      <pose> -0.65 2.4 5.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://red_ball</uri>
+      <name>ball_144</name>
+      <pose> 0.65 -2.4 5.5 0 0 0</pose>
+      <static>true</static>
+    </include>
+  </world>
+</sdf>

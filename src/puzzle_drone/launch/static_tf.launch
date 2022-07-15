@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<launch>
+  <node pkg="tf2_ros" type="static_transform_publisher" name="tf_baseLinkFrd_cameraD435i" args="0.12 0 0 0 -0.17 3.14 base_link_frd camera_d435i_link" />
+</launch>
