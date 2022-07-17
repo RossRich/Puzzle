@@ -15,7 +15,7 @@
     <arg name="reconnect_timeout" value="6.0"/>
   </include>
 
-  <node name="ball_tracking" pkg="puzzle_reaction" type="BallTrackingNode" output="screen">
+  <node name="ball_tracking" pkg="puzzle_reaction" type="BallTrackingNode" output="log">
     <param name="camera_color_topic" value="/camera_d435i/color/image_raw" />
     <param name="camera_depth_topic" value="/camera_d435i/aligned_depth_to_color/image_raw" />
     <param name="camera_info_topic"  value="/camera_d435i/depth/camera_info" />

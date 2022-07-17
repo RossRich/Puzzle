@@ -1,9 +1,25 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(puzzle_reaction)
 
-## Compile as C++11, supported in ROS Kinetic and newer
+set(KALMAN_FILTER 11)
+set(RUN_AVR_FILTER 12)
+set(FILTER_NAME)
+
 add_compile_options(-std=c++14)
-add_definitions(-DBALL_TRACKING_FILTER=${BALL_TRACKING_FILTER})
+
+if(${BALL_TRACKING_FILTER})
+  if(${BALL_TRACKING_FILTER} EQUAL ${KALMAN_FILTER})
+    set(FILTER_NAME "Kalman")
+  else()
+    set(FILTER_NAME "Running average")
+  endif()
+  add_definitions(-DBALL_TRACKING_FILTER=${BALL_TRACKING_FILTER})
+else() 
+  set(FILTER_NAME "Running average")
+  add_definitions(-DBALL_TRACKING_FILTER=${RUN_AVR_FILTER})
+endif()
+message(STATUS "Build ${PROJECT_NAME} with ${FILTER_NAME} filter")
+
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
