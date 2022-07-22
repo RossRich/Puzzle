@@ -2,10 +2,15 @@
 #define _BALL_TRACKING_H_
 
 #include "utils/thresholdtype.hpp"
+#include <ros/ros.h>
 #include <deque>
 #include <iostream>
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/cudaarithm.hpp>
+#include <opencv2/cudafilters.hpp>
+#include <opencv2/cudaimgproc.hpp>
+
 
 class BallTracking {
 
@@ -17,6 +22,13 @@ private:
 
   cv::Size2i _filterSize = cv::Size2i(3, 3);
   cv::Matx33f _dist2Meters = cv::Matx33d::all(0.001f);
+
+  cv::cuda::GpuMat _gpuMaskImg, _gpuColorImg;
+  cv::Ptr<cv::cuda::Filter> _gaussFilter;
+  cv::Ptr<cv::cuda::Filter> _closeFilter;
+  cv::Ptr<cv::cuda::Filter> _erodeFilter;
+  cv::Ptr<cv::cuda::Filter> _dilateFilter;
+  cv::Mat _closeFilterKernel;
 
   // static const char *_confFile;
 

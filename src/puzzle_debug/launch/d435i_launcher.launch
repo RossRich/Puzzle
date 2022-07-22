@@ -9,6 +9,11 @@
     <arg name="enable_pointcloud" value="false" />
     <arg name="depth_fps"         value="60" />
     <arg name="color_fps"         value="60" />
-    <arg name="filters"           value="hole_filling" />
+    <arg name="filters"           value="hole_filling, decimation" />
   </include>
+
+  <!-- <node name="dynamic_reconfigure_load_rgb_camera_cfg" pkg="dynamic_reconfigure" type="dynparam" args="load /camera_d435i/rgb_camera $(find puzzle_reaction)/data/d435_rgd_camera.yaml" /> -->
+  <!-- <node name="dynamic_reconfigure_load_filter_cfg"     pkg="dynamic_reconfigure" type="dynparam" args="load /camera_d435i/hole_filling $(find puzzle_reaction)/data/d435_hole_filling.yaml" /> -->
+  <!-- <node name="dynamic_reconfigure_load_align_cfg"      pkg="dynamic_reconfigure" type="dynparam" args="load /camera_d435i/align_to_color $(find puzzle_reaction)/data/d435_align_to_color.yaml" /> -->
+  <!-- <node name="dynamic_reconfigure_load_sterio_mod_cfg" pkg="dynamic_reconfigure" type="dynparam" args="load /camera_d435i/stereo_module $(find puzzle_reaction)/data/d435_sterio_module.yaml" /> -->
 </launch>

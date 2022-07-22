@@ -5,8 +5,8 @@ ARG USER_ID=1000
 ARG GROUP_ID=1000
 ARG USER_NAME=dev
 
-ENV NVIDIA_VISIBLE_DEVICES ${NVIDIA_VISIBLE_DEVICES:-all}
-ENV NVIDIA_DRIVER_CAPABILITIES ${NVIDIA_DRIVER_CAPABILITIES:+$NVIDIA_DRIVER_CAPABILITIES,}graphics
+ENV NVIDIA_VISIBLE_DEVICES all
+ENV NVIDIA_DRIVER_CAPABILITIES compute,utility,graphics,display
 
 RUN groupadd -g $GROUP_ID $USER_NAME
 RUN useradd -rm -d /home/$USER_NAME -s /bin/bash -g $GROUP_ID -u $USER_ID $USER_NAME
@@ -38,7 +38,8 @@ RUN apt update \
     && apt install librealsense2-utils -y \
     && apt install librealsense2-dev -y \
     && apt install ros-noetic-aruco-ros -y
-RUN pip3 install pyqtgraph
+RUN pip3 install pyqtgraph \
+    && pip3 install PyYAML==5.3
 
 RUN echo "parse_git_branch() {" >> /home/${USER_NAME}/.bashrc \
     && echo "    git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/ (\\\1)/'" >> /home/${USER_NAME}/.bashrc \

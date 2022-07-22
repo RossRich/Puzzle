@@ -27,7 +27,7 @@
 		"--privileged",
 		"--rm",
 		"-it",
-		"--gpus=all",
+		"--gpus=all,\"capabilities=compute,utility,graphics,display\"",
 		"--runtime=nvidia",
 		"--tmpfs=/tmp",
 		"--network=host",
@@ -36,13 +36,16 @@
 		"-v",
 		"/dev:/dev:ro",
 		"-v",
-		"/home/${localEnv:USER}/.gitconfig:/etc/gitconfig"
+		"/home/${localEnv:USER}/.gitconfig:/etc/gitconfig",
+		"-v",
+		"/usr/local/cuda-11.7:/usr/local/cuda-11.7:ro"
 	],
 	"workspaceFolder": "/workspaces/Puzzle",
 	"containerEnv": {
 		"DISPLAY": "${localEnv:DISPLAY}",
 		"QT_X11_NO_MITSHM": "1",
-		"PYTHONPATH": "/opt/ros/noetic/lib/python3/dist-packages"
+		"PYTHONPATH": "/opt/ros/noetic/lib/python3/dist-packages",
+		"LD_LIBRARY_PATH": "/usr/local/cuda-11.7/lib64"
 	}, 
 	"remoteUser": "dev"
 }

@@ -8,6 +8,8 @@ src/PX4-Autopilot/
 src/mavlink_sitl_gazebo/
 src/PxSitl/tmp/
 src/PxSitl/TMP/
+src/puzzle_common/opencv_contrib-4.6.0
+src/puzzle_common/opencv-4.6.0
+src/puzzle_common/opencv
 tmp/
-opencv/
 DockerfileWork

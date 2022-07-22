@@ -32,7 +32,7 @@ bool StateTracking::loadParam() {
     ROS_INFO("[StateTracking] No filter_gain param. Use default value %f", _filterGain);
   }
 
-#if defined(BALL_TRACKING_FILTER) && BALL_TRACKING_FILTER==KALMAN
+#if defined(BALL_TRACKING_FILTER) && BALL_TRACKING_FILTER == KALMAN
   if (!_nh.getParam("dt_4_kalman", _dt4kalman)) {
     ROS_INFO("[StateTracking] No dt_4_kalman param. Use default value %f", _dt4kalman);
   }
@@ -63,7 +63,8 @@ bool StateTracking::setup() {
     }
   }
 
-  if (!_it) _it = std::make_shared<image_transport::ImageTransport>(_nh);
+  if (!_it)
+    _it = std::make_shared<image_transport::ImageTransport>(_nh);
 
   if (!_vh) {
     try {
@@ -82,11 +83,14 @@ bool StateTracking::setup() {
     _objPositionPub = _nh.advertise<Point>("obj_position", 1);
   }
 
-  if (!_bt) _bt = std::make_unique<BallTracking>(_vh->getWidth(), _vh->getHeight(), threshold);
+  if (!_bt)
+    _bt = std::make_unique<BallTracking>(_vh->getWidth(), _vh->getHeight(), threshold);
 
-  if (!_tfListener) _tfListener = std::make_unique<tf2_ros::TransformListener>(_tfBuffer, _nh);
+  if (!_tfListener)
+    _tfListener = std::make_unique<tf2_ros::TransformListener>(_tfBuffer, _nh);
 
-  if (!_rvizPainter) _rvizPainter = std::make_unique<RvizPainter>(_nh, "puzzle_reaction_painter");
+  if (!_rvizPainter)
+    _rvizPainter = std::make_unique<RvizPainter>(_nh, "puzzle_reaction_painter");
 
   if (_metricsPub.getTopic().empty()) {
     _metricsPub = _nh.advertise<puzzle_msgs::Metrics>("metrics", 1500);
@@ -101,10 +105,11 @@ bool StateTracking::setup() {
   }
 
   _loopTimer = ros::Time::now();
+  debugImgPubRate = ros::Time::now();
 
   reset();
 
-#if defined(BALL_TRACKING_FILTER) && BALL_TRACKING_FILTER==KALMAN
+#if defined(BALL_TRACKING_FILTER) && BALL_TRACKING_FILTER == KALMAN
   ROS_INFO("Kalman filter setup done! Filter gain = %f; dt = %f.", _filterGain, _dt4kalman);
   _kalmanFilter.setParameters(_filterGain, _dt4kalman);
 #else
@@ -127,26 +132,31 @@ void StateTracking::arucoPosCallback(const Vector3StampedConstPtr &arucoPosition
 
 float StateTracking::getDistToObj(const cv::Mat &depth, const cv::Mat &mask, const cv::Point2f &center, const uint16_t &radius) {
   uint16_t deametr = radius + radius;
-  if (deametr > 25) deametr = 25;
+  if (deametr > 25)
+    deametr = 25;
 
   float x = center.x - radius;
-  if (x < 0) x = 0;
+  if (x < 0)
+    x = 0;
 
   float y = center.y - radius;
-  if (y < 0) y = 0;
+  if (y < 0)
+    y = 0;
 
   float width = deametr;
-  if (x + width > depth.cols) width = depth.cols - x;
+  if (x + width > depth.cols)
+    width = depth.cols - x;
 
   float height = deametr;
-  if (y + height > depth.rows) height = depth.rows - y;
+  if (y + height > depth.rows)
+    height = depth.rows - y;
 
   return getDistToObj(depth, cv::Rect2f(x, y, width, height));
 }
 
 float StateTracking::getDistToObj(const cv::Mat &depth, const cv::Rect2f &roi) {
   cv::Mat ballDists(depth, roi);
-
+  ros::Time depthHandle = ros::Time::now();
   // ROS_DEBUG_STREAM_THROTTLE(1.0, "Depth oroigin size: " << depth.size() << " ball dist size: " << ballDists.size());
 
   uint16_t *bestDist1 = nullptr, *bestDist2 = nullptr, *bestDist3 = nullptr;
@@ -185,7 +195,8 @@ float StateTracking::getDistToObj(const cv::Mat &depth, const cv::Rect2f &roi) {
           bestDist3 = cols + j;
         }
 
-      } else mapOfDist.insert({dist, 1});
+      } else
+        mapOfDist.insert({dist, 1});
     }
   }
 
@@ -211,30 +222,43 @@ float StateTracking::getDistToObj(const cv::Mat &depth, const cv::Rect2f &roi) {
     dist /= maxCount1;
 
     float filtredDist;
-#if defined(BALL_TRACKING_FILTER) && BALL_TRACKING_FILTER==KALMAN
-    filtredDist = _kalmanFilter.filtered(dist);
+#if defined(BALL_TRACKING_FILTER) && BALL_TRACKING_FILTER == KALMAN
+    // filtredDist = _kalmanFilter.filtered(dist);
 #else
-    filtredDist = _runningAvrFilter.filtered(dist);
+    // filtredDist = _runningAvrFilter.filtered(dist);
 #endif // BALL_TRACKING_FILTER
 
-    Point objPositionMsg;
-    objPositionMsg.x = dist;
-    objPositionMsg.y = filtredDist;
-    
-    
-
-    if (std::fabs(filtredDist - dist) < 500.0f && dist != 0) {
-      dist = filtredDist;
-      _isSoftFiltringEnabled = true;
-    } else {
-      _isSoftFiltringEnabled = false;
+    std::stringstream info2;
+    info2 << "MapOfDistDump:";
+    for (auto i : mapOfDist) {
+      info2 << "\n\tcount: " << i.second << "\tdist: " << i.first;
     }
 
-    objPositionMsg.z = 3000 + (500 * _isSoftFiltringEnabled);
-    _objPositionPub.publish(objPositionMsg);
+    /* info2 << "\nBsetDists:"
+          << "\n\tbest_dist1: " << *bestDist1
+          << "\n\tbest_dist2: " << *bestDist2
+          << "\n\tbest_dist3: " << *bestDist3 << "\n";
+   */
+    ROS_DEBUG_STREAM_THROTTLE(0.5, info2.rdbuf());
 
-    ROS_DEBUG_STREAM_THROTTLE(0.5, "Is filter enabled: " << _isSoftFiltringEnabled);
+    /*
+        Point objPositionMsg;
+        objPositionMsg.x = dist;
+        objPositionMsg.y = filtredDist;
+
+        if (std::fabs(filtredDist - dist) < 500.0f && dist != 0) {
+          dist = filtredDist;
+          _isSoftFiltringEnabled = true;
+        } else {
+          _isSoftFiltringEnabled = false;
+        }
+
+        objPositionMsg.z = 3000 + (500 * _isSoftFiltringEnabled);
+        _objPositionPub.publish(objPositionMsg);
+        */
   }
+
+  ROS_DEBUG_STREAM_THROTTLE(.5, "Depth handle: " << ros::Duration(ros::Time::now() - depthHandle).toSec() * 1000.0);
 
   return dist * 0.001f;
 }
@@ -298,7 +322,8 @@ Pose StateTracking::transformPose3(const tf2::Vector3 &position, const tf2::Quat
 float StateTracking::getVelocity(float x, float y, float angle) {
   float num = PZ_GRAVITY * powf(x, 2);
   float den = 2.0f * (y - tanf(angle) * x) * powf(cosf(angle), 2);
-  if (den < 1.0e-3f && den > -1.0e-3f) den = 1.0f;
+  if (den < 1.0e-3f && den > -1.0e-3f)
+    den = 1.0f;
 
   ROS_DEBUG_STREAM_NAMED("[getVelocity] num", "num" << num);
   ROS_DEBUG_STREAM_NAMED("[getVelocity] den", "den" << den);
@@ -308,7 +333,8 @@ float StateTracking::getVelocity(float x, float y, float angle) {
 
 float StateTracking::getContactProbobility(const tf2::Vector3 &currentObjPosition, const tf2::Vector3 &lastObjPosition,
                                            const tf2::Vector3 &cameraPosition) {
-  if (_predictedSigments.size() == 0) return -1;
+  if (_predictedSigments.size() == 0)
+    return -1;
 
   float minDist = 100.0f;
   auto nearLine = std::ref(_predictedSigments[0]);
@@ -326,15 +352,18 @@ float StateTracking::getContactProbobility(const tf2::Vector3 &currentObjPositio
 
   float dist2ToPoint = nearLine.get().dist2ToPoint(currentObjPosition);
 
-  if (dist2ToPoint == -1.f) return -1.f;
+  if (dist2ToPoint == -1.f)
+    return -1.f;
 
   tf2::Vector3 pointOnLine = nearLine.get().porjectPoint(currentObjPosition);
   _rvizPainter->draw(_rvizPainterObject.getPointOnTraj(), pointOnLine);
   _rvizPainter->draw(_rvizPainterObject.getShortABlueLine(), currentObjPosition, middle);
 
   tf2::Vector3 lineDir;
-  if (cameraPosition.z() - _firstObjPosition.z() < 0) lineDir = nearLine.get().getP1() - nearLine.get().getP2();
-  else lineDir = nearLine.get().getP2() - nearLine.get().getP1();
+  if (cameraPosition.z() - _firstObjPosition.z() < 0)
+    lineDir = nearLine.get().getP1() - nearLine.get().getP2();
+  else
+    lineDir = nearLine.get().getP2() - nearLine.get().getP1();
 
   float yawArwOfPred = atan2f(lineDir.normalized().y(), lineDir.normalized().x());
   float pitchArwOfPred = asinf(lineDir.normalized().z());
@@ -412,7 +441,8 @@ void StateTracking::trajectoryPrediction(const tf2::Vector3 &cameraPosition, con
         points.push_back(point);
       break;
     case 4:
-      if (counter == 0 || counter == 1 || counter == 3) points.push_back(point);
+      if (counter == 0 || counter == 1 || counter == 3)
+        points.push_back(point);
       break;
     case 3:
       points.push_back(point);
@@ -425,7 +455,8 @@ void StateTracking::trajectoryPrediction(const tf2::Vector3 &cameraPosition, con
     }
     ++counter;
 
-    if (counter == safePoints) break;
+    if (counter == safePoints)
+      break;
   }
 
   if (points.empty()) {
@@ -455,10 +486,14 @@ void StateTracking::trajectoryPrediction(const tf2::Vector3 &cameraPosition, con
     ROS_DEBUG("Intersect state %i", distToDrone <= abs(safeZone));
     // }
 
-  } else approxLinear(points, abc, totalPoints);
+  } else
+    approxLinear(points, abc, totalPoints);
 
   for (auto &point : points) {
-    ROS_DEBUG_STREAM("point:\n" << point.x() << "\n" << point.y() << "\n" << point.z());
+    ROS_DEBUG_STREAM("point:\n"
+                     << point.x() << "\n"
+                     << point.y() << "\n"
+                     << point.z());
   }
 
   for (auto &k : abc) {
@@ -598,7 +633,8 @@ void StateTracking::conceptThree(tf2::Vector3 &objPosition, uint16_t &radius) {
   }
 
   tf2::Vector3 lastPointInRealTrajectory = _realTrajPoints.back();
-  if (tf2::tf2Distance2(lastPointInRealTrajectory, objPosition) < 0.0225f) return;
+  if (tf2::tf2Distance2(lastPointInRealTrajectory, objPosition) < 0.0225f)
+    return;
 
   if (_realTrajPoints.size() > 20) ///< TODO: add to launch param
     _realTrajPoints.pop_front();
@@ -625,7 +661,8 @@ void StateTracking::conceptThree(tf2::Vector3 &objPosition, uint16_t &radius) {
   // uint8_t totalPoints = std::floor(sqrtf(totalDist2 / pointDist2));
   safePoints = std::floor(totalPoints / 2.f);
   // uint8_t safePoints = std::floor(totalPoints / 2.f);
-  if (safePoints > 5) safePoints = 5; ///< TODO: not good idea
+  if (safePoints > 5)
+    safePoints = 5; ///< TODO: not good idea
 
   float safeDist = tf2::tf2Distance2(cameraPosition, objPosition) / totalDist2;
   ROS_DEBUG_STREAM("safeDist: " << safeDist);
@@ -686,34 +723,48 @@ void StateTracking::reset() {
 void StateTracking::execute() {
   cv::Mat frame;
   cv::Mat depth;
-
-  _vh->readColor(frame);
-  _vh->readDepth(depth);
+  try {
+    _vh->readColor(frame);
+    _vh->readDepth(depth);
+  } catch (...) {
+    ROS_ERROR("Read fatal error");
+    ros::Duration(5.0).sleep();
+    wait();
+  }
 
   if (frame.empty() || depth.empty()) {
     ROS_WARN_THROTTLE(1.0, "Frame is empty");
     return;
   }
 
-  cv::Mat tmpFrame = frame.clone();
   cv::Mat mask;
+  cv::Mat tmpFrame = frame.clone();
   cv::Point2f center = {0, 0};
   uint16_t radius = 0;
+  ros::Time imgProcTime = ros::Time::now();
+  try {
+    _bt->process(tmpFrame, mask, &center, &radius);
+  } catch (const cv::Exception &e) {
+    ROS_ERROR("process fatal error: %s", e.what());
+    ros::Duration(5.0).sleep();
+    wait();
+  }
 
-  _bt->process(frame, mask, &center, &radius);
+  ROS_DEBUG_STREAM_THROTTLE(.5, "Img proc time: " << ros::Duration(ros::Time::now() - imgProcTime).toSec() * 1000.0);
 
-  if (radius != 0) _isConturFinded = true;
-  else _isConturFinded = false;
+  if (radius != 0)
+    _isConturFinded = true;
+  else
+    _isConturFinded = false;
 
-  if (_isConturFinded) {
+  if (_isConturFinded && !_isTrekLinePredicted) {
     float distToObj = getDistToObj(depth, mask, center, radius);
     ROS_DEBUG_STREAM_THROTTLE(1.0, "distToObj " << distToObj);
     ROS_DEBUG_THROTTLE(1.0, "objRadius: %i", radius);
-    // ROS_DEBUG_STREAM_THROTTLE(0.25, "filterIsEnabled: " << _isSoftFiltringEnabled);
 
     if (distToObj == 0) {
       ROS_WARN_THROTTLE(5.0, "Distance to object out of range [%f, %f]", _minDist * 0.001f, _maxDist * 0.001f);
-      reset(); ///< !!!!!
+      // reset(); ///< !!!!!
       return;
     }
 
@@ -726,6 +777,7 @@ void StateTracking::execute() {
     } catch (const tf2::TransformException &e) {
       ROS_ERROR("[StateTracking] %s", e.what());
       ros::Duration(1.0).sleep();
+      return;
     }
     Pose calcZonePose;
     calcZonePose.position.x = droneFrd.transform.translation.x;
@@ -733,7 +785,6 @@ void StateTracking::execute() {
     calcZonePose.position.z = droneFrd.transform.translation.z;
     calcZonePose.orientation = tf2::toMsg(tf2::Quaternion::getIdentity());
     // calcZonePose.orientation = droneFrd.transform.rotation;
-
     _rvizPainter->update(_rvizPainterObject.getCalcZone(), calcZonePose);
 
     try {
@@ -761,11 +812,14 @@ void StateTracking::execute() {
           reset();
           _rvizPainter->clear(_rvizPainterObject.getObjPosition());
           ros::Duration(1.0).sleep();
+          return;
         }
       }
 
-      if (distToObj <= 3.2) conceptThree(newObjPosition, radius);
-
+      ros::Time approxTime = ros::Time::now();
+      if (distToObj <= 3.2)
+        conceptThree(newObjPosition, radius);
+      ROS_DEBUG_STREAM_THROTTLE(.5, "Approx time: " << ros::Duration(ros::Time::now() - approxTime).toSec() * 1000.0);
     } catch (const tf2::TransformException &e) {
       ROS_ERROR("[StateTracking] %s", e.what());
       ros::Duration(1.0).sleep();
@@ -779,18 +833,22 @@ void StateTracking::execute() {
       wait();
     }
 
-    cv::circle(tmpFrame, center, radius + 3.0, cv::Scalar::all(128), 2, cv::LINE_4);
-    cv::circle(tmpFrame, center, 3, cv::Scalar(0, 255, 0), cv::FILLED, cv::LINE_8);
+    ros::Duration pubPrd(1.0 / 15.0);
+    if (ros::Time::now() - debugImgPubRate > pubPrd) {
+      cv::circle(tmpFrame, center, radius + 3.0, cv::Scalar::all(128), 2, cv::LINE_4);
+      cv::circle(tmpFrame, center, 3, cv::Scalar(0, 255, 0), cv::FILLED, cv::LINE_8);
 
-    _fps = static_cast<int>(std::ceil(1.0 / ros::Duration(ros::Time::now() - _loopTimer).toSec()));
+      // _fps = static_cast<int>(std::ceil(1.0 / ros::Duration(ros::Time::now() - _loopTimer).toSec()));
 
-    cv::Size textSize = cv::getTextSize(std::to_string(_fps), cv::FONT_HERSHEY_SIMPLEX, 0.4, 2, nullptr);
-    cv::putText(tmpFrame, std::to_string(_fps), cv::Point(5, textSize.height * 2), cv::FONT_HERSHEY_SIMPLEX, 0.4, cv::Scalar::all(0));
+      // cv::Size textSize = cv::getTextSize(std::to_string(_fps), cv::FONT_HERSHEY_SIMPLEX, 0.4, 2, nullptr);
+      // cv::putText(tmpFrame, std::to_string(_fps), cv::Point(5, textSize.height * 2), cv::FONT_HERSHEY_SIMPLEX, 0.4, cv::Scalar::all(0));
 
-    sensor_msgs::ImagePtr debugImg = CvImage(std_msgs::Header(), enc::MONO8, mask).toImageMsg();
-    sensor_msgs::ImagePtr resultImg = CvImage(std_msgs::Header(), enc::BGR8, tmpFrame).toImageMsg();
-    _debugPub.publish(debugImg);
-    _resultPub.publish(resultImg);
+      sensor_msgs::ImagePtr debugImg = CvImage(std_msgs::Header(), enc::MONO8, mask).toImageMsg();
+      sensor_msgs::ImagePtr resultImg = CvImage(std_msgs::Header(), enc::BGR8, tmpFrame).toImageMsg();
+      _debugPub.publish(debugImg);
+      _resultPub.publish(resultImg);
+      debugImgPubRate += pubPrd;
+    }
 
     _resetTimer = ros::Time::now();
   } else {
@@ -808,7 +866,7 @@ void StateTracking::execute() {
       }
     } */
 
-    if (ros::Time::now() - _resetTimer >= ros::Duration(1.0)) {
+    if (ros::Time::now() - _resetTimer >= ros::Duration(2.0)) {
       reset();
     }
   }

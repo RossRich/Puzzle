@@ -78,6 +78,7 @@ private:
   ros::Time _resetTimer;
   ros::Time _detectionTimer;
   ros::Time _aTimer;
+  ros::Time debugImgPubRate;
 
   tf2_ros::Buffer _tfBuffer;
   std::unique_ptr<tf2_ros::TransformListener> _tfListener;

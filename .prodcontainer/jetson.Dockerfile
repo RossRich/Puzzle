@@ -38,6 +38,7 @@ RUN apt-get update && apt-get install -q -y --no-install-recommends \
     python-rosdep \
     python-catkin-tools \
     python-wstool \
+    python-pip \
     git \
     python-rosinstall \
     python-vcstools \
@@ -46,7 +47,9 @@ RUN apt-get update && apt-get install -q -y --no-install-recommends \
     ros-melodic-resource-retriever \
     ca-certificates \
     openssl \
-    && rm -rf /var/lib/apt/lists/*    
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip install PyYAML==5.3
 
 # copying a puzzle in docker conteiner    
 COPY src /puzzle/src
@@ -79,5 +82,5 @@ RUN apt-get update && \
 WORKDIR /puzzle   
 
 RUN . /opt/ros/${ROS_DISTRO}/setup.sh && \
-    catkin config --cmake-args -DBALL_TRACKING_FILTER=11 && \
+    catkin config --cmake-args -DBALL_TRACKING_FILTER=11 -DCMAKE_BUILD_TYPE=Release -DCATKIN_ENABLE_TESTING=False && \
     catkin build

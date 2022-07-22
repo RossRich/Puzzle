@@ -33,15 +33,16 @@ find_package(catkin REQUIRED COMPONENTS
   image_transport
   tf2_ros
   tf2
-  image_geometry
   visualization_msgs
   tf2_geometry_msgs
   puzzle_msgs
   puzzle_common
   cv_bridge
+  image_geometry
 )
-
-find_package(OpenCV REQUIRED) 
+find_package(OpenCV 4.6.0 REQUIRED NO_MODULE PATHS /workspaces/Puzzle/src/puzzle_common/opencv NO_DEFAULT_PATH)
+message("*****!**!*!*!**!OpenCV_LIBS " ${OpenCV_LIBS})
+message("*****!**!*!*!**!OpenCV_INCLUDE_DIRS " ${OpenCV_INCLUDE_DIRS})
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -196,6 +197,7 @@ add_executable(BallTrackingSetupNode src/vision/setup/BallTrackingSetupNode.cpp)
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
+  ${OpenCV_LIBS}
 )
 
 target_link_libraries(${PROJECT_NAME}_node
@@ -203,12 +205,12 @@ target_link_libraries(${PROJECT_NAME}_node
 )
 
 target_link_libraries(BallTrackingNode
-  ${catkin_LIBRARIES}
+  # ${catkin_LIBRARIES}
   ${PROJECT_NAME}
-  ${OpenCV_LIBS}
-  ${NLopt_LIBS}
   realsense2
   video_handler
+  ${OpenCV_LIBS}
+  # ${NLopt_LIBS}
   # puzzle_common
 )
 
