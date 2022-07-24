@@ -46,4 +46,7 @@ RUN echo "parse_git_branch() {" >> /home/${USER_NAME}/.bashrc \
     && echo "}" >> /home/${USER_NAME}/.bashrc \
     && echo "export PS1='\u@\h \[\033[32m\]\w\[\033[33m\]\$(parse_git_branch)\[\033[00m\] $ '" >> /home/${USER_NAME}/.bashrc
 
+COPY .devcontainer/config/cuda.path /tmp
+RUN cat /tmp/cuda.path >> /home/${USER_NAME}/.bashrc
+
 USER ${USER_NAME}
